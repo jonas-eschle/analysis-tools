@@ -1,0 +1,10 @@
+# Jupyter
+.ipynb_checkpoints
+# Python
+*.pyc
+# ROOT
+*.o
+*.so
+*.pcm
+*.d
+*.gch
