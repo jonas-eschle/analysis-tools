@@ -22,9 +22,6 @@ import os
 import analysis
 
 
-BASE_PATH = analysis.get_global_var('BASE_PATH')
-
-
 def get_toy_path(name):
     """Get the name of the toy MC generated file.
 
@@ -38,7 +35,8 @@ def get_toy_path(name):
         str: Absolute path of the toys file.
 
     """
-    return os.path.join(BASE_PATH, 'data', 'toys', 'gen', name + '.hdf')
+    return os.path.join(analysis.get_global_var('BASE_PATH'),
+                        'data', 'toys', 'gen', name + '.hdf')
 
 
 def get_toy_config_path(name):
@@ -54,7 +52,8 @@ def get_toy_config_path(name):
         str: Absolute path of the config file.
 
     """
-    return os.path.join(BASE_PATH, 'data', 'toys', 'gen', name + '.yml')
+    return os.path.join(analysis.get_global_var('BASE_PATH'),
+                        'data', 'toys', 'gen', name + '.yml')
 
 
 def get_toy_fit_path(name):
@@ -70,7 +69,8 @@ def get_toy_fit_path(name):
         str: Absolute path of the toys file.
 
     """
-    return os.path.join(BASE_PATH, 'data', 'toys', 'fit', name + '.hdf')
+    return os.path.join(analysis.get_global_var('BASE_PATH'),
+                        'data', 'toys', 'fit', name + '.hdf')
 
 
 def get_toy_fit_config_path(name):
@@ -86,7 +86,8 @@ def get_toy_fit_config_path(name):
         str: Absolute path of the config file.
 
     """
-    return os.path.join(BASE_PATH, 'data', 'toys', 'fit', name + '.yml')
+    return os.path.join(analysis.get_global_var('BASE_PATH'),
+                        'data', 'toys', 'fit', name + '.yml')
 
 
 def get_log_path(name, is_batch=True):
@@ -104,7 +105,8 @@ def get_log_path(name, is_batch=True):
 
     """
     jobid = '_${PBS_JOBID}' if is_batch else ''
-    return os.path.join(BASE_PATH, 'data', 'logs', name + jobid + '.log')
+    return os.path.join(analysis.get_global_var('BASE_PATH'),
+                        'data', 'logs', name + jobid + '.log')
 
 
 def prepare_path(name, link_from, path_func):
@@ -129,8 +131,8 @@ def prepare_path(name, link_from, path_func):
 
     """
     do_link = False
-    dest_base_dir = BASE_PATH
-    src_base_dir = link_from or BASE_PATH
+    dest_base_dir = analysis.get_global_var('BASE_PATH')
+    src_base_dir = link_from or dest_base_dir
     if dest_base_dir != src_base_dir:
         do_link = True
         if not os.path.exists(src_base_dir):

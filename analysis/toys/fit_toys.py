@@ -17,6 +17,7 @@ import pandas as pd
 
 import ROOT
 
+from analysis import get_global_var
 from analysis.physics import get_physics_factory
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
@@ -182,6 +183,16 @@ def run(config_files, link_from, verbose):
     if not models:
         logger.error("No model was specified in the config file!")
         raise KeyError()
+    try:
+        fit_strategies = {strategy_name: get_global_var('FIT_STRATEGIES')[strategy_name]
+                          for strategy_name
+                          in config['fit'].get('strategies', ['simple'])}
+    except KeyError as error:
+        logger.error("Missing fit_strategy configuration -> %s", str(error))
+        raise KeyError("Missing fit_strategy configuration")
+    if not fit_strategies:
+        logger.error("No fit strategies were specified in the config file!")
+        raise KeyError()
     # Some info
     logger.info("Doing %s sample/fit sequences", config['fit']['nfits'])
     logger.info("Fit job name: %s", config['name'])
@@ -227,7 +238,8 @@ def run(config_files, link_from, verbose):
                 pdfs[factory_name] = factory.get_extended_pdf()("%s^{%s}" % (config['name'], factory_name),
                                                                 "%s^{%s}" % (config['name'], factory_name),
                                                                 "N^{%s}" % factory_name,
-                                                                config[model_name][factory_name].get('initial-yield', 1000),
+                                                                config[model_name][factory_name].get('initial-yield',
+                                                                                                     1000),
                                                                 *(observables + fit_params))
                 # Add everything to the fit parameters
                 fit_parameters.extend(fit_params)
@@ -283,7 +295,7 @@ def run(config_files, link_from, verbose):
                                                                            'transform_dataset')
                                                        for model_name, model in fit_models.items()})
                 for sample_name, sample_size in sample_sizes.items():
-                    gen_events['N^{%s}' % sample_name].append(sample_size)
+                    gen_events['N^{%s}_{gen}' % sample_name].append(sample_size)
             except KeyError:
                 logger.exception("Bad data configuration")
                 raise
@@ -292,12 +304,14 @@ def run(config_files, link_from, verbose):
                 dataset = datasets.pop(model_name)
                 physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config = fit_models[model_name]
                 # Now fit
-                fit_result = fit_model.fitTo(dataset, *fit_config)
-                # Now results are in fit_parameters
-                result = _data.fit_parameters_to_dict(fit_parameters)
-                result['fit_status'] = fit_result.status()
-                fit_results[model_name].append(result)
-                _root.destruct_object(fit_result)
+                for fit_name, fit_func in fit_strategies.items():
+                    toy_key = (model_name, fit_name)
+                    fit_result = fit_func(fit_model, dataset, fit_config)  # fit_model.fitTo(dataset, *fit_config)
+                    # Now results are in fit_parameters
+                    result = _data.fit_parameters_to_dict(fit_parameters)
+                    result['fit_status'] = fit_result.status()
+                    fit_results[toy_key].append(result)
+                    _root.destruct_object(fit_result)
                 _root.destruct_object(dataset)
             logger.debug("Cleaning up")
         logger.info("Fitting loop over")
@@ -306,16 +320,36 @@ def run(config_files, link_from, verbose):
         logger.info("Saving to disk")
         try:
             # Save
+            data = []
+            # Get gen values for this model
+            data_gen = {key + '_{gen}': val for key, val in gen_values.items()}
+            nominal_yields = {'N^{%s}_{nominal}' % data_name: data_info['nevents']
+                              for data_name, data_info
+                              in config['data'].items()}
+            # indices = ['model_name', 'fit_strategy'] + data_gen.keys() + nominal_yields.keys()
+            for (model_name, fit_strategy), fits in fit_results.items():
+                for fit_res in fits:
+                    fit_res = fit_res.copy()
+                    fit_res['model_name'] = model_name
+                    fit_res['fit_strategy'] = fit_strategy
+                    data.append(fit_res)
+                    # fit_res.update(data_gen)
+                    # fit_res.update(nominal_yields)
+                    # Calculate pulls
+            data_frame = pd.DataFrame(data)
+            gen_frame = pd.concat([pd.concat([pd.concat([pd.DataFrame(data_gen, index=[0]),
+                                                         pd.DataFrame(nominal_yields, index=[0])],
+                                                        axis=1)]*data_frame.shape[0]).reset_index(drop=True),
+                                   pd.DataFrame(gen_events)],
+                                  axis=1)
+            # Currently, fit_result_frame is not indexed. Could be improved in the future.
+            # Should I just separate gen_frame from data_frame to save space?
+            fit_result_frame = pd.concat([gen_frame,
+                                          data_frame,
+                                          _data.calculate_pulls(data_frame, gen_frame)],
+                                         axis=1)
             with _data.modify_hdf(src_toy_fit_file, dest_toy_fit_file) as hdf_file:
-                # Append results
-                for model_name, fit_result in fit_results.items():
-                    hdf_file.append('fit_' + model_name,
-                                    pd.concat([pd.DataFrame(fit_result),
-                                               _data.calculate_pulls(pd.DataFrame(fit_result),
-                                                                     pd.concat([pd.DataFrame([gen_values]*len(fit_result)),
-                                                                                pd.DataFrame(gen_events)],
-                                                                               axis=1))],
-                                              axis=1))
+                hdf_file.append('fit_results', fit_result_frame)
                 # Add link to generated samples for bookeeping
                 if 'gen_info' not in hdf_file:
                     hdf_file.append('gen_info',
@@ -329,6 +363,8 @@ def run(config_files, link_from, verbose):
                 logger.info("Linked to %s", dest_toy_fit_file)
         except ValueError as error:
             logger.exception("Exception on dataset saving")
+            import ipdb
+            ipdb.set_trace()
             raise RuntimeError(str(error))
     finally:
         for store in stores.values():

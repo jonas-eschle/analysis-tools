@@ -20,7 +20,8 @@ setup(name='analysis',
                         'pandas',
                         'colorlog',
                         'fasteners',
-                        'PyYAML'],
+                        'PyYAML',
+                        'contextlib2'],
       packages=['analysis'],
       zip_safe=False)
 

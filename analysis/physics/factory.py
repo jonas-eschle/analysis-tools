@@ -238,7 +238,11 @@ class PhysicsFactory(BaseFactory):
             **config (dict): Configuration of the factory.
 
         """
-        assert self.PARAMETERS is not None
+        try:
+            assert self.PARAMETERS is not None
+        except AssertionError:
+            import ipdb
+            ipdb.set_trace()
         super(PhysicsFactory, self).__init__(**config)
         # pylint: disable=E1101
         if hasattr(self, 'MANDATORY_PARAMETERS'):

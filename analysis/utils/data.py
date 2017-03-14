@@ -197,7 +197,11 @@ def calculate_pulls(fit_results, gen_values):
                 param_name.endswith('_err_plus'),
                 param_name.endswith('_err_minus'))):
             continue
-        pulls[param_name + '_pull_diff'] = fit_results[param_name] - gen_values[param_name]
+        # Calculate pulls only for matching parameters
+        gen_name = param_name +  '_{gen}'
+        if gen_name not in gen_values.columns:
+            continue
+        pulls[param_name + '_pull_diff'] = fit_results[param_name] - gen_values[gen_name]
         pulls[param_name + '_pull_hesse'] = pulls[param_name + '_pull_diff'] / fit_results[param_name + '_err_hesse']
         pulls[param_name + '_pull_minos'] = pulls[param_name + '_pull_diff'] / \
             fit_results[param_name + '_err_plus']

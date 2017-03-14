@@ -5,7 +5,7 @@
 # @author Albert Puig (albert.puig@cern.ch)
 # @date   11.01.2017
 # =============================================================================
-"""Generic angular analysis."""
+"""Generic analysis configuration."""
 
 import os
 
@@ -75,5 +75,7 @@ def add_pdf_paths(*paths):
 set_global_var('BASE_PATH',
                os.path.abspath(os.path.join(os.path.dirname(__file__))))
 add_pdf_paths('pdfs')  # Setup {BASE_PATH}/pdfs as base dir for PDFs
+set_global_var('FIT_STRATEGIES',
+               {'simple': lambda model, dataset, fit_config: model.fitTo(dataset, *fit_config)})
 
 # EOF

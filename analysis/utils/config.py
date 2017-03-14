@@ -59,7 +59,7 @@ def load_config(*file_names, **options):
         data_keys = ['/'.join(key.split('/')[:entry_num+1])
                      for key, _ in unfolded_data
                      for entry_num in range(len(key.split('/')))]
-        logger.debug("Validating against the followinf keys -> %s",
+        logger.debug("Validating against the following keys -> %s",
                      ', '.join(data_keys))
         for key in options['validate']:
             if key not in data_keys:
