@@ -58,8 +58,8 @@ def load_pdfs(model):
             physics_factory = get_physics_factory(pdfs)
         except KeyError:
             logger.error("Cannot find physics factory for %s",
-                         ','.join(['%s:%s' % (pdf['observables'], pdf['type'])
-                                   for pdf in element['pdfs']]))
+                         ','.join(['%s:%s' % (obs, pdf['pdf'])
+                                   for obs, pdf in pdfs.items()]))
             raise ValueError()
         physics_factories[name] = physics_factory
         observables = set(obs.GetName()
@@ -71,7 +71,7 @@ def load_pdfs(model):
                 logger.error("Mismatch in observables between PDFs.")
                 raise KeyError()
         # Configure the variables
-        for pdf in pdfs:
+        for pdf in pdfs.values():
             fit_parameters = {param.GetName(): param
                               for param in physics_factory.get_fit_parameters()}
             # Rename parameters to param_name^{model_name} for easier visualization

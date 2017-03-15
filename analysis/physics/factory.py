@@ -253,8 +253,7 @@ class PhysicsFactory(BaseFactory):
         self._parameter_values.update(self._config.pop('parameters', {}))
         self._parameter_names.update(self._config.pop('parameter-names', {}))
         self._name = self._config.pop('name', None)
-        self._type = self._config.pop('type')
-        self._observables = self._config.pop('observables')
+        self._type = self._config.pop('pdf')
 
     def set_parameter_names(self, name_dict):
         """Set parameter name conversion.

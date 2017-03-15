@@ -110,7 +110,7 @@ def run(config_files, link_from):
         logger.error("No pdfs were specified in the config file!")
         raise KeyError()
     # Ignore renaming
-    for pdf in pdfs:
+    for pdf in pdfs.values():
         pdf.pop('parameter-names', None)
     logger.info("Generating %s events", config['gen']['nevents'])
     logger.info("Generation job name: %s", config['name'])
@@ -142,8 +142,8 @@ def run(config_files, link_from):
         physics = get_physics_factory(pdfs)
     except KeyError:
         logger.error("Cannot find physics factory for %s",
-                     ','.join(['%s:%s' % (pdf['observables'], pdf['type'])
-                               for pdf in pdfs]))
+                     ','.join(['%s:%s' % (obs, pdf['pdf'])
+                               for obs, pdf in pdfs.items()]))
         raise ValueError()
     try:
         dataset = generate(physics, config)

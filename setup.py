@@ -21,7 +21,8 @@ setup(name='analysis',
                         'colorlog',
                         'fasteners',
                         'PyYAML',
-                        'contextlib2'],
+                        'contextlib2',
+                        'yamlordereddictloader'],
       packages=['analysis'],
       zip_safe=False)
 

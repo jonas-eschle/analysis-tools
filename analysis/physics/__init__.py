@@ -17,7 +17,8 @@ def get_physics_factory(pdf_configs):
     """Get physics factory.
 
     Arguments:
-        pdf_configs (list): List of PDFs to load, along with their configuration.
+        pdf_configs (dict): PDFs to load, along with their configuration.
+            The keys define the type of observable.
 
     Returns:
         `PhysicsFactory`: Requested PhysicsFactory.
@@ -27,12 +28,10 @@ def get_physics_factory(pdf_configs):
 
     """
     factories = get_global_var('PHYSICS_FACTORIES')
-    if not isinstance(pdf_configs, (list, tuple)):
-        pdf_configs = [pdf_configs]
     if len(pdf_configs) == 1:
-        return factories[pdf_configs[0]['observables']][pdf_configs[0]['type']](**pdf_configs[0])
+        return factories[pdf_configs.keys()[0]][pdf_configs.values()[0]['pdf']](**pdf_configs.values()[0])
     else:
-        return ProductPhysicsFactory([factories[pdf_config['observables']][pdf_config['type']]
-                                      for pdf_config in pdf_configs])(pdf_configs)
+        return ProductPhysicsFactory([factories[observable][config['pdf']]
+                                      for observable, config in pdf_configs.items()])(pdf_configs.values())
 
 # EOF

@@ -9,7 +9,10 @@
 
 import os
 
+from collections import OrderedDict
+
 import yaml
+import yamlordereddictloader
 
 import ROOT
 
@@ -48,7 +51,8 @@ def load_config(*file_names, **options):
             raise OSError("Cannot file config file -> %s" % file_name)
         try:
             with open(file_name) as input_obj:
-                unfolded_data.extend(unfold_config(yaml.load(input_obj)))
+                unfolded_data.extend(unfold_config(yaml.load(input_obj,
+                                                             Loader=yamlordereddictloader.Loader)))
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
     data = fold_config(unfolded_data)
@@ -77,6 +81,37 @@ def write_config(config, file_name):
         file_name (str): Output file.
 
     """
+    def represent_ordereddict(self, mapping, flow_style=None):
+        """Dump an OrderedDict in YAML in the proper order.
+
+        Modified from `yaml.representer.represent_mapping`.
+
+        """
+        tag = u'tag:yaml.org,2002:map'
+        value = []
+        node = yaml.representer.MappingNode(tag, value, flow_style=flow_style)
+        if self.alias_key is not None:
+            self.represented_objects[self.alias_key] = node
+        best_style = True
+        mapping = mapping.items()
+        for item_key, item_value in mapping:
+            node_key = self.represent_data(item_key)
+            node_value = self.represent_data(item_value)
+            if not (isinstance(node_key, yaml.representer.ScalarNode) and not node_key.style):
+                best_style = False
+            if not (isinstance(node_value, yaml.representer.ScalarNode) and not node_value.style):
+                best_style = False
+            value.append((node_key, node_value))
+        if flow_style is None:
+            if self.default_flow_style is not None:
+                node.flow_style = self.default_flow_style
+            else:
+                node.flow_style = best_style
+        return node
+
+    # Configure Dumper
+    yaml.add_representer(OrderedDict, represent_ordereddict)
+    # Dump
     with open(file_name, 'w') as output_file:
         yaml.dump(config,
                   output_file,

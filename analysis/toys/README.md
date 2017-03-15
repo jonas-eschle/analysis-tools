@@ -27,14 +27,14 @@ name: Test
 nevents: 23
 folding: S4
 pdfs:
-    - observables: angular
-      type: signal
-      parameters:
-          - S4: 1.0
-    - observables: mass
-      type: doublecb
-    - observables: q2
-      type: flat
+    angular:
+        pdf: signal
+        parameters:
+            - S4: 1.0
+    mass
+        pdf: doublecb
+    q2
+        pdf: flat
 ```
 
 The `pdfs` key configures the generation PDFs, and details on how to configure them can be found in [the physics README](../physics/README.md).
