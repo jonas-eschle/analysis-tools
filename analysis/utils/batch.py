@@ -45,6 +45,32 @@ echo "------------------------------------------------------------------------"
 logger = get_logger('analysis.utils.batch')
 
 
+def which(program):
+    """Check the location of the given command.
+
+    Arguments:
+        program (str): Command to check.
+
+    Returns:
+        str: Path of the program. Returns None if it cannot be found.
+
+    """
+    def is_exe(fpath):
+        """Check if path is executable."""
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    if os.path.split(program)[0]:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+
+
 # pylint: disable=too-many-locals
 def submit_job(job_name, cmd_script, script_args, log_file, runtime):
     """Submit jobs as stdin in TORQUE.
@@ -62,7 +88,12 @@ def submit_job(job_name, cmd_script, script_args, log_file, runtime):
     Returns:
         str: JobID.
 
+    Raises:
+        AssertionError: If the qsub command cannot be found.
+
     """
+    # Check if qsub exists
+    assert which('qsub')
     # Check if a similar job had already been produced
     if os.path.exists(log_file):
         with open(log_file) as log_file_obj:
@@ -174,6 +205,7 @@ class ToySubmitter(object):
             script_to_run (str): Script to run in the cluster.
 
         Raises:
+            AssertionError: If the qsub command cannot be found.
             AttributeError: If non-matching configuration file was found.
             OSError: If there is a problem preparing the output path.
 

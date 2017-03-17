@@ -134,8 +134,8 @@ def compare_configs(config1, config2):
 
     """
     return {key for key, _
-            in set.symmetric_difference(unfold_config(config1),
-                                        unfold_config(config2))}
+            in set.symmetric_difference(set(unfold_config(config1)),
+                                        set(unfold_config(config2)))}
 
 
 # Helpers
