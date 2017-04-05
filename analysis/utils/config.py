@@ -48,7 +48,7 @@ def load_config(*file_names, **options):
     unfolded_data = []
     for file_name in file_names:
         if not os.path.exists(file_name):
-            raise OSError("Cannot file config file -> %s" % file_name)
+            raise OSError("Cannot find config file -> %s" % file_name)
         try:
             with open(file_name) as input_obj:
                 unfolded_data.extend(unfold_config(yaml.load(input_obj,
