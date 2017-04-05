@@ -34,13 +34,15 @@ def get_logger(name, lvl=logging.INFO, format_=None):
         format_ = ("%(asctime)s - %(name)s | "
                    "%(log_color)s%(levelname)-8s%(reset)s | "
                    "%(log_color)s%(message)s%(reset)s")
-    logging.root.setLevel(lvl)
-    formatter = colorlog.ColoredFormatter(format_)
-    stream = logging.StreamHandler()
-    stream.setFormatter(formatter)
+    if not logging.getLogger().isEnabledFor(lvl):
+        logging.root.setLevel(lvl)
     logger = logging.getLogger(name)
-    logger.setLevel(lvl)
-    logger.addHandler(stream)
+    if not len(logger.handlers):
+        formatter = colorlog.ColoredFormatter(format_)
+        stream = logging.StreamHandler()
+        stream.setFormatter(formatter)
+        logger.setLevel(lvl)
+        logger.addHandler(stream)
     return logger
 
 # EOF
