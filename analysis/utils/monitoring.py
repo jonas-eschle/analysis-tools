@@ -11,6 +11,8 @@ import os
 
 from timeit import default_timer
 
+from .logging_color import get_logger
+
 
 def memory_usage():
     """Get memory usage of current process in MiB.
@@ -69,6 +71,7 @@ class Timer(object):
     def __exit__(self, *args):
         self.elapsed = self._timer() - self.start
         if self.verbose:
-            print 'elapsed time: %f ms' % (self.elapsed/1000.0)
+            get_logger('analysis.utils.monitoring').info('Elapsed time: %f ms',
+                                                         self.elapsed*1000.0)
 
 # EOF
