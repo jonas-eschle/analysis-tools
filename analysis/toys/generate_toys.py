@@ -17,7 +17,7 @@ from analysis.physics import get_physics_factory
 from analysis.utils.root import destruct_object
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
-from analysis.utils.paths import get_toy_path, prepare_path
+from analysis.utils.paths import get_toy_path, work_on_file
 from analysis.utils.data import modify_hdf, pandas_from_dataset
 
 
@@ -120,14 +120,6 @@ def run(config_files, link_from):
         logger.info("Linking toy data from %s", config['link-from'])
     else:
         logger.debug("No linking specified")
-    # Prepare paths
-    try:
-        _, src_toy_file, dest_toy_file = prepare_path(config['name'],
-                                                      config.get('link-from', None),
-                                                      get_toy_path)
-    except OSError, excp:
-        logger.error(str(excp))
-        raise
     # Set seed
     try:
         job_id = os.environ['PBS_JOBID']
@@ -159,13 +151,19 @@ def run(config_files, link_from):
                      'nevents': [config['gen']['nevents']]})
     try:
         # Save
-        with modify_hdf(src_toy_file, dest_toy_file) as hdf_file:
-            hdf_file.append('data', dataset.assign(jobid=job_id))
-            hdf_file.append('toy_info', pd.DataFrame(toy_info))
+        with work_on_file(config['name'],
+                          config.get('link-from', None),
+                          get_toy_path) as toy_file:
+            with modify_hdf(toy_file) as hdf_file:
+                hdf_file.append('data', dataset.assign(jobid=job_id))
+                hdf_file.append('toy_info', pd.DataFrame(toy_info))
         # Say something
-        logger.info("Written output to %s", src_toy_file)
+        logger.info("Written output to %s", toy_file)
         if 'link-from' in config:
-            logger.info("Linked to %s", dest_toy_file)
+            logger.info("Linked to %s", config['link-from'])
+    except OSError, excp:
+        logger.error(str(excp))
+        raise
     except ValueError as error:
         logger.exception("Exception on dataset saving")
         raise RuntimeError(str(error))

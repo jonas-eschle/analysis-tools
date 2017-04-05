@@ -26,20 +26,14 @@ logger = get_logger('analysis.utils.data')
 
 
 @contextmanager
-def modify_hdf(file_name, link_from=None, compress=True):
+def modify_hdf(file_name, compress=True):
     """Context manager to exclusively open an HDF file and write it to disk on close.
-
-    Optionally, perform linking to storage space. That is, if `link_from` is
-    specified, the file in `link_from` is written and then symlinked to
-    `file_name`. If both file names are the same, symlinking is also ignored.
 
     Note:
         File is compressed on closing.
 
     Arguments:
         file_name (str): Final (desination) file name to write to.
-        link_from (str, optional): Source file for symlinking. If not specified,
-            no symlink is performed and `file_name` is directly written.
         compress (bool, optional): Compress the file after closing? This is very
             useful when appending to an existing file. Defaults to `True`.
 
@@ -47,50 +41,14 @@ def modify_hdf(file_name, link_from=None, compress=True):
         `pandas.HDFStore`: Store to modify.
 
     """
-    if file_name == link_from:
-        link_from = None
-    if link_from:
-        src_file = link_from
-        dest_file = file_name
-    else:
-        src_file = file_name
-    lock_file = os.path.join(os.path.dirname(src_file),
-                             '.%s.lock' % os.path.split(src_file)[1])
-    with fasteners.InterProcessLock(lock_file):
-        logger.debug("Got lock!")
-        mode = 'a' if os.path.exists(src_file) else 'w'
-        with pd.HDFStore(src_file, mode=mode, format='table') as data_file:
-            yield data_file
-        logger.debug('Compressing...')
-        if compress:
-            os.system("ptrepack --chunkshape=auto --propindexes --complevel=9 --complib=blosc "
-                      "%s %s.out" % (src_file, src_file))
-            shutil.move("%s.out" % src_file, src_file)
-        if link_from:
-            link_files((src_file, dest_file))
-        logger.debug('Releasing lock!')
-
-
-def link_files(*files):
-    """Perform simlinking of files.
-
-    Note:
-        If the destination file exists and it's not a link, it is
-        removed.
-
-    Arguments:
-        *files (list[tuple]): Pairs of (source, destination) names
-            for simlynking.
-
-    """
-    for src_file, dest_file in files:
-        if not os.path.exists(src_file):
-            continue
-        if os.path.exists(dest_file):
-            if not os.path.islink(dest_file):
-                os.remove(dest_file)
-        if not os.path.exists(dest_file):
-            os.symlink(src_file, dest_file)
+    mode = 'a' if os.path.exists(file_name) else 'w'
+    with pd.HDFStore(file_name, mode=mode, format='table') as data_file:
+        yield data_file
+    logger.debug('Compressing...')
+    if compress:
+        os.system("ptrepack --chunkshape=auto --propindexes --complevel=9 --complib=blosc "
+                  "%s %s.out" % (file_name, file_name))
+        shutil.move("%s.out" % file_name, file_name)
 
 
 def pandas_from_dataset(dataset):
@@ -117,7 +75,7 @@ def pandas_from_dataset(dataset):
     return pd.DataFrame(values)
 
 
-def dataset_from_pandas(frame, name, title, var_list=None):
+def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None):
     """Build RooDataset from a Pandas DataFrame.
 
     Arguments:
@@ -126,14 +84,21 @@ def dataset_from_pandas(frame, name, title, var_list=None):
         title (str): RooDataSet title.
         var_list (list[str], optional): List of variables to add to the dataset.
             If not given, all variables are converted.
+        weight_var (str, optional): Assign the given variable name as weight.
+            Defaults to None.
 
     Returns:
         ROOT.RooDataSet: Frame converted to dataset.
 
+    Raises:
+        KeyError: If the weight_var is not present in `frame`.
+
     """
+    if weight_var and weight_var not in frame.columns:
+        raise KeyError("Cannot find weight variable -> %s" % weight_var)
     var_names = var_list if var_list else list(frame.columns)
     dataset_vars = [ROOT.RooRealVar(var_name, var_name, 0.0)
-                    for var_name in frame.columns]
+                    for var_name in var_names]
     dataset_set = ROOT.RooArgSet()
     for var in dataset_vars:
         dataset_set.add(var)
@@ -143,6 +108,10 @@ def dataset_from_pandas(frame, name, title, var_list=None):
             if isinstance(row[var_name], (float, int)):
                 dataset_set.setRealValue(var_name, row[var_name])
         dataset.add(dataset_set)
+    if weight_var:
+        dataset = ROOT.RooDataSet(name, title, dataset_set,
+                                  ROOT.RooFit.Import(dataset),
+                                  ROOT.RooFit.WeightVar(weight_var))
     return dataset
 
 

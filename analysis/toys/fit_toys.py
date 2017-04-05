@@ -97,24 +97,19 @@ def load_pdfs(model):
     return physics_factories, constraints
 
 
-def get_datasets(data_info, hdf_stores, transformers):
+def get_datasets(data_info, data_frames, transformers):
     """Build the datasets from the input toys.
-
-    Note:
-        Dataset transormations are performed using the first PDF from the list
-        of physics factories. In the same way, observables are taken from the
-        same factory.
 
     Arguments:
         data_info (list[dict]): Configuration of input toys.
-        hdf_stores (list[pandas.HDFStore]): HDFStores with the toy information.
+        data_frames (list[pandas.DataFrame]): Data frames with the toy information.
         transformers (dict): Dataset transformation functions, with the name of the
             output dataset as key.
 
     Returns:
-        tuple (dict (str: ROOT.RooDataSet), dict): Datasets made of the combination
-            of the several input sources with the transformations applied, as well
-            as the number of generated events per data sample.
+        tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the
+            combination of the several input sources with the transformations applied,
+            and number of generated events per data sample.
 
     Raises:
         KeyError: If there is information missing from the data configuration.
@@ -126,7 +121,7 @@ def get_datasets(data_info, hdf_stores, transformers):
         # Do poisson if it is extended
         sample_sizes[data_name] = poisson.rvs(data['nevents'])
         # Extract suitable number of rows and transform them
-        rows = hdf_stores[data_name]['data'].sample(sample_sizes[data_name])
+        rows = data_frames[data_name].sample(sample_sizes[data_name])
         # Append to merged dataset
         if dataset is None:
             dataset = rows
@@ -204,7 +199,7 @@ def run(config_files, link_from, verbose):
         logger.debug("No linking specified")
     # Analyze data requirements
     logger.info("Loading input data")
-    stores = {}
+    data = {}
     gen_values = {}
     for source_name, data_source in config['data'].items():
         try:
@@ -215,140 +210,142 @@ def run(config_files, link_from, verbose):
         path = _paths.get_toy_path(source_toy)
         if not os.path.exists(path):
             raise OSError("Cannot find input toy -> %s" % path)
-        stores[source_name] = pd.HDFStore(path)
-        for var_name in stores[source_name]['toy_info'].columns:
+        with pd.HDFStore(path) as store:
+            data[source_name] = store['data']
+        # Generator values
+        for var_name in data[source_name]['toy_info'].columns:
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
-            gen_values['%s^{%s}' % (var_name, source_name)] = stores[source_name]['toy_info'][var_name][0]
+            gen_values['%s^{%s}' % (var_name, source_name)] = data[source_name]['toy_info'][var_name][0]
+    fit_models = {}
+    for model_name, model in models.items():
+        try:
+            logger.info("Loading PDFs")
+            physics_factories, constraints = load_pdfs(model)
+        except ValueError:
+            raise KeyError()
+        fit_parameters = []
+        # Build the fit PDF
+        pdfs = OrderedDict()
+        for factory_name, factory in physics_factories.items():
+            observables = factory.get_observables()
+            fit_params = factory.get_fit_parameters()
+            # Make extended PDF
+            pdfs[factory_name] = factory.get_extended_pdf()("%s^{%s}" % (config['name'], factory_name),
+                                                            "%s^{%s}" % (config['name'], factory_name),
+                                                            "N^{%s}" % factory_name,
+                                                            config[model_name][factory_name].get('initial-yield',
+                                                                                                 1000),
+                                                            *(observables + fit_params))
+            # Add everything to the fit parameters
+            fit_parameters.extend(fit_params)
+            fit_parameters.append(factory.get('N'))
+        # Make RooAddPdf
+        logger.info("Building fit pdf")
+        if len(pdfs) > 1:
+            fit_model = ROOT.RooAddPdf(config['name'], config['name'], _root.list_to_rooargset(pdfs))
+        else:
+            fit_model = pdfs.values()[0]
+        # Configure fit
+        fit_config = [ROOT.RooFit.Save(True),
+                      ROOT.RooFit.Extended(True),
+                      ROOT.RooFit.Minos(config['fit'].get('minos', True)),
+                      ROOT.RooFit.PrintLevel(2 if verbose else -1)]
+        if constraints:
+            constraints_set = _root.list_to_rooargset(constraints)
+            fit_config.append(ROOT.RooFit.ExternalConstraints(constraints_set))
+        fit_models[model_name] = (physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config)
+    # TODO: Acceptance
+    acceptance = None
+    if 'acceptance' in config:
+        acceptance_vars = config['acceptance']['vars']
+        gen_file = config['acceptance']['gen-file']
+        reco_file = config['acceptance']['reco-file']
+    # Prepare output
+    gen_events = defaultdict(list)
+    # Set seed
     try:
-        fit_models = {}
-        for model_name, model in models.items():
-            try:
-                logger.info("Loading PDFs")
-                physics_factories, constraints = load_pdfs(model)
-            except ValueError:
-                raise KeyError()
-            fit_parameters = []
-            # Build the fit PDF
-            pdfs = OrderedDict()
-            for factory_name, factory in physics_factories.items():
-                observables = factory.get_observables()
-                fit_params = factory.get_fit_parameters()
-                # Make extended PDF
-                pdfs[factory_name] = factory.get_extended_pdf()("%s^{%s}" % (config['name'], factory_name),
-                                                                "%s^{%s}" % (config['name'], factory_name),
-                                                                "N^{%s}" % factory_name,
-                                                                config[model_name][factory_name].get('initial-yield',
-                                                                                                     1000),
-                                                                *(observables + fit_params))
-                # Add everything to the fit parameters
-                fit_parameters.extend(fit_params)
-                fit_parameters.append(factory.get('N'))
-            # Make RooAddPdf
-            logger.info("Building fit pdf")
-            if len(pdfs) > 1:
-                fit_model = ROOT.RooAddPdf(config['name'], config['name'], _root.list_to_rooargset(pdfs))
-            else:
-                fit_model = pdfs.values()[0]
-            # Configure fit
-            fit_config = [ROOT.RooFit.Save(True),
-                          ROOT.RooFit.Extended(True),
-                          ROOT.RooFit.Minos(config['fit'].get('minos', True)),
-                          ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-            if constraints:
-                constraints_set = _root.list_to_rooargset(constraints)
-                fit_config.append(ROOT.RooFit.ExternalConstraints(constraints_set))
-            fit_models[model_name] = (physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config)
-        # Prepare output
-        gen_events = defaultdict(list)
+        job_id = os.environ['PBS_JOBID']
+        seed = int(job_id.split('.')[0])
+    except KeyError:
+        import random
+        job_id = 'local'
+        seed = random.randint(0, 100000)
+    ROOT.RooRandom.randomGenerator().SetSeed(seed)
+    # Start looping
+    fit_results = defaultdict(list)
+    logger.info("Starting sampling-fit loop (print frequency is 20)")
+    initial_mem = memory_usage()
+    initial_time = default_timer()
+    for fit_num in range(config['fit']['nfits']):
+        # Logging
+        if (fit_num+1) % 20 == 0:
+            logger.info("  Fitting event %s/%s", fit_num+1, config['fit']['nfits'])
+        # Get a compound dataset
         try:
-            _, src_toy_fit_file, dest_toy_fit_file = _paths.prepare_path(config['name'],
-                                                                         config.get('link-from', None),
-                                                                         _paths.get_toy_fit_path)
-        except OSError, excp:
-            logger.error(str(excp))
-            raise
-        # Set seed
-        try:
-            job_id = os.environ['PBS_JOBID']
-            seed = int(job_id.split('.')[0])
+            logger.debug("Sampling input data")
+            datasets, sample_sizes = get_datasets(config['data'],
+                                                  data,
+                                                  {model_name: getattr(model[0].values()[0],
+                                                                       'transform_dataset')
+                                                   for model_name, model in fit_models.items()})
+            for sample_name, sample_size in sample_sizes.items():
+                gen_events['N^{%s}_{gen}' % sample_name].append(sample_size)
         except KeyError:
-            import random
-            job_id = 'local'
-            seed = random.randint(0, 100000)
-        ROOT.RooRandom.randomGenerator().SetSeed(seed)
-        # Start looping
-        fit_results = defaultdict(list)
-        logger.info("Starting sampling-fit loop (print frequency is 20)")
-        initial_mem = memory_usage()
-        initial_time = default_timer()
-        for fit_num in range(config['fit']['nfits']):
-            # Logging
-            if (fit_num+1) % 20 == 0:
-                logger.info("  Fitting event %s/%s", fit_num+1, config['fit']['nfits'])
-            # Get a compound dataset
-            try:
-                logger.debug("Sampling input data")
-                datasets, sample_sizes = get_datasets(config['data'],
-                                                      stores,
-                                                      {model_name: getattr(model[0].values()[0],
-                                                                           'transform_dataset')
-                                                       for model_name, model in fit_models.items()})
-                for sample_name, sample_size in sample_sizes.items():
-                    gen_events['N^{%s}_{gen}' % sample_name].append(sample_size)
-            except KeyError:
-                logger.exception("Bad data configuration")
-                raise
-            logger.debug("Fitting")
-            for model_name in models:
-                dataset = datasets.pop(model_name)
-                physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config = fit_models[model_name]
-                # Now fit
-                for fit_name, fit_func in fit_strategies.items():
-                    toy_key = (model_name, fit_name)
-                    fit_result = fit_func(fit_model, dataset, fit_config)  # fit_model.fitTo(dataset, *fit_config)
-                    # Now results are in fit_parameters
-                    result = _data.fit_parameters_to_dict(fit_parameters)
-                    result['fit_status'] = fit_result.status()
-                    fit_results[toy_key].append(result)
-                    _root.destruct_object(fit_result)
-                _root.destruct_object(dataset)
-            logger.debug("Cleaning up")
-        logger.info("Fitting loop over")
-        logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/config['fit']['nfits'])
-        logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/(config['fit']['nfits']))
-        logger.info("Saving to disk")
-        try:
-            # Save
-            data = []
-            # Get gen values for this model
-            data_gen = {key + '_{gen}': val for key, val in gen_values.items()}
-            nominal_yields = {'N^{%s}_{nominal}' % data_name: data_info['nevents']
-                              for data_name, data_info
-                              in config['data'].items()}
-            # indices = ['model_name', 'fit_strategy'] + data_gen.keys() + nominal_yields.keys()
-            for (model_name, fit_strategy), fits in fit_results.items():
-                for fit_res in fits:
-                    fit_res = fit_res.copy()
-                    fit_res['model_name'] = model_name
-                    fit_res['fit_strategy'] = fit_strategy
-                    data.append(fit_res)
-                    # fit_res.update(data_gen)
-                    # fit_res.update(nominal_yields)
-                    # Calculate pulls
-            data_frame = pd.DataFrame(data)
-            gen_frame = pd.concat([pd.concat([pd.concat([pd.DataFrame(data_gen, index=[0]),
-                                                         pd.DataFrame(nominal_yields, index=[0])],
-                                                        axis=1)]*data_frame.shape[0]).reset_index(drop=True),
-                                   pd.DataFrame(gen_events)],
-                                  axis=1)
-            # Currently, fit_result_frame is not indexed. Could be improved in the future.
-            # Should I just separate gen_frame from data_frame to save space?
-            fit_result_frame = pd.concat([gen_frame,
-                                          data_frame,
-                                          _data.calculate_pulls(data_frame, gen_frame)],
-                                         axis=1)
-            with _data.modify_hdf(src_toy_fit_file, dest_toy_fit_file) as hdf_file:
+            logger.exception("Bad data configuration")
+            raise
+        logger.debug("Fitting")
+        for model_name in models:
+            dataset = datasets.pop(model_name)
+            physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config = fit_models[model_name]
+            # Now fit
+            for fit_name, fit_func in fit_strategies.items():
+                toy_key = (model_name, fit_name)
+                fit_result = fit_func(fit_model, dataset, fit_config)  # fit_model.fitTo(dataset, *fit_config)
+                # Now results are in fit_parameters
+                result = _data.fit_parameters_to_dict(fit_parameters)
+                result['fit_status'] = fit_result.status()
+                fit_results[toy_key].append(result)
+                _root.destruct_object(fit_result)
+            _root.destruct_object(dataset)
+        logger.debug("Cleaning up")
+    logger.info("Fitting loop over")
+    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/config['fit']['nfits'])
+    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/(config['fit']['nfits']))
+    logger.info("Saving to disk")
+    data_res = []
+    # Get gen values for this model
+    data_gen = {key + '_{gen}': val for key, val in gen_values.items()}
+    nominal_yields = {'N^{%s}_{nominal}' % data_name: data_info['nevents']
+                      for data_name, data_info
+                      in config['data'].items()}
+    # indices = ['model_name', 'fit_strategy'] + data_gen.keys() + nominal_yields.keys()
+    for (model_name, fit_strategy), fits in fit_results.items():
+        for fit_res in fits:
+            fit_res = fit_res.copy()
+            fit_res['model_name'] = model_name
+            fit_res['fit_strategy'] = fit_strategy
+            data_res.append(fit_res)
+            # fit_res.update(data_gen)
+            # fit_res.update(nominal_yields)
+            # Calculate pulls
+    data_frame = pd.DataFrame(data_res)
+    gen_frame = pd.concat([pd.concat([pd.concat([pd.DataFrame(data_gen, index=[0]),
+                                                 pd.DataFrame(nominal_yields, index=[0])],
+                                                axis=1)]*data_frame.shape[0]).reset_index(drop=True),
+                           pd.DataFrame(gen_events)],
+                          axis=1)
+    # Currently, fit_result_frame is not indexed. Could be improved in the future.
+    # Should I just separate gen_frame from data_frame to save space?
+    fit_result_frame = pd.concat([gen_frame,
+                                  data_frame,
+                                  _data.calculate_pulls(data_frame, gen_frame)],
+                                 axis=1)
+    try:
+        with _paths.work_on_file(config['name'],
+                                 config.get('link-from', None),
+                                 _paths.get_toy_fit_path) as toy_fit_file:
+            with _data.modify_hdf(toy_fit_file) as hdf_file:
                 hdf_file.append('fit_results', fit_result_frame)
                 # Add link to generated samples for bookeeping
                 if 'gen_info' not in hdf_file:
@@ -358,17 +355,15 @@ def run(config_files, link_from, verbose):
                                                    'nevents': data_info['nevents']}
                                                   for data_name, data_info
                                                   in config['data'].items()]).set_index(['name']))
-            logger.info("Written output to %s", src_toy_fit_file)
+            logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
-                logger.info("Linked to %s", dest_toy_fit_file)
-        except ValueError as error:
-            logger.exception("Exception on dataset saving")
-            import ipdb
-            ipdb.set_trace()
-            raise RuntimeError(str(error))
-    finally:
-        for store in stores.values():
-            store.close()
+                logger.info("Linked to %s", config['link-from'])
+    except OSError, excp:
+        logger.error(str(excp))
+        raise
+    except ValueError as error:
+        logger.exception("Exception on dataset saving")
+        raise RuntimeError(str(error))
 
 
 def main():
