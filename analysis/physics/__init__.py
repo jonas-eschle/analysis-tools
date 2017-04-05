@@ -29,9 +29,11 @@ def get_physics_factory(pdf_configs):
     """
     factories = get_global_var('PHYSICS_FACTORIES')
     if len(pdf_configs) == 1:
-        return factories[pdf_configs.keys()[0]][pdf_configs.values()[0]['pdf']](**pdf_configs.values()[0])
+        config_name = pdf_configs.keys()[0].lower()
+        config = pdf_configs.values()[0]
+        return factories[config_name][config['pdf'].lower()](**config)
     else:
-        return ProductPhysicsFactory([factories[observable][config['pdf']]
+        return ProductPhysicsFactory([factories[observable.lower()][config['pdf'].lower()]
                                       for observable, config in pdf_configs.items()])(pdf_configs.values())
 
 # EOF
