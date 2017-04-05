@@ -77,5 +77,7 @@ set_global_var('BASE_PATH',
 add_pdf_paths('pdfs')  # Setup {BASE_PATH}/pdfs as base dir for PDFs
 set_global_var('FIT_STRATEGIES',
                {'simple': lambda model, dataset, fit_config: model.fitTo(dataset, *fit_config)})
+set_global_var('PHYSICS_FACTORIES', {})
+set_global_var('EFFICIENCY_MODELS', {})
 
 # EOF
