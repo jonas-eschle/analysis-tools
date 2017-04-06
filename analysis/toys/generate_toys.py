@@ -42,9 +42,6 @@ def generate(physics_factory, configuration):
 
         Result is converted to a pandas data frame.
 
-        Note:
-            q^2 is fixed to 0.
-
         Arguments:
             gen_pdf (`ROOT.RooAbsPdf`): PDF to use for generation.
             obs_set (`ROOT.RooArgSet`): Observables to generate.
