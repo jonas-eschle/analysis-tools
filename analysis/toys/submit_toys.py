@@ -51,6 +51,7 @@ class FitSubmitter(ToySubmitter):
                   'fit/nfits-per-job': "Number of fits per job not specified!",
                   'model': "No pdfs were specified in the config file!",
                   'data': "No input data was specified in the config file!"}
+    # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_fit_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_fit_config_path)
     ALLOWED_CONFIG_DIFFS = ['gen/nevents',
@@ -68,6 +69,7 @@ class GenerationSubmitter(ToySubmitter):
                   'gen/nevents': "Number of events not specified!",
                   'gen/nevents-per-job': "Number of events per job not specified!",
                   'pdfs': "No pdfs were specified in the config file!"}
+    # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_config_path)
     ALLOWED_CONFIG_DIFFS = ['gen/nevents',
@@ -106,7 +108,8 @@ def process_scan_val(value):
         except ValueError:
             raise ValueError('Badly specified range')
         try:
-            _ = [int(val) for val in (min_, max_, step)]
+            # pylint: disable=W0106
+            [int(val) for val in (min_, max_, step)]
             num_func = int
         except ValueError:
             num_func = float

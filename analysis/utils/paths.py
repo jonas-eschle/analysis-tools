@@ -18,119 +18,107 @@ These may just be soft links, depending on how they have been run.
 """
 
 import os
+import inspect
+from functools import partial
 
 from contextlib import contextmanager
 
 import fasteners
 
-import analysis
+from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.utils.paths')
 
 
-def get_toy_path(name):
-    """Get the name of the toy MC generated file.
+def _get_path(dirs, extension, name_transformation, name, *args, **kwargs):
+    """Get the path for an object.
 
-    The file name is {BASE_PATH}/data/toys/gen/{name}.hdf and its existence is
+    The path is $BASE_PATH/{'/'.join(dirs)}/{name_transformation(name, args, kwargs)}{extension}.
+
+    Arguments:
+        dirs (list): Parent directories of the object path.
+        extension (str): Extension of the file.
+        name_transformation (Callable, optional): Function to transform the name of the path.
+        name (str): Name of the object.
+        *args (list): Positional arguments to be passed to `name_transformation`.
+        *kwargs (list): Keyword arguments to be passed to `name_transformation`.
+
+    Returns:
+        str: Absolute path of the object.
+
+    """
+    return os.path.join(*([get_global_var('BASE_PATH')] +
+                          dirs + [name_transformation(name, args, kwargs) + extension]))
+
+
+def register_path(path_type,
+                  parent_dirs,
+                  extension,
+                  name_transformation=lambda name, args, kwargs: name):
+    """Register path function.
+
+    This will create a function in the module namespace called `get_{path_type}_path`.
+
+    Arguments:
+        path_type (str): Type of path to register. Defines the name of the registered function.
+        parent_dirs (list): List of parent dirs (on top of BASE_PATH) of the path we want to register.
+        extension (str): Extension of the file, including the dot.
+        name_transformation (Callable, optional): Function to transform the name of the path
+            when calling the `get_{path_type}_path`. It needs to have three arguments: `name`,
+            `args` and `kwargs`, which are passed when executing the `get_{path_type}_path` function.
+            Defaults to the identity:
+
+                ```
+                lambda name, args, kwargs: name
+                ```
+
+    Returns:
+        Callable: The created function.
+
+    Raises:
+        ValueError: If the signature of the `name_transformation` doesn't match the specifications.
+        KeyError: If the path has already been registered.
+
+    """
+    # Checks
+    if not extension.startswith('.'):
+        extension = '.' + extension
+    if len(inspect.getargspec(name_transformation).args) != 3:
+        raise ValueError("The name transformation function needs to have 3 arguments")
+    # Register the partialled function in globals
+    func_name = 'get_' + path_type + '_path'
+    if func_name in globals():
+        raise KeyError("Path type already registered -> %s" % path_type)
+    logger.debug("Registering path %s", func_name)
+    func = partial(_get_path, parent_dirs, extension, name_transformation)
+    # Create the docstring
+    func.__doc__ = """Get the path for %s.
+
+    The file name is {BASE_PATH}/%s/{name}%s and its existence is
     not checked.
 
     Arguments:
-        name (str): Name of the MC generation.
+        name (str): Name of the object.
 
     Returns:
-        str: Absolute path of the toys file.
+        str: Absolute path of the file.
 
-    """
-    return os.path.join(analysis.get_global_var('BASE_PATH'),
-                        'data', 'toys', 'gen', name + '.hdf')
-
-
-def get_toy_config_path(name):
-    """Get the name of the config file for the toy generation.
-
-    The file name is {BASE_PATH}/data/toys/gen/{name}.yaml and its existence is
-    not checked.
-
-    Arguments:
-        name (str): Name of the MC generation.
-
-    Returns:
-        str: Absolute path of the config file.
-
-    """
-    return os.path.join(analysis.get_global_var('BASE_PATH'),
-                        'data', 'toys', 'gen', name + '.yaml')
+    """ % (path_type, os.sep.join(parent_dirs), extension)
+    globals()['get_' + path_type + '_path'] = func
+    return func
 
 
-def get_toy_fit_path(name):
-    """Get the name of the fit results for toys.
-
-    The file name is {BASE_PATH}/data/toys/fit/{name}.hdf and its existence is
-    not checked.
-
-    Arguments:
-        name (str): Name of the fit file.
-
-    Returns:
-        str: Absolute path of the toys file.
-
-    """
-    return os.path.join(analysis.get_global_var('BASE_PATH'),
-                        'data', 'toys', 'fit', name + '.hdf')
-
-
-def get_toy_fit_config_path(name):
-    """Get the name of the config file for the toy fits.
-
-    The file name is {BASE_PATH}/data/toys/fit/{name}.yaml and its existence is
-    not checked.
-
-    Arguments:
-        name (str): Name of the toy fit generation.
-
-    Returns:
-        str: Absolute path of the config file.
-
-    """
-    return os.path.join(analysis.get_global_var('BASE_PATH'),
-                        'data', 'toys', 'fit', name + '.yaml')
-
-
-def get_log_path(name, is_batch=True):
-    """Get the path for log files.
-
-    The file name is {BASE_PATH}/data/logs/{name}_PBSJOBID.log and its existence is
-    not checked.
-
-    Arguments:
-        name (str): Name of the job.
-        is_batch (bool, optional): Is this a log file for a batch job?
-
-    Returns:
-        str: Absolute path of the log fil.
-
-    """
-    jobid = '_${PBS_JOBID}' if is_batch else ''
-    return os.path.join(analysis.get_global_var('BASE_PATH'),
-                        'data', 'logs', name + jobid + '.log')
-
-
-def get_efficiency_path(name):
-    """Get the name of the config files for the efficiency descriptions.
-
-    The file name is {BASE_PATH}/data/efficiency/{name}.yaml and its existence is
-    not checked.
-
-    Arguments:
-        name (str): Name of the efficiency.
-
-    Returns:
-        str: Absolute path of the config file.
-
-    """
-    return os.path.join(analysis.get_global_var('BASE_PATH'),
-                        'data', 'efficiency', name + '.yaml')
+# Register path functions
+register_path('toy', ['data', 'toys', 'gen'], 'hdf')
+register_path('toy_config', ['data', 'toys', 'gen'], 'yaml')
+register_path('toy_fit', ['data', 'toys', 'fit'], 'hdf')
+register_path('toy_fit_config', ['data', 'toys', 'fit'], 'yaml')
+register_path('log', ['data', 'logs'], 'log',
+              lambda name, args, kwargs: name+'_${PBS_JOBID}'
+              if kwargs.get('isBatch', False) else name)
+register_path('efficiency', ['data', 'efficiency'], 'yaml')
+register_path('acceptance', ['data', 'acceptance'], 'yaml')
 
 
 def prepare_path(name, path_func, link_from):
@@ -155,7 +143,7 @@ def prepare_path(name, path_func, link_from):
 
     """
     do_link = False
-    dest_base_dir = analysis.get_global_var('BASE_PATH')
+    dest_base_dir = get_global_var('BASE_PATH')
     src_base_dir = link_from or dest_base_dir
     if dest_base_dir != src_base_dir:
         do_link = True

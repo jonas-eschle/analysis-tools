@@ -8,8 +8,30 @@
 """Physics utilities."""
 
 from analysis import get_global_var
+from analysis.utils.logging_color import get_logger
 
 from .factory import ProductPhysicsFactory
+
+
+logger = get_logger('analysis.physics')
+
+
+def register_physics_factories(observable, factories):
+    """Register a physics factory.
+
+    This model then becomes available to `get_efficiency_model` functions.
+
+    Arguments:
+        observable (str): Observable name.
+        factories (dict): Factory name -> factory class mapping.
+
+    Returns:
+        int: Number of registered physics factories for the given observable.
+
+    """
+    logger.debug("Registering factories for the '%s' observable -> %s", observable, factories)
+    get_global_var('PHYSICS_FACTORIES')[observable].update(factories)
+    return len(get_global_var('PHYSICS_FACTORIES')[observable])
 
 
 # Factory loading

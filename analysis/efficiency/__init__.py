@@ -5,17 +5,49 @@
 # @author Albert Puig (albert.puig@cern.ch)
 # @date   21.03.2017
 # =============================================================================
-"""Efficiency classes and utilities."""
+"""Efficiency classes and utilities.
+
+Note that the default efficiency models are not loaded into the global variables
+until this module is imported.
+
+"""
 
 import os
 
 from analysis import get_global_var
-from analysis.utils.paths import get_efficiency_path
 from analysis.utils.config import load_config
+# pylint: disable=E0611
+from analysis.utils.paths import get_efficiency_path
+from analysis.utils.logging_color import get_logger
+
 
 from .legendre import _EFFICIENCY_MODELS as _LEG_EFFICIENCY_MODELS
 
-_EFFICIENCY_MODELS = [_LEG_EFFICIENCY_MODELS]
+
+logger = get_logger('analysis.efficiency')
+
+
+def register_efficiency_model(model_name, model_class):
+    """Register an efficiency model.
+
+    This model then becomes available to `get_efficiency_model` functions.
+
+    Arguments:
+        model_name (str): Name of the model.
+        model_class (`Efficiency`): Efficiency model to register.
+
+    Returns:
+        int: Number of registered efficiency models
+
+    """
+    logger.debug("Registering efficiency model -> %s", model_name)
+    get_global_var('EFFICIENCY_MODELS').update({model_name: model_class})
+    return len(get_global_var('EFFICIENCY_MODELS'))
+
+
+# Register our models
+for name, class_ in _LEG_EFFICIENCY_MODELS.items():
+    register_efficiency_model(name, class_)
 
 
 def get_efficiency_model_class(model_name):
@@ -28,30 +60,24 @@ def get_efficiency_model_class(model_name):
         `Efficiency`: Efficiency class, non-instantiated.
 
     """
-    # Load predefined models
-    efficiency_models = {}
-    for eff_model in _EFFICIENCY_MODELS:
-        efficiency_models.update(eff_model)
-    # Add user defined models
-    efficiency_models.update(get_global_var('EFFICIENCY_MODELS'))
-    return efficiency_models.get(model_name.lower(), None)
+    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower(), None)
 
 
-def load_efficiency_model(name):
+def load_efficiency_model(model_name):
     """Load efficiency from file.
 
     The file path is determined from the `name` using the `paths.get_efficiency_path`
     function.
 
     Arguments:
-        name (str): Name of the efficiency model.
+        model_name (str): Name of the efficiency model.
 
     Raises:
         OSError: If the efficiecny file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
     """
-    path = get_efficiency_path(name)
+    path = get_efficiency_path(model_name)
     if not os.path.exists(path):
         raise OSError("Cannot find efficiency file -> %s" % path)
     return get_efficiency_model(load_config(path,

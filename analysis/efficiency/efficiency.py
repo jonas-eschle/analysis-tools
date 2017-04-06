@@ -9,6 +9,7 @@
 
 import pandas as pd
 
+# pylint: disable=E0611
 from analysis.utils.paths import get_efficiency_path, work_on_file
 from analysis.utils.config import write_config
 

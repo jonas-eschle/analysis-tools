@@ -17,6 +17,7 @@ from analysis.physics import get_physics_factory
 from analysis.utils.root import destruct_object
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
+#pylint: disable=E0611
 from analysis.utils.paths import get_toy_path, work_on_file
 from analysis.utils.data import modify_hdf, pandas_from_dataset
 

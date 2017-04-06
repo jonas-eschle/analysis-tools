@@ -207,6 +207,7 @@ def run(config_files, link_from, verbose):
         except KeyError:
             logger.error("Data source not specified")
             raise
+        # pylint: disable=E1101
         path = _paths.get_toy_path(source_toy)
         if not os.path.exists(path):
             raise OSError("Cannot find input toy -> %s" % path)
@@ -256,11 +257,11 @@ def run(config_files, link_from, verbose):
             fit_config.append(ROOT.RooFit.ExternalConstraints(constraints_set))
         fit_models[model_name] = (physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config)
     # TODO: Acceptance
-    acceptance = None
-    if 'acceptance' in config:
-        acceptance_vars = config['acceptance']['vars']
-        gen_file = config['acceptance']['gen-file']
-        reco_file = config['acceptance']['reco-file']
+    # acceptance = None
+    # if 'acceptance' in config:
+    #     acceptance_vars = config['acceptance']['vars']
+    #     gen_file = config['acceptance']['gen-file']
+    #     reco_file = config['acceptance']['reco-file']
     # Prepare output
     gen_events = defaultdict(list)
     # Set seed
@@ -342,6 +343,7 @@ def run(config_files, link_from, verbose):
                                   _data.calculate_pulls(data_frame, gen_frame)],
                                  axis=1)
     try:
+        # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
                                  config.get('link-from', None),
                                  _paths.get_toy_fit_path) as toy_fit_file:

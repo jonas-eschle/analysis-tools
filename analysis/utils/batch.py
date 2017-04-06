@@ -15,7 +15,6 @@ import tempfile
 import analysis.utils.config as _config
 import analysis.utils.paths as _paths
 from analysis.utils.logging_color import get_logger
-from analysis.utils.data import link_files
 
 
 TEMPLATE_SERIAL = """
@@ -234,7 +233,7 @@ class ToySubmitter(object):
             else:
                 # Create de symlink if necessary
                 if not os.path.exists(expected_dest):
-                    link_files(expected_src, expected_dest)
+                    os.symlink(expected_src, expected_dest)
                 if not self.extend:
                     logger.info("Nor --extend nor --overwrite have been specified. Nothing to do.")
                     return
@@ -250,6 +249,7 @@ class ToySubmitter(object):
             script_args.append('--link-from=%s' % config['link-from'])
         script_args.append(config_file_dest)
         # Prepare paths
+        # pylint: disable=E1101
         _, log_file_fmt, _ = _paths.prepare_path(config['name'],
                                                  None,  # No linking is done for logs
                                                  _paths.get_log_path)
