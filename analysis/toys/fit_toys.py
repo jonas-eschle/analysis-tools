@@ -18,9 +18,9 @@ import pandas as pd
 import ROOT
 
 from analysis import get_global_var
-from analysis.physics import get_physics_factory
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
+from analysis.fit import load_pdfs
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.data as _data
@@ -28,73 +28,6 @@ import analysis.utils.root as _root
 
 
 logger = get_logger('analysis.toys.fit')
-
-
-def load_pdfs(model):
-    """Load the PDFs of the given model.
-
-    This includes configuring parameters.
-
-    Arguments:
-        model (list[dict]): Model to load.
-
-    Returns:
-        tuple[dict, list]: Physics factories by name, and external constraints
-            to apply to the fit (if any).
-
-    Raises:
-        KeyError: If some configuration data are missing.
-        ValueError: If there is any problem in configuring the PDF factories.
-
-    """
-    # Get PDFs
-    model_observables = None
-    physics_factories = {}
-    fit_parameters = {}
-    constraints = []
-    for name, element in model.items():
-        pdfs = element['pdfs']
-        try:
-            physics_factory = get_physics_factory(pdfs)
-        except KeyError:
-            logger.error("Cannot find physics factory for %s",
-                         ','.join(['%s:%s' % (obs, pdf['pdf'])
-                                   for obs, pdf in pdfs.items()]))
-            raise ValueError()
-        physics_factories[name] = physics_factory
-        observables = set(obs.GetName()
-                          for obs in physics_factory.get_observables())
-        if model_observables is None:
-            model_observables = observables
-        else:
-            if model_observables != observables:
-                logger.error("Mismatch in observables between PDFs.")
-                raise KeyError()
-        # Configure the variables
-        for pdf in pdfs.values():
-            fit_parameters = {param.GetName(): param
-                              for param in physics_factory.get_fit_parameters()}
-            # Rename parameters to param_name^{model_name} for easier visualization
-            physics_factory.set_parameter_names({param_name: "%s^{%s}" % (param_name, name)
-                                                 for param_name in fit_parameters})
-            for parameter_name, param_config in pdf.get('parameter-constraints', {}).items():
-                # Get the parameter
-                try:
-                    parameter = fit_parameters[parameter_name]
-                except KeyError:
-                    logger.error("Unknown parameter -> %s", parameter_name)
-                    raise
-                try:
-                    constraint = _config.configure_parameter(parameter, param_config)
-                    if constraint:
-                        constraints.append(constraint)
-                except KeyError as error:
-                    logger.error("Unknown parameter action -> %s", error)
-                    raise
-                except ValueError as error:
-                    logger.error("Wrong parameter configuration -> %s", error)
-                    raise
-    return physics_factories, constraints
 
 
 def get_datasets(data_info, data_frames, transformers):
