@@ -15,13 +15,14 @@ until this module is imported.
 import os
 
 from analysis import get_global_var
-from analysis.utils.config import load_config
+from analysis.utils.config import load_config, ConfigError
 # pylint: disable=E0611
-from analysis.utils.paths import get_efficiency_path
+from analysis.utils.paths import get_efficiency_path, get_acceptance_path
 from analysis.utils.logging_color import get_logger
 
-
 from .legendre import _EFFICIENCY_MODELS as _LEG_EFFICIENCY_MODELS
+
+from .acceptance import Acceptance
 
 
 logger = get_logger('analysis.efficiency')
@@ -46,8 +47,8 @@ def register_efficiency_model(model_name, model_class):
 
 
 # Register our models
-for name, class_ in _LEG_EFFICIENCY_MODELS.items():
-    register_efficiency_model(name, class_)
+for eff_name, class_ in _LEG_EFFICIENCY_MODELS.items():
+    register_efficiency_model(eff_name, class_)
 
 
 def get_efficiency_model_class(model_name):
@@ -115,5 +116,79 @@ def get_efficiency_model(efficiency_config):
     if 'rename-vars' in efficiency_config:
         eff_model.rename_variables(efficiency_config['rename-vars'])
     return eff_model
+
+
+def load_acceptance(name):
+    """Load an acceptance configuration file.
+
+    The file path is determined from the `name` using the `paths.get_acceptance_path`
+    function.
+
+    Arguments:
+        name (str): Name of the acceptance.
+
+    Returns:
+        `analysis.efficiency.Acceptance`: Acceptance object.
+
+    Raises:
+        OSError: If the efficiecny file does not exist.
+        analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
+
+    """
+    # pylint: disable=E1101
+    path = get_acceptance_path(name)
+    if not os.path.exists(path):
+        raise OSError("Cannot find efficiency file -> %s" % path)
+    return get_acceptance(load_config(path,
+                                      validate=('variables', 'generation', 'reconstruction')))
+
+
+def get_acceptance(config):
+    """Get an acceptance object.
+
+    Arguments:
+        config (dict): Acceptance to load. Its keys are:
+            + `variables` (list[str]): List of variable names.
+            + `generation` (dict): Generation configuration. Its keys are:
+                - `name` (str): Name of the generator shape fit.
+                - `rename-vars` (dict, optional): Rename variables from the original efficiency
+                    to adapt them to different datasets.
+            + `reconstruction` (dict): Reconstruction efficiency configuration. Its keys are:
+                - `name` (str): Name of the reconstruction shape fit.
+                - `rename-vars` (dict, optional): Rename variables from the original efficiency
+                    to adapt them to different datasets.
+
+    Returns:
+        `analysis.efficiency.acceptance.Acceptance`: Acceptance object.
+
+    Raises:
+        analysis.utils.config.ConfigError: If the input config is missing keys.
+        See `analysis.utils.config.load_config`.
+
+    """
+    if any(key not in config for key in ('variables', 'generation', 'reconstruction')):
+        raise ConfigError("Missing configuration key!")
+    # pylint: disable=E1101
+    generation_config = load_config(get_efficiency_path(config['generation']['name']),
+                                    validate=('model', 'variables', 'parameters'))
+    if 'rename-vars' in config['generation']:
+        generation_config.update({'rename-vars': config['generation']['rename-vars']})
+    # pylint: disable=E1101
+    reconstruction_config = load_config(get_efficiency_path(config['reconstruction']['name']),
+                                        validate=('model', 'variables', 'parameters'))
+    if 'rename-vars' in config['reconstruction']:
+        reconstruction_config.update({'rename-vars': config['reconstruction']['rename-vars']})
+    # Load the efficiencies
+    gen_efficiency = get_efficiency_model(generation_config)
+    reco_efficiency = get_efficiency_model(reconstruction_config)
+    # Check the variables
+    if set(config['variables']) != set(gen_efficiency.get_variables()):
+        raise ConfigError("Mismatch in variables between acceptance and generation")
+    if set(config['variables']) != set(reco_efficiency.get_variables()):
+        raise ConfigError("Mismatch in variables between acceptance and reconstruction")
+    # Now create the acceptance
+    return Acceptance(config['variables'],
+                      gen_efficiency,
+                      reco_efficiency)
 
 # EOF
