@@ -94,12 +94,10 @@ The `fit` key configures the fit work, setting the total number of samples to be
 The `model` key configures the default fit model.
 However, several different fit models (for the same dataset) can be specified with the `fit/models` keys;
 in this case, the names specified in such key are used to search for models.
-In it, one can add as many PDFs as needed, with the key being their name.
-Each of these PDFs is defined the same way as in the generation case (that is, using the `pdfs` entry), and in addition it is possible (and very recommended) to specify an `initial-yield` so the fitter can converge better.
-In the end, all objects specified in the `model` dictionary are added using a `RooAddPdf` after converting each PDF into an `RooExtendPdf`.
+The configuration of each fit model is discussed in [the corresponding `README.md`](../fit/README.md).
 
 Similarly, several fit strategies can be specified with the `fit/strategies` key.
-A basic one (`model.fitTo`) is implemented with the name `simple`, but more can be registered by adding them to the `FIT_STRATEGIES` global variable dictionary.
+A basic one (`model.fitTo`) is implemented with the name `simple`, but more can be registered by using the `analysis.fit.register_fit_strategy` function (more details [here](../fit/README.md)).
 These fit strategies should consist of a function that gets the model (PDF), the dataset to fit and the fit options, and return a `RooFitResult`.
 
 The `data` key is used to specify the input data for each toy.

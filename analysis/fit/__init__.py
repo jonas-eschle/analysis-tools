@@ -56,7 +56,7 @@ def load_pdfs(model):
     This includes configuring parameters.
 
     Arguments:
-        model (list[dict]): Model to load.
+        model (dict[dict]): Model to load.
 
     Returns:
         tuple[dict, list]: Physics factories by name, and external constraints

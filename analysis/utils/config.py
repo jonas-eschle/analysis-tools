@@ -195,7 +195,8 @@ def configure_parameter(parameter, parameter_config):
     consists in a letter that indicates the "action" to apply on the parameter,
     followed by the configuration of that action. There are several possibilities:
         * 'I' is used for free parameters. Only one argument is required: its
-        initial value.
+        initial value. This is optional; if no action is specified the parameter
+        is considered free.
         * 'F' indicates a fixed parameter. The following argument indicates
         at which value to fix it.
         * 'G' is used for a Gaussian-constrained parameter. The arguments of that
@@ -221,7 +222,7 @@ def configure_parameter(parameter, parameter_config):
     parameter_name = parameter.GetName()
     # Do something with it
     action_params = parameter_config.split()
-    action = action_params.pop(0)
+    action = 'I' if len(action_params) == 1 else action_params.pop(0)
     parameter.setVal(float(action_params[0]))
     if action == 'I':  # Free parameter, we specify its initial value
         parameter.setConstant(False)
