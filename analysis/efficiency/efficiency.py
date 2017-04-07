@@ -7,7 +7,11 @@
 # =============================================================================
 """Efficiency class."""
 
+import re
+
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 # pylint: disable=E0611
 from analysis.utils.paths import get_efficiency_path, work_on_file
@@ -100,6 +104,63 @@ class Efficiency(object):
 
         Returns:
             dict: Variable -> plot mapping.
+
+        """
+        def tex_escape(text):
+            """Escape LaTeX characters.
+
+            Arguments:
+                text (str): Text to escape.
+
+            Returns:
+                str: Escaped message.
+
+            """
+            conv = {'&': r'\&',
+                    '%': r'\%',
+                    '$': r'\$',
+                    '#': r'\#',
+                    '_': r'\_',
+                    '{': r'\{',
+                    '}': r'\}',
+                    '~': r'\textasciitilde{}',
+                    '^': r'\^{}',
+                    '\\': r'\textbackslash{}',
+                    '<': r'\textless',
+                    '>': r'\textgreater'}
+            regex = re.compile('|'.join(re.escape(unicode(key))
+                                        for key in sorted(conv.keys(),
+                                                          key=lambda item: -len(item))))
+            return regex.sub(lambda match: conv[match.group()], text)
+
+        if labels is None:
+            labels = {}
+        figures = {}
+        for var_name in self._var_list:
+            x, y = self.project_efficiency(var_name, n_points=1000)
+            fig = plt.figure()
+            sns.distplot(data[var_name], kde=None, norm_hist=True)
+            plt.plot(x, y, 'b-')
+            if var_name not in labels:
+                labels[var_name] = tex_escape(var_name)
+            plt.xlabel(labels[var_name])
+            figures[var_name] = fig
+        return figures
+
+    def project_efficiency(self, var_name, n_points):
+        """Project the efficiency in one variable.
+
+        If multidimensional, the non-projected variables need to be integrated out.
+
+        Arguments:
+            var_name (str): Variable to project.
+            n_points (int): Number of points of the projection.
+
+        Returns:
+            tuple (np.array): x and y coordinates of the projection.
+
+        Raises:
+            ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
         raise NotImplementedError()

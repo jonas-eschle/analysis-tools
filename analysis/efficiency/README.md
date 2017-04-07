@@ -28,7 +28,7 @@ To implement an efficiency model, one needs to subclass `Efficiency` and impleme
 
     - `_get_efficiency`, which calculates the value of the efficiency given a dataset.
     - `fit`, to model a given dataset with the efficiency model.
-    - `plot`, which draws the projections of the efficiency.
+    - `project_efficiency`, which draws the projections of the efficiency.
 
 Some models are already implemented by default, and are discussed in the following subsections.
 
@@ -92,3 +92,38 @@ with pd.HDFStore('B02Kst0Jpsi2ee-Gen.h5') as store:
 ```
 
 It uses all the power of the `analysis` framework to fix the path, load the efficiency file and plot the acceptance.
+
+
+Modeling efficiency
+===================
+
+The `model_efficiency` script gives a shortcut to what was discussed in the previous section.
+With it, one could perform the same job as in the previous code with the following configuration file:
+
+```yaml
+name: Test
+model: legendre
+data: 
+    file: B02Kst0Jpsi2ee-Gen.h5
+    tree: B02Kst0Jpsi2ee-Gen
+variables:
+  - acc_q2
+  - acc_cosThetaL
+  - acc_cosThetaK
+  - acc_phi
+parameters:
+    legendre-orders:
+        acc_q2: 1
+        acc_cosThetaL: 5
+        acc_cosThetaK': 10
+        acc_phi: 10
+    ranges:
+        acc_phi: -pi pi
+        acc_q2: 8 11
+plot: y
+plot-labels:
+    acc_phi: '$\phi$'
+```
+
+This has the advantage of taking care of saving the plots `$BASE_PATH/data/efficiency/{name}_{var}.eps` and handling the errors in a more graceful way.
+

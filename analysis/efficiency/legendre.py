@@ -11,10 +11,8 @@ import operator
 import functools
 import itertools
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 from analysis.utils.logging_color import get_logger
 
@@ -48,7 +46,7 @@ def process_range(range_lst):
     try:
         high, low = range_lst
     except ValueError:
-        raise ValueError("Too many elements in range")
+        raise ValueError("Wrong number of elements in range")
     try:
         high = float(high)
     except ValueError:  # It's a literal
@@ -156,6 +154,7 @@ class LegendreEfficiency(Efficiency):
             first = False
         return pd.Series(coeffs, name="efficiency")
 
+    # pylint: disable=R0914,W0221
     @staticmethod
     def fit(dataset, var_list, legendre_orders=None, weight_var=None, ranges=None):
         """Calculate Legendre coefficients using the method of moments.
@@ -216,53 +215,49 @@ class LegendreEfficiency(Efficiency):
                                              'coefficients': coefficients.flatten().tolist(),
                                              'ranges': ranges})
 
-    def plot(self, data, labels=None):
-        """Plot the efficiency against a dataset.
+    # pylint: disable=R0914
+    def project_efficiency(self, var_name, n_points):
+        """Project the efficiency in one variable.
+
+        If multidimensional, the non-projected variables are integrated analytically.
 
         Arguments:
-            data (`pandas.DataFrame`): Data to plot.
-            labels (dict, optional): Label names for each variable.
+            var_name (str): Variable to project.
+            n_points (int): Number of points of the projection.
 
         Returns:
-            dict: Variable -> plot mapping.
+            tuple (np.array): x and y coordinates of the projection.
+
+        Raises:
+            ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
-        if labels is None:
-            labels = {}
-        figures = {}
-        coeffs = self._coefficients
-        for var_pos, var_name in enumerate(self._var_list):
-            x = np.linspace(-1, 1, 1000)
-            y = np.zeros(1000)
-            coeff_iter = [range(order) for order in coeffs.shape]
-            for non_int_order in range(coeffs.shape[var_pos]):
-                coeff_iter[var_pos] = [non_int_order]
-                current_coeff = np.zeros(len(coeffs.shape), dtype=np.int8)
-                current_coeff[var_pos] = non_int_order
-                val = 0.0
-                for index in itertools.product(*coeff_iter):
-                    term_val = coeffs[index]
-                    for order_pos, order in enumerate(index):
-                        if order_pos == var_pos:
-                            continue
-                        high, low = legval([1, -1],
-                                           legint(np.array(np.append(np.zeros(order), [1])),
-                                                  lbnd=-1))
-                        term_val *= (high-low)
-                    val += term_val
-                y += val * legval(x, np.array(np.append(np.zeros(non_int_order), [1])))
-            fig = plt.figure()
-            sns.distplot(data[var_name], kde=None, norm_hist=True)
-            if var_name in self._ranges:
-                x = scale_dataset(x,
-                                  -1, 1,
-                                  self._ranges[var_name][0], self._ranges[var_name][1])
-                y = y * 2.0 / (self._ranges[var_name][1] - self._ranges[var_name][0])
-            plt.plot(x, y, 'b-')
-            if var_name in labels:
-                plt.xlabel(labels[var_name])
-            figures[var_name] = fig
-        return figures
+        var_pos = self._var_list.index(var_name)
+        x = np.linspace(-1, 1, n_points)
+        y = np.zeros(1000)
+        coeff_iter = [range(order) for order in self._coefficients.shape]
+        for non_int_order in range(self._coefficients.shape[var_pos]):
+            coeff_iter[var_pos] = [non_int_order]
+            current_coeff = np.zeros(len(self._coefficients.shape), dtype=np.int8)
+            current_coeff[var_pos] = non_int_order
+            val = 0.0
+            for index in itertools.product(*coeff_iter):
+                term_val = self._coefficients[index]
+                for order_pos, order in enumerate(index):
+                    if order_pos == var_pos:
+                        continue
+                    high, low = legval([1, -1],
+                                       legint(np.array(np.append(np.zeros(order), [1])),
+                                              lbnd=-1))
+                    term_val *= (high-low)
+                val += term_val
+            y += val * legval(x, np.array(np.append(np.zeros(non_int_order), [1])))
+        if var_name in self._ranges:
+            x = scale_dataset(x,
+                              -1, 1,
+                              self._ranges[var_name][0], self._ranges[var_name][1])
+            y = y * 2.0 / (self._ranges[var_name][1] - self._ranges[var_name][0])
+        return x, y
 
 
 ###############################################################################
@@ -331,6 +326,7 @@ class LegendreEfficiency1D(Efficiency):
             effs *= np.polynomial.legendre.legval(data[var_name], self._coefficients[var_number])
         return pd.Series(effs, name="efficiency")
 
+    # pylint: disable=R0914,W0221
     @staticmethod
     def fit(dataset, var_list, legendre_orders=None, weight_var=None, ranges=None):
         """Calculate Legendre coefficients using the method of moments.
@@ -376,7 +372,7 @@ class LegendreEfficiency1D(Efficiency):
             coefficients = np.zeros(legendre_orders[var_name])
             for current_order in range(legendre_orders[var_name]):
                 coefficients[current_order] = (2.*current_order+1.)/2 * inv_sum_weights * \
-                    np.sum(weights * \
+                    np.sum(weights *
                            legval(data[var_name],
                                   np.array(np.append(np.zeros(current_order), [1]))))
             coeff_list.append(coefficients.tolist())
@@ -384,35 +380,29 @@ class LegendreEfficiency1D(Efficiency):
                                                'coefficients': sum(coeff_list, []),
                                                'ranges': ranges})
 
-    def plot(self, data, labels=None):
-        """Plot the efficiency against a dataset.
+    def project_efficiency(self, var_name, n_points):
+        """Project the efficiency in one variable.
 
         Arguments:
-            data (`pandas.DataFrame`): Data to plot.
-            labels (dict, optional): Label names for each variable.
+            var_name (str): Variable to project.
+            n_points (int): Number of points of the projection.
 
         Returns:
-            dict: Variable -> plot mapping.
+            tuple (np.array): x and y coordinates of the projection.
+
+        Raises:
+            ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
-        if labels is None:
-            labels = {}
-        figures = {}
-        for var_pos, var_name in enumerate(self._var_list):
-            x = np.linspace(-1, 1, 1000)
-            y = legval(x, self._coefficients[var_pos])
-            fig = plt.figure()
-            sns.distplot(data[var_name], kde=None, norm_hist=True)
-            if var_name in self._ranges:
-                x = scale_dataset(x,
-                                  -1, 1,
-                                  self._ranges[var_name][0], self._ranges[var_name][1])
-                y = y * 2.0 / (self._ranges[var_name][1] - self._ranges[var_name][0])
-            plt.plot(x, y, 'b-')
-            if var_name in labels:
-                plt.xlabel(labels[var_name])
-            figures[var_name] = fig
-        return figures
+        var_pos = self._var_list.index(var_name)
+        x = np.linspace(-1, 1, 1000)
+        y = legval(x, self._coefficients[var_pos])
+        if var_name in self._ranges:
+            x = scale_dataset(x,
+                              -1, 1,
+                              self._ranges[var_name][0], self._ranges[var_name][1])
+            y = y * 2.0 / (self._ranges[var_name][1] - self._ranges[var_name][0])
+        return x, y
 
 
 _EFFICIENCY_MODELS = {'legendre': LegendreEfficiency,
