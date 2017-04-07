@@ -25,7 +25,7 @@ def get_logger(name, lvl=logging.NOTSET, format_=None):
     Arguments:
         name (str): Name of the logger.
         lvl (int, optional): Logging level. Defaults to
-            `logging.INFO`.
+            `logging.NOTSET`.
         format_ (str): Logger formatting string
 
     Returns:
