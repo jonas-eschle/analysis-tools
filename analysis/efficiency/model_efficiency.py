@@ -11,8 +11,10 @@ import os
 import argparse
 
 import pandas as pd
-# import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
 
+from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 import analysis.utils.config as _config
 import analysis.utils.paths as _paths
@@ -116,12 +118,14 @@ def run(config_files, link_from):
                 logger.warning("Output efficiency already exists, only redoing plots")
                 eff = load_efficiency_model(config['name'])
             if plot_files:
-                # plt.style.use('file://%s' % _paths.get_plot_style_path('LHCb'))
-                plots = eff.plot(data, config.get('plot-labels', {}))
+                sns.set_style("white")
+                plt.style.use('file://%s' % os.path.join(get_global_var('STYLE_PATH'),
+                                                         'matplotlib_LHCb.mplstyle'))
+                plots = eff.plot(data, weight_var, labels=config.get('plot-labels', {}))
                 for var_name, plot in plots.items():
                     logger.info("Plotting '%s' efficiency -> %s",
                                 var_name, plot_files[var_name])
-                    plot.savefig(plot_files[var_name])
+                    plot.savefig(plot_files[var_name], bbox_inches='tight')
 
 
 def main():
@@ -151,7 +155,7 @@ def main():
                         help="Configuration files")
     args = parser.parse_args()
     if args.verbose:
-        logger.setLevel(1)
+        get_logger('analysis.efficiency').setLevel(1)
     try:
         exit_status = 0
         run(args.config, args.link_from)
