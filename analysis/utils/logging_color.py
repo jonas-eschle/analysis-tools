@@ -19,7 +19,7 @@ import logging
 import colorlog
 
 
-def get_logger(name, lvl=logging.INFO, format_=None):
+def get_logger(name, lvl=logging.NOTSET, format_=None):
     """Configure logging.
 
     Arguments:
@@ -36,16 +36,15 @@ def get_logger(name, lvl=logging.INFO, format_=None):
         format_ = ("%(asctime)s - %(name)s | "
                    "%(log_color)s%(levelname)-8s%(reset)s | "
                    "%(log_color)s%(message)s%(reset)s")
-    if not logging.getLogger().isEnabledFor(lvl):
-        logging.root.setLevel(lvl)
-    logger = logging.getLogger(name)
-    if not len(logger.handlers):
+
+    if not len(logging.root.handlers):
         formatter = colorlog.ColoredFormatter(format_)
         stream = logging.StreamHandler()
         stream.setFormatter(formatter)
-        logger.setLevel(lvl)
-        logger.addHandler(stream)
-        logger.propagate = False
+        logging.root.addHandler(stream)
+        logging.root.setLevel(logging.INFO)
+    logger = logging.getLogger(name)
+    logger.setLevel(lvl)
     return logger
 
 # EOF
