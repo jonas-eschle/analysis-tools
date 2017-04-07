@@ -156,15 +156,15 @@ class LegendreEfficiency(Efficiency):
 
     # pylint: disable=R0914,W0221
     @staticmethod
-    def fit(dataset, var_list, legendre_orders=None, weight_var=None, ranges=None):
+    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None):
         """Calculate Legendre coefficients using the method of moments.
 
         Arguments:
             dataset (pandas.DataFrame): Data to model.
             var_list (list): Variables to model. Defines the order.
+            weight_var (str, optional): Variable to use as weight. If `None`
+                is given, unity weights are used.
             legendre_orders (dict): Variable name/max Legendre order.
-            weight_var (str, optional): Variable to use as weight. Defaults to `None`,
-                in which case weights are considered unity.
             ranges (dict, optional)
 
         Returns:
@@ -328,15 +328,15 @@ class LegendreEfficiency1D(Efficiency):
 
     # pylint: disable=R0914,W0221
     @staticmethod
-    def fit(dataset, var_list, legendre_orders=None, weight_var=None, ranges=None):
+    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None):
         """Calculate Legendre coefficients using the method of moments.
 
         Arguments:
             dataset (pandas.DataFrame): Data to model.
             var_list (list): Variables to model. Defines the order.
+            weight_var (str, optional): Variable to use as weight. If `None`
+                is given, unity weights are used.
             legendre_orders (dict): Variable name/max Legendre order.
-            weight_var (str, optional): Variable to use as weight. Defaults to `None`,
-                in which case weights are considered unity.
             ranges (dict, optional)
 
         Returns:

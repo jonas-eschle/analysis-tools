@@ -86,7 +86,7 @@ with pd.HDFStore('B02Kst0Jpsi2ee-Gen.h5') as store:
     else:
         logger.info("Loading coeffs -> %s", EFF_NAME)
         eff = load_efficiency_model(EFF_NAME)
-    plots = eff.plot(data, {'acc_phi': r'$\phi$'})
+    plots = eff.plot(data, labels={'acc_phi': r'$\phi$'})
     plots['acc_phi'].show()
 
 ```
@@ -124,6 +124,8 @@ plot: y
 plot-labels:
     acc_phi: '$\phi$'
 ```
+
+A weight variable can be specified in `data/weight`.
 
 This has the advantage of taking care of saving the plots `$BASE_PATH/data/efficiency/{name}_{var}.eps` and handling the errors in a more graceful way.
 

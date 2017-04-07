@@ -95,11 +95,15 @@ def run(config_files, link_from):
                 data = store.select(config['data']['tree'], columns=config['variables'])
             except KeyError:
                 raise OSError("Cannot find data tree in input file -> %s", config['data']['tree'])
-            logger.info("Data loaded")
+            weight_var = config['data']['weight'] if 'weight' in config['data'] else None
+            if weight_var:
+                logger.info("Data loaded, using %s as weight", weight_var)
+            else:
+                logger.info("Data loaded, not using any weights")
             if not os.path.exists(_paths.get_efficiency_path(config['name'])):
                 logger.info("Fitting efficiency model")
                 try:
-                    eff = efficiency_class.fit(data, config['variables'], **config['parameters'])
+                    eff = efficiency_class.fit(data, config['variables'], weight_var, **config['parameters'])
                 except (ValueError, TypeError) as error:
                     raise ValueError("Cannot configure the efficiency model -> %s", error.message)
                 except KeyError as error:

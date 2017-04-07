@@ -95,15 +95,20 @@ class Efficiency(object):
         """
         raise NotImplementedError()
 
-    def plot(self, data, labels=None):
+    def plot(self, data, weight_var=None, labels=None):
         """Plot the efficiency against a dataset.
 
         Arguments:
             data (`pandas.DataFrame`): Data to plot.
+            weight_var (str, optional): Variable to use as weight. If `None`
+                is given, unity weights are used.
             labels (dict, optional): Label names for each variable.
 
         Returns:
             dict: Variable -> plot mapping.
+
+        Raises:
+            ValueError: If the weight variable is not in `data`.
 
         """
         def tex_escape(text):
@@ -133,13 +138,16 @@ class Efficiency(object):
                                                           key=lambda item: -len(item))))
             return regex.sub(lambda match: conv[match.group()], text)
 
+        if weight_var and weight_var not in data.columns:
+            raise ValueError("The weight variable is not find in the dataset -> %s", weight_var)
         if labels is None:
             labels = {}
         figures = {}
         for var_name in self._var_list:
             x, y = self.project_efficiency(var_name, n_points=1000)
             fig = plt.figure()
-            sns.distplot(data[var_name], kde=None, norm_hist=True)
+            data_to_plot = data[var_name]*data[weight_var] if weight_var else data[var_name]
+            sns.distplot(data_to_plot, kde=None, norm_hist=True)
             plt.plot(x, y, 'b-')
             if var_name not in labels:
                 labels[var_name] = tex_escape(var_name)
@@ -166,12 +174,14 @@ class Efficiency(object):
         raise NotImplementedError()
 
     @staticmethod
-    def fit(dataset, var_list, **params):
+    def fit(dataset, var_list, weight_var=None, **params):
         """Model the data using the Efficiency model.
 
         Arguments:
             dataset (pandas.DataFrame): Data to model.
             var_list (list): Variables to model. Defines the order.
+            weight_var (str, optional): Variable to use as weight. If `None`
+                is given, unity weights are used.
             **params (dict): Extra configuration parameters. Different for
                 each subclass.
 
