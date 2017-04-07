@@ -90,14 +90,17 @@ def run(config_files, link_from):
     # pylint: disable=E1101
     if not all(os.path.exists(file_name)
                for file_name in plot_files.values()) or \
-            os.path.exists(_paths.get_efficiency_path(config['name'])):  # If plots don't exist, we load data
+            not os.path.exists(_paths.get_efficiency_path(config['name'])):  # If plots don't exist, we load data
         logger.info("Loading data, this may take a while...")
         with pd.HDFStore(input_data) as store:
+            weight_var = config['data']['weight'] if 'weight' in config['data'] else None
+            columns = config['variables']
+            if weight_var:
+                columns.append(weight_var)
             try:
-                data = store.select(config['data']['tree'], columns=config['variables'])
+                data = store.select(config['data']['tree'], columns=columns)
             except KeyError:
                 raise OSError("Cannot find data tree in input file -> %s", config['data']['tree'])
-            weight_var = config['data']['weight'] if 'weight' in config['data'] else None
             if weight_var:
                 logger.info("Data loaded, using %s as weight", weight_var)
             else:
@@ -126,6 +129,8 @@ def run(config_files, link_from):
                     logger.info("Plotting '%s' efficiency -> %s",
                                 var_name, plot_files[var_name])
                     plot.savefig(plot_files[var_name], bbox_inches='tight')
+    else:
+        logger.info("Nothing to do!")
 
 
 def main():
@@ -155,7 +160,7 @@ def main():
                         help="Configuration files")
     args = parser.parse_args()
     if args.verbose:
-        get_logger('analysis.efficiency').setLevel(1)
+        get_logger('analysis.efficiency').setLevel(10)
     try:
         exit_status = 0
         run(args.config, args.link_from)
