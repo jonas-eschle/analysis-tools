@@ -4,13 +4,15 @@
 # @author C. Marin Benito (carla.marin.benito@cern.ch)
 # @date   16.03.2016
 # =============================================================================
-"""
-This functions configures a logger using logging and colorlog
+"""Configure the logging.
+
+These functions configures a logger using logging and colorlog
 and returns the logger for further usage
 By default, time, name of the logger and message with the default
 colorlog color scheme are printed.
 The threshold level for displaying messages and the format of the
 logger can be configured with the lvl and format arguments
+
 """
 
 import logging
@@ -43,6 +45,7 @@ def get_logger(name, lvl=logging.INFO, format_=None):
         stream.setFormatter(formatter)
         logger.setLevel(lvl)
         logger.addHandler(stream)
+        logger.propagate = False
     return logger
 
 # EOF
