@@ -17,10 +17,9 @@ import pandas as pd
 
 import ROOT
 
-from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.fit import load_pdfs
+from analysis.fit import load_pdfs, get_fit_strategy
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.data as _data
@@ -112,7 +111,7 @@ def run(config_files, link_from, verbose):
         logger.error("No model was specified in the config file!")
         raise KeyError()
     try:
-        fit_strategies = {strategy_name: get_global_var('FIT_STRATEGIES')[strategy_name]
+        fit_strategies = {strategy_name: get_fit_strategy(strategy_name)
                           for strategy_name
                           in config['fit'].get('strategies', ['simple'])}
     except KeyError as error:

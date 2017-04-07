@@ -49,6 +49,23 @@ register_fit_strategy('simple',
                       lambda model, dataset, fit_config: model.fitTo(dataset, *fit_config))
 
 
+# Get the fit strategy
+def get_fit_strategy(name):
+    """Get a fit strategy.
+
+    Arguments:
+        name (str): Name of the fit strategy.
+
+    Returns:
+        Callable: The fit function.
+
+    Raises:
+        KeyError: If the strategy is not registered.
+
+    """
+    return get_global_var('FIT_STRATEGIES')[name]
+
+
 # Load PDFs
 def load_pdfs(model):
     """Load the PDFs of the given model.
