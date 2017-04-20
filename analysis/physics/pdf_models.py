@@ -15,6 +15,30 @@ from analysis.utils.root import execute_and_return_self
 
 
 # pylint: disable=R0903
+class GaussianPdfMixin(object):
+    """Mixin defining a Gaussian.
+
+    Parameter names, and their defaults (when applicable):
+        - 'mu'
+        - 'sigma'
+
+    """
+
+    MANDATORY_PARAMETERS = ('mu',
+                            'sigma')
+
+    def get_unbound_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Returns:
+            BifurcatedCB.
+
+        """
+        return ROOT.RooGaussian(name, title,
+                                *(self.get_observables()+self.get_fit_parameters()))
+
+
+# pylint: disable=R0903
 class BifurcatedCBPdfMixin(object):
     """Mixin defining a bifurcated CB.
 
