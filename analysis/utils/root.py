@@ -12,9 +12,6 @@ import subprocess
 
 import ROOT
 
-from .data import pandas_from_dataset as __pandas_from_dataset
-from .data import dataset_from_pandas as __dataset_from_pandas
-
 
 def load_library(name, lib_dirs=None, debug=False, force=False):
     """Load C++ ROOT libraries, compiling if necessary.
@@ -102,11 +99,6 @@ def execute_and_return_self(obj, func, *args, **kwargs):
     """
     getattr(obj, func)(*args, **kwargs)
     return obj
-
-
-# Pandas stuff
-roodataset_to_pandas = __pandas_from_dataset
-pandas_to_roodataset = __dataset_from_pandas
 
 
 # Helpers
