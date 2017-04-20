@@ -50,7 +50,7 @@ set_global_var('BASE_PATH',
                os.path.abspath(os.path.join(os.path.dirname(__file__))))
 set_global_var('STYLE_PATH',
                os.path.join(get_global_var('BASE_PATH'),
-                            'data', 'styles'))
+                            'data_files', 'styles'))
 # add_pdf_paths('pdfs')  # Setup {BASE_PATH}/pdfs as base dir for PDFs
 set_global_var('PDF_PATHS', [])
 set_global_var('FIT_STRATEGIES', {})
