@@ -9,7 +9,7 @@
 
 import os
 import argparse
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from timeit import default_timer
 
 from scipy.stats import poisson
@@ -19,11 +19,14 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.fit import load_pdfs, get_fit_strategy
+from analysis.fit import get_fit_strategy, build_fit_model
+from analysis.data import get_data
+from analysis.data.hdf import modify_hdf
+from analysis.data.converters import dataset_from_pandas
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
-import analysis.utils.data as _data
 import analysis.utils.root as _root
+import analysis.utils.fit as _fit
 
 
 logger = get_logger('analysis.toys.fit')
@@ -60,8 +63,8 @@ def get_datasets(data_info, data_frames, transformers):
         else:
             dataset = pd.concat([dataset, rows])
     # Convert dataset to RooDataset
-    return {ds_name: _data.dataset_from_pandas(transform(dataset),
-                                               "data_%s" % ds_name, "data_%s" % ds_name)
+    return {ds_name: dataset_from_pandas(transform(dataset),
+                                         "data_%s" % ds_name, "data_%s" % ds_name)
             for ds_name, transform in transformers.items()},\
         sample_sizes
 
@@ -115,8 +118,8 @@ def run(config_files, link_from, verbose):
                           for strategy_name
                           in config['fit'].get('strategies', ['simple'])}
     except KeyError as error:
-        logger.error("Missing fit_strategy configuration -> %s", str(error))
-        raise KeyError("Missing fit_strategy configuration")
+        logger.error("Unknown fit_strategy configuration -> %s", str(error))
+        raise KeyError("Unknown fit_strategy configuration")
     if not fit_strategies:
         logger.error("No fit strategies were specified in the config file!")
         raise KeyError()
@@ -133,61 +136,31 @@ def run(config_files, link_from, verbose):
     logger.info("Loading input data")
     data = {}
     gen_values = {}
-    for source_name, data_source in config['data'].items():
+    for data_source in config['data']:
         try:
             source_toy = data_source['source']
         except KeyError:
             logger.error("Data source not specified")
             raise
-        # pylint: disable=E1101
-        path = _paths.get_toy_path(source_toy)
-        if not os.path.exists(path):
-            raise OSError("Cannot find input toy -> %s" % path)
-        with pd.HDFStore(path) as store:
-            data[source_name] = store['data']
+        source_name = data_source.get('pulls-with', None)
+        if not source_name:
+            source_name = source_toy
+            data[source_name] = get_data({'source': source_toy,
+                                          'source-type': 'toy',
+                                          'tree': 'data',
+                                          'output-format': 'pandas'})
         # Generator values
-        for var_name in data[source_name]['toy_info'].columns:
+        toy_info = get_data({'source': source_toy,
+                             'source-type': 'toy',
+                             'tree': 'toy_info',
+                             'output-format': 'pandas'})
+        for var_name in toy_info.columns:
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
-            gen_values['%s^{%s}' % (var_name, source_name)] = data[source_name]['toy_info'][var_name][0]
+            gen_values['%s^{%s}' % (var_name, source_name)] = toy_info[var_name][0]
     fit_models = {}
     for model_name, model in models.items():
-        try:
-            logger.info("Loading PDFs")
-            physics_factories, constraints = load_pdfs(model)
-        except ValueError:
-            raise KeyError()
-        fit_parameters = []
-        # Build the fit PDF
-        pdfs = OrderedDict()
-        for factory_name, factory in physics_factories.items():
-            observables = factory.get_observables()
-            fit_params = factory.get_fit_parameters()
-            # Make extended PDF
-            pdfs[factory_name] = factory.get_extended_pdf()("%s^{%s}" % (config['name'], factory_name),
-                                                            "%s^{%s}" % (config['name'], factory_name),
-                                                            "N^{%s}" % factory_name,
-                                                            config[model_name][factory_name].get('initial-yield',
-                                                                                                 1000),
-                                                            *(observables + fit_params))
-            # Add everything to the fit parameters
-            fit_parameters.extend(fit_params)
-            fit_parameters.append(factory.get('N'))
-        # Make RooAddPdf
-        logger.info("Building fit pdf")
-        if len(pdfs) > 1:
-            fit_model = ROOT.RooAddPdf(config['name'], config['name'], _root.list_to_rooargset(pdfs))
-        else:
-            fit_model = pdfs.values()[0]
-        # Configure fit
-        fit_config = [ROOT.RooFit.Save(True),
-                      ROOT.RooFit.Extended(True),
-                      ROOT.RooFit.Minos(config['fit'].get('minos', True)),
-                      ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-        if constraints:
-            constraints_set = _root.list_to_rooargset(constraints)
-            fit_config.append(ROOT.RooFit.ExternalConstraints(constraints_set))
-        fit_models[model_name] = (physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config)
+        fit_models[model_name] = build_fit_model(model_name, model)
     # TODO: Acceptance
     # acceptance = None
     # if 'acceptance' in config:
@@ -219,7 +192,7 @@ def run(config_files, link_from, verbose):
             logger.debug("Sampling input data")
             datasets, sample_sizes = get_datasets(config['data'],
                                                   data,
-                                                  {model_name: getattr(model[0].values()[0],
+                                                  {model_name: getattr(model.get_factories()[0],
                                                                        'transform_dataset')
                                                    for model_name, model in fit_models.items()})
             for sample_name, sample_size in sample_sizes.items():
@@ -230,13 +203,16 @@ def run(config_files, link_from, verbose):
         logger.debug("Fitting")
         for model_name in models:
             dataset = datasets.pop(model_name)
-            physics_factories, constraints, fit_parameters, pdfs, fit_model, fit_config = fit_models[model_name]
+            fit_model = fit_models[model_name]
             # Now fit
-            for fit_name, fit_func in fit_strategies.items():
-                toy_key = (model_name, fit_name)
-                fit_result = fit_func(fit_model, dataset, fit_config)  # fit_model.fitTo(dataset, *fit_config)
+            for fit_strategy in fit_strategies:
+                toy_key = (model_name, fit_strategy)
+                fit_result = fit_model.fit(fit_strategy,
+                                           dataset,
+                                           config['fit'].get('minos', True),
+                                           verbose)
                 # Now results are in fit_parameters
-                result = _data.fit_parameters_to_dict(fit_parameters)
+                result = _fit.fit_parameters_to_dict(fit_model.get_fit_parameters())
                 result['fit_status'] = fit_result.status()
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
@@ -272,14 +248,14 @@ def run(config_files, link_from, verbose):
     # Should I just separate gen_frame from data_frame to save space?
     fit_result_frame = pd.concat([gen_frame,
                                   data_frame,
-                                  _data.calculate_pulls(data_frame, gen_frame)],
+                                  _fit.calculate_pulls(data_frame, gen_frame)],
                                  axis=1)
     try:
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
                                  config.get('link-from', None),
                                  _paths.get_toy_fit_path) as toy_fit_file:
-            with _data.modify_hdf(toy_fit_file) as hdf_file:
+            with modify_hdf(toy_fit_file) as hdf_file:
                 hdf_file.append('fit_results', fit_result_frame)
                 # Add link to generated samples for bookeeping
                 if 'gen_info' not in hdf_file:

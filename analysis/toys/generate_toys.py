@@ -13,13 +13,14 @@ import os
 import pandas as pd
 import ROOT
 
-from analysis.physics import get_physics_factory
+from analysis.physics import configure_model
 from analysis.utils.root import destruct_object
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
-#pylint: disable=E0611
+# pylint: disable=E0611
 from analysis.utils.paths import get_toy_path, work_on_file
-from analysis.utils.data import modify_hdf, pandas_from_dataset
+from analysis.data.converters import pandas_from_dataset
+from analysis.data.hdf import modify_hdf
 
 
 logger = get_logger('analysis.toys.generate')
@@ -88,7 +89,7 @@ def run(config_files, link_from):
         config = load_config(*config_files,
                              validate=['gen/nevents',
                                        'name',
-                                       'pdfs'])
+                                       'gen-model'])
     except OSError:
         raise OSError("Cannot load configuration files: %s",
                       config_files)
@@ -97,19 +98,13 @@ def run(config_files, link_from):
             logger.error("Number of events not specified")
         if 'name' in error.missing_keys:
             logger.error("No name was specified in the config file!")
-        if 'pdfs' in error.missing_keys:
-            logger.error("No pdfs were specified in the config file!")
+        if 'gen-model' in error.missing_keys:
+            logger.error("No generation model were specified in the config file!")
         raise KeyError("ConfigError raised -> %s" % error.missing_keys)
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
-    pdfs = config['pdfs']
-    if not len(pdfs):
-        logger.error("No pdfs were specified in the config file!")
-        raise KeyError()
     # Ignore renaming
-    for pdf in pdfs.values():
-        pdf.pop('parameter-names', None)
     logger.info("Generating %s events", config['gen']['nevents'])
     logger.info("Generation job name: %s", config['name'])
     if link_from:
@@ -129,12 +124,13 @@ def run(config_files, link_from):
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Generate
     try:
-        physics = get_physics_factory(pdfs)
-    except KeyError:
-        logger.error("Cannot find physics factory for %s",
-                     ','.join(['%s:%s' % (obs, pdf['pdf'])
-                               for obs, pdf in pdfs.items()]))
-        raise ValueError()
+        physics = configure_model(config['gen-model'])
+    except KeyError as error:
+        logger.error("Cannot find physics factory")
+        raise ValueError('%s' % error)
+    except ValueError:
+        logger.error("Problem dealing with shared parameters")
+        raise
     try:
         dataset = generate(physics, config)
     except ValueError as error:
