@@ -3,16 +3,21 @@
 # =============================================================================
 # @file   factory.py
 # @author Albert Puig (albert.puig@cern.ch)
-# @date   18.01.2017
+# @date   15.04.2017
 # =============================================================================
-"""Base Physics factory clases."""
+"""Physics factory classes."""
 
-from functools import partial
+import re
+from collections import OrderedDict
 
 import ROOT
 
+from analysis.utils.config import configure_parameter
 from analysis.utils.root import execute_and_return_self
-from .helpers import build_factory_prod, bind_to_object
+from analysis.utils.logging_color import get_logger
+
+
+logger = get_logger('analysis.physics.factory')
 
 
 # The base class
@@ -24,24 +29,95 @@ class BaseFactory(object):
     """
 
     PARAMETERS = None
+    MANDATORY_PARAMETERS = {}
+    PARAMETER_DEFAULTS = {}
 
-    def __init__(self, **config):
-        """Initialize the internal ROOT workspace.
+    def __init__(self, config, parameters=None):
+        """Initialize the internal object cache.
 
         Arguments:
             **config (dict): Configuration of the factory.
 
-        """
-        self._ws = {}
-        self._config = config
-        self._parameter_names = {}
-        self._parameter_values = getattr(self, 'PARAMETER_DEFAULTS', {})
+        Raises:
+            KeyError: When parameters are missing.
 
-    def get(self, key, init_val=None):
+        """
+        if self.PARAMETERS is None and not self.MANDATORY_PARAMETERS:
+            logger.warning("Instantiating Factory with no parameters")
+        # pylint: disable=C0103
+        if self.PARAMETERS is None:
+            self.PARAMETERS = list(self.MANDATORY_PARAMETERS)
+        self.PARAMETERS = list(self.PARAMETERS)
+        # Initialize objects
+        self._objects = {}
+        self._children = OrderedDict()
+        self._config = config
+        self._constraints = []
+        # Initialize parameters
+        self._parameter_names = {param: param for param in self.PARAMETERS}
+        self._parameter_names.update(self._config.get('parameter-names', {}))
+        # Set the parameter dictionary
+        param_dict = self.PARAMETER_DEFAULTS.copy()
+        param_dict.update(config.get('parameters', {}))
+        self._constructor_parameters = []
+        if parameters:
+            self._constructor_parameters = parameters.keys()
+            for parameter_name in set(param_dict.keys()) & set(parameters.keys()):
+                logger.debug("Skipping parameter %s because it was specified in the constructor", parameter_name)
+            param_dict.update(parameters)  # Constructor parameters have priority
+        # Now, build parameters
+        missing_parameters = []
+        for parameter_name in self.PARAMETERS:
+            if parameter_name not in param_dict:
+                missing_parameters.append(parameter_name)
+                continue
+            parameter_value = param_dict.pop(parameter_name)
+            parameter, constraint = self._create_parameter(parameter_name, parameter_value)
+            if constraint:
+                self._constraints.append(constraint)
+            self.set(parameter_name, parameter)
+        if missing_parameters:
+            if 'Yield' in missing_parameters:
+                logger.debug("Initial yield not specified")  # Most of the time you won't want to do it
+            raise KeyError("Missing parameters -> %s" % ','.join(missing_parameter
+                                                                 for missing_parameter in missing_parameters))
+        if 'Yield' in param_dict:
+            yield_value = param_dict.pop('Yield')
+            yield_, constraint = self._create_parameter('Yield', yield_value)
+            if constraint:
+                self._constraints.append(constraint)
+            self.set('Yield', yield_)
+        if param_dict:
+            logger.warning("Trying to set unsupported params in config. I skipped them -> %s",
+                           ','.join(param_dict.keys()))
+
+    def get_config(self):
+        return self._config
+
+    def get_children(self):
+        return self._children
+
+    def get_constraints(self):
+        return self._constraints + [constraint
+                                    for child in self.get_children()
+                                    for constraint in child.get_constraints()]
+
+    def _find_object(self, name):
+        """Find object here or in children. Priority is here."""
+        if name in self._objects:
+            return self._objects[name]
+        for child in self._children.values():
+            if name in child:
+                return child[name]
+        return None
+
+    def get(self, key, init_val=None, recursive=True):
         """Get object from the ROOT workspace.
 
         If the object is not there and `init_val` is given, it is added
         and returned.
+
+        We look in children too.
 
         Arguments:
             key (str): Object identifier.
@@ -56,9 +132,15 @@ class BaseFactory(object):
                 is given.
 
         """
-        if key not in self._ws and init_val is not None:
-            self._ws[key] = init_val
-        return self[key]
+        if recursive:
+            obj = self._find_object(key)
+        else:
+            obj = self._objects.get(key, None)
+        if not obj:
+            if init_val is not None:
+                self._objects[key] = init_val
+            return self._objects[key]
+        return obj
 
     def __getitem__(self, key):
         """Get object from internal ROOT workspace.
@@ -73,7 +155,34 @@ class BaseFactory(object):
             KeyError: if `key` is not in the internal workspace.
 
         """
-        return self._ws[key]
+        obj = self._find_object(key)
+        if not obj:
+            raise KeyError("Cannot find %s in object" % key)
+        return obj
+
+    def set(self, key, object_):
+        """Set an object in the internal ROOT workspace.
+
+        Arguments:
+            key (str): Object identifier.
+            object_ (object): Object to store.
+
+        Returns:
+            object: The object.
+
+        """
+        self._objects[key] = object_
+        return self[key]
+
+    def __setitem__(self, key, object_):
+        """Get object from internal ROOT workspace.
+
+        Arguments:
+            key (str): Object identifier.
+            object_ (object): Object to store.
+
+        """
+        self._objects[key] = object_
 
     def __contains__(self, key):
         """Check if an object is in the internal ROOT workspace.
@@ -85,54 +194,96 @@ class BaseFactory(object):
             bool: Wether the object is in the workspace.
 
         """
-        return key in self._ws
+        return self._find_object(key) is not None
 
-    def _get_obj_name(self, name):
+    def _create_parameter(self, parameter_name, parameter_value):
+        if isinstance(parameter_value, ROOT.TObject):  # It's a string specification
+            self._parameter_names[parameter_name] = parameter_value.GetName()
+            constraint = None
+        else:
+            var = ROOT.RooRealVar(self.get_parameter_name(parameter_name),
+                                  self.get_parameter_name(parameter_name),
+                                  0.0)
+            constraint = configure_parameter(var, parameter_value)
+            parameter_value = var
+        return execute_and_return_self(parameter_value,
+                                       'setStringAttribute',
+                                       'originalName',
+                                       parameter_name), constraint
+
+    def get_parameter_name(self, param_id):
         """Get the name of the parameter according to the configuration.
 
-        Defaults to the same name if no parameter naming has been given
+        Defaults to the same name if no parameter naming has been given.
 
         """
-        return self._parameter_names.get(name, name)
+        return self._parameter_names.get(param_id, param_id)
 
-    def _get_roorealvar(self, param_name, val=None, min_val=None, max_val=None):
-        """Get a fit parameter.
-
-        If it doesn't exist, create a new RooRealVar taking into account possible
-        name transformations, otherwise get it from the internal workspace. Additionally,
-        the variable is set to non-constant and its 'originalName' attribute is set
-        to the given parameter name (without transformations).
+    def set_parameter_names(self, name_dict):
+        """Set parameter name conversion.
 
         Arguments:
-            param_name (str): Parameter name, as defined by the factory.
-            val (float, optional): Initialization value for the parameter. If not given,
-                the config value will be used.
-            min_val (float, optional): Lower range for the variable.
-            max_val (float, optional): Upper range for the variable. Only of `max_val` and
-                `min_val` are given, the range is set.
+            name_dict (dict): (name -> new name) pairs.
 
         Returns:
-            ROOT.RooRealVar.
+            bool: True only if all requested renaming operations have been
+                performed.
 
         Raises:
-            KeyError: If there is no initial value for the variable.
+            KeyError: If some of the parameter names is unknown.
 
         """
-        value = val if val is not None else self._parameter_values[param_name]
-        limits = [min_val, max_val] if min_val and max_val else []
-        return self.get(param_name,
-                        execute_and_return_self(
-                            execute_and_return_self(ROOT.RooRealVar(self._get_obj_name(param_name),
-                                                                    self._get_obj_name(param_name),
-                                                                    value,
-                                                                    *limits),
-                                                    'setStringAttribute',
-                                                    'originalName',
-                                                    param_name),
-                            'setConstant',
-                            False))
+        if not set(name_dict.keys()).issubset(set(self.PARAMETERS + ['Yield'])):
+            raise KeyError("Bad renaming scheme!")
+        all_good = True
+        # logger.debug("Requesting a parameter name change -> %s", name_dict)
+        for base_name, new_name in name_dict.items():
+            if base_name in self._constructor_parameters:
+                all_good = False
+                continue
+            # Now rename the parameters if necessary
+            if base_name in self._objects:
+                self._objects[base_name].SetName(new_name)
+                self._objects[base_name].SetTitle(new_name)
+            self._parameter_names[base_name] = new_name
+        return all_good
 
-    def get_pdf(self):
+    def rename_children_parameters(self, naming=None):
+        if not naming:
+            naming = self._children.viewitems()
+        naming = list(naming)
+        for label, factory in naming:
+            # Recursively rename children
+            if factory.get_children():
+                factory.rename_children_parameters(('%s,%s' % (label, child_name), child)
+                                                   for child_name, child in factory.get_children().items())
+            parameters_to_set = {}
+            for param_id in factory.PARAMETERS + ['Yield']:
+                param_name = factory.get_parameter_name(param_id)
+                subscript_match = re.search(r'\^{(.*?)}', param_name)
+                if subscript_match:
+                    new_param_name = re.sub(r'\^{(.*?)}',
+                                            lambda match, name=label: '^{%s,%s}' % (name,
+                                                                                    match.groups()[0]),
+                                            param_name)
+                else:
+                    new_param_name = '%s^{%s}' % (param_name, label)
+                parameters_to_set[param_id] = new_param_name
+            factory.set_parameter_names(parameters_to_set)
+
+    def get_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Raises:
+            NotImplementedError
+
+        """
+        pdf_name = 'pdf_%s' % name
+        return self.get(pdf_name) \
+            if pdf_name in self \
+            else self.set(pdf_name, self.get_unbound_pdf(name, title))
+
+    def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
         Raises:
@@ -141,27 +292,17 @@ class BaseFactory(object):
         """
         raise NotImplementedError()
 
-    def get_extended_pdf(self):
+    def get_extended_pdf(self, name, title, yield_val=None, yield_name=None):
         """Get an extended physics PDF.
 
         Returns:
             `ROOT.RooExtendPdf`.
 
+        Raises:
+            ValueError: If the yield had not been configured previously
+
         """
-        return bind_to_object(self)(partial(lambda self, name, title, yield_name, yield_val=None, *inputs:
-                                            ROOT.RooExtendPdf(name,
-                                                              title,
-                                                              self.get_pdf()(name+'_{noext}',
-                                                                             title+'_{noext}',
-                                                                             *inputs),
-                                                              execute_and_return_self(
-                                                                  execute_and_return_self(
-                                                                      self._get_roorealvar('N', yield_val),
-                                                                      'SetTitle',
-                                                                      yield_name),
-                                                                  'SetName',
-                                                                  yield_name)),
-                                            self))
+        raise NotImplementedError()
 
     def get_observables(self):
         """Get the physics observables.
@@ -172,7 +313,7 @@ class BaseFactory(object):
         """
         raise NotImplementedError()
 
-    def get_fit_parameters(self):
+    def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
         Raises:
@@ -190,7 +331,16 @@ class BaseFactory(object):
             tuple[`ROOT.RooRealVar`]
 
         """
-        return self.get_fit_parameters()
+        raise NotImplementedError()
+
+    def get_yield_var(self):
+        return self.get('Yield', None)
+
+    def get_category_var(self):
+        return None
+
+    def is_simultaneous(self):
+        return False
 
     # pylint: disable=R0201
     def transform_dataset(self, dataset):
@@ -218,63 +368,7 @@ class PhysicsFactory(BaseFactory):
 
     """
 
-    def __init__(self, **config):
-        """Initialize the internal ROOT workspace and parameter values.
-
-        The 'parameters' keyword is extracted from the configuration to
-        obtain the starting values for the fit parameters. If the class
-        provides a `PARAMETER_DEFAULTS` attribute, it's also used for those
-        parameters not included in the 'parameters' configuration. If a
-        class provides a `MANDATORY_PARAMETERS` attribute, it is checked that
-        it exists, either in the configuration or as a default value.
-
-        In any case, the list of parameters must be given in the `PARAMETERS`
-        attribute.
-
-        Additionally, parameters can be renamed by giving the 'parameter-names'
-        configuration.
-
-        Arguments:
-            **config (dict): Configuration of the factory.
-
-        """
-        try:
-            assert self.PARAMETERS is not None
-        except AssertionError:
-            import ipdb
-            ipdb.set_trace()
-        super(PhysicsFactory, self).__init__(**config)
-        # pylint: disable=E1101
-        if hasattr(self, 'MANDATORY_PARAMETERS'):
-            for parameter in self.MANDATORY_PARAMETERS:
-                if parameter not in config.get('parameters', {}) and\
-                        parameter not in self._parameter_values:
-                    raise MissingParameter("Missing parameter -> %s" % parameter)
-        self._parameter_values.update(self._config.pop('parameters', {}))
-        self._parameter_names.update(self._config.pop('parameter-names', {}))
-        self._name = self._config.pop('name', None)
-        self._type = self._config.pop('pdf')
-
-    def set_parameter_names(self, name_dict):
-        """Set parameter name conversion.
-
-        Arguments:
-            name_dict (dict): (name -> new name) pairs.
-
-        Raises:
-            KeyError: If some of the parameter names is unknown.
-
-        """
-        if not set(name_dict.keys()).issubset(set(self.PARAMETERS)):
-            raise KeyError("Bad renaming scheme!")
-        self._parameter_names = name_dict
-        # Now rename the parameters if necessary
-        for parameter_name in self._parameter_names:
-            if parameter_name in self._ws:
-                self._ws[parameter_name].SetName(self._parameter_names[parameter_name])
-                self._ws[parameter_name].SetTitle(self._parameter_names[parameter_name])
-
-    def get_pdf(self):
+    def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
         Raises:
@@ -282,6 +376,35 @@ class PhysicsFactory(BaseFactory):
 
         """
         raise NotImplementedError()
+
+    def get_extended_pdf(self, name, title, yield_val=None, yield_name=None):
+        """Get an extended physics PDF.
+
+        Returns:
+            `ROOT.RooExtendPdf`.
+
+        Raises:
+            ValueError: If the yield had not been configured previously
+
+        """
+        # Configure yield
+        if 'Yield' not in self._objects:
+            if yield_val is None:
+                raise ValueError("Initial yield not configured -> %s" % self)
+            if yield_name:
+                self._parameter_names['Yield'] = yield_name
+            yield_param, yield_constraint = self._create_parameter('Yield', yield_val)
+            if yield_constraint:
+                self._constraints.append(yield_constraint)
+            self.set('Yield', yield_param)
+        # Return the extended PDF
+        pdf_name = 'pdf_%s' % name
+        return self.get(pdf_name) \
+            if pdf_name in self \
+            else self.set(pdf_name, ROOT.RooExtendPdf(name,
+                                                      title,
+                                                      self.get_pdf(name+'_{noext}', title+'_{noext}'),
+                                                      self.get('Yield')))
 
     def get_observables(self):
         """Get the physics observables.
@@ -292,98 +415,93 @@ class PhysicsFactory(BaseFactory):
         """
         raise NotImplementedError()
 
-    def get_fit_parameters(self):
+    def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
         Returns:
             tuple[`ROOT.RooRealVar`]: Parameters as defined by the `PARAMETERS` attribute.
 
         """
-        return tuple(self._get_roorealvar(param_name)
-                     for param_name in self.PARAMETERS)
+        params = self.PARAMETERS[:]
+        if extended and 'Yield' in self:
+            params.append('Yield')
+        return tuple(self.get(param_name) for param_name in params)
 
+    def get_gen_parameters(self):
+        """Get all the necessary generation parameters.
 
-class ProductPhysicsFactory(BaseFactory):
-    """Product of several physics factories with different observables."""
-
-    def __init__(self, factories):
-        """Check the compatibility of the factories.
-
-        Note:
-            Order matters in terms of order of observables.
-
-        Arguments:
-            factories (list[`PhysicsFactory`]): Physics factories to merge.
-
-        Raises:
-            KeyError: If there are shared observables.
-
-        """
-        if set.intersection(*[{factory.TYPE} for factory in factories]):
-            raise KeyError("Shared observables!")
-        super(ProductPhysicsFactory, self).__init__()
-        self._factory_classes = factories
-        self._factories = None
-
-    def __call__(self, config):
-        """Initialize the factories.
-
-        Mimics the class instantiation and instantiates the internal factories.
-
-        Arguments:
-            config (list): Configuration of the factories.
-
-        Raises:
-            ValueError: If the number of pdfs in `config` doesn't match what was given
-                on initialization.
-            KeyError: If there are duplicate parameter names.
-
-        """
-        if len(config) != len(self._factory_classes):
-            ValueError("Wrong number of classes given.")
-        # Instantiate the classes
-        self._factories = [Factory(**config[class_num])
-                           for class_num, Factory in enumerate(self._factory_classes)]
-        # pylint: disable=C0103
-        self.PARAMETERS = tuple(parameter
-                                for factory in self._factories
-                                for parameter in factory.PARAMETERS)
-        if len(self.PARAMETERS) != len(set(self.PARAMETERS)):  # Parameter names are repeated
-            raise KeyError("Duplicate parameter name")
-        return self
-
-    def set_parameter_names(self, name_dict):
-        """Set parameter name conversion.
-
-        Arguments:
-            name_dict (dict): (name -> new name) pairs.
-
-        Raises:
-            KeyError: If some of the parameter names is unknown.
-
-        """
-        for factory in self._factories:
-            factory.set_parameter_names({param_name: name_dict[param_name]
-                                         for param_name in factory.PARAMETERS
-                                         if param_name in name_dict})
-
-    def get_pdf(self):
-        """Get the physics PDF.
-
-        The returned object behaves like a `RooAbsPdf` class in the sense that
-        it can be called, similarly to a `RooAbsPdf`, and the returned object
-        is a `RooProdPdf.`
+        Returns the fit parameters by default.
 
         Returns:
-            `ProdPDF`: PDF-like object that simulates a `RooAbsPdf` class.
-
-        Raises:
-            NotInitializedError: If `__call__` has not been called.
+            tuple[`ROOT.RooRealVar`]
 
         """
-        if not self._factories:
-            raise NotInitializedError()
-        return bind_to_object(self)(build_factory_prod(self._factories))
+        return self.get_fit_parameters()
+
+
+# Product Physics Factory
+class ProductPhysicsFactory(BaseFactory):
+    """RooProdPdf of different observables."""
+
+    PARAMETERS = []  # No extra parameters here
+
+    def __init__(self, factories, parameters=None):
+        """Initialize.
+
+        In this case, the children are a map of observable -> Factory.
+
+        """
+        super(ProductPhysicsFactory, self).__init__({}, parameters)
+        # Rename action -> Add the observable in the superscript of each variable
+        self._children = factories
+        # for observable, factory in factories.items():
+        #     self._children[observable] = factory
+        #     for param_id in factory.PARAMETERS + ['Yield']:
+        #         param_name = factory.get_parameter_name(param_id)
+        #         subscript_match = re.search(r'\^{(.*?)}', param_name)
+        #         if subscript_match:
+        #             new_param_name = re.sub(r'\^{(.*?)}',
+        #                                     lambda match, obs=observable: '^{%s,%s}' % (match.groups(),
+        #                                                                                 obs),
+        #                                     param_name)
+        #         else:
+        #             new_param_name = '%s^{%s}' % (param_id, observable)
+        #         factory.set_parameter_names({param_id: new_param_name})
+
+    def get_unbound_pdf(self, name, title):
+        """Get unbound PDF."""
+        pdfs = ROOT.RooArgList()
+        for observable, factory in self._children.items():
+            pdfs.add(factory.get_pdf(observable, observable))
+        return ROOT.RooProdPdf(name, title, pdfs)
+
+    def get_extended_pdf(self, name, title, yield_val=None, yield_name=None):
+        """Get an extended physics PDF.
+
+        Returns:
+            `ROOT.RooExtendPdf`.
+
+        Raises:
+            ValueError: If the yield had not been configured previously
+
+        """
+        # Configure yield
+        if 'Yield' not in self._objects:
+            if yield_val is None:
+                raise ValueError("Initial yield not configured")
+            if yield_name:
+                self._parameter_names['Yield'] = yield_name
+            yield_param, yield_constraint = self._create_parameter('Yield', yield_val)
+            if yield_constraint:
+                self._constraints.append(yield_constraint)
+            self.set('Yield', yield_param)
+        # Return the extended PDF
+        return self.get(name) \
+            if name in self \
+            else self.set(name, ROOT.RooExtendPdf(name,
+                                                  title,
+                                                  self.get_pdf(name+'_{noext}', title+'_{noext}'),
+                                                  self.get('Yield')))
 
     def get_observables(self):
         """Get the physics observables.
@@ -395,10 +513,8 @@ class ProductPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        if not self._factories:
-            raise NotInitializedError()
         return tuple(obs
-                     for factory in self._factories
+                     for factory in self._children.values()
                      for obs in factory.get_observables())
 
     def get_gen_parameters(self):
@@ -411,13 +527,11 @@ class ProductPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        if not self._factories:
-            raise NotInitializedError()
         return tuple(param
-                     for factory in self._factories
+                     for factory in self._children.values()
                      for param in factory.get_gen_parameters())
 
-    def get_fit_parameters(self):
+    def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
         Returns:
@@ -427,39 +541,179 @@ class ProductPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        if not self._factories:
-            raise NotInitializedError()
         return tuple(param
-                     for factory in self._factories
-                     for param in factory.get_fit_parameters())
+                     for factory in self._children.values()
+                     for param in factory.get_fit_parameters(extended))
 
-    # pylint: disable=R0201
-    def transform_dataset(self, dataset):
-        """Transform dataset according to the factory configuration.
 
-        Transformation for all factories is applied in sequence.
+# Sum physics factory
+class SumPhysicsFactory(BaseFactory):
+    """RooProdPdf of different observables."""
 
-        Note:
-            It's recommended to pass a copy since the dataset is modified
-            in place.
+    PARAMETERS = []  # No extra parameters here
 
-        Arguments:
-            dataset (pandas.DataFrame): Data frame to fold.
+    def __init__(self, factories):
+        """Initialize.
 
-        Returns:
-            `pandas.DataFrame`: Input dataset with the transformation applied.
+        In this case, the children are a map of PDF name -> Factory.
+
+        Raises:
+            ValueError: When the observables of the factories are
 
         """
-        for factory in self._factories:
-            dataset = factory.transform_dataset(dataset)
-        return dataset
+        # Check observable compatibility
+        if len({tuple([tuple(set(obs.GetName())) for obs in factory.get_observables()])
+                for factory in factories.values()}) != 1:
+            raise ValueError("Incompatible observables")
+        super(SumPhysicsFactory, self).__init__({}, None)
+        # Rename action -> Add the observable in the superscript of each variable
+        self._children = factories
+
+    def get_unbound_pdf(self, name, title):
+        logger.warning("All RooAddPdfs are Extended. "
+                       "An extended PDF will be returned even if a non-extended one has been requested.")
+        return self.get_extended_pdf(name, title)
+
+    def get_extended_pdf(self, name, title, yield_val=None, yield_name=None):
+        if yield_val is not None:
+            logger.warning("Specified yield for a RooAddPdf. "
+                           "Since the yield is defined by its children, I'm ignoring it.")
+        if yield_name is not None:
+            logger.warning("Specified yield name for a RooAddPdf. "
+                           "Since the yield name is defined by its children, I'm ignoring it.")
+        pdf_name = 'pdf_%s' % name
+        if pdf_name in self:
+            return self.get(pdf_name)
+        else:
+            pdfs = ROOT.RooArgList()
+            for child_name, child in self._children.items():
+                pdfs.add(child.get_extended_pdf(child_name, child_name))
+            return self.set(pdf_name, ROOT.RooAddPdf(name, title, pdfs))
+
+    def get_observables(self):
+        """Get the physics observables.
+
+        Returns:
+            tuple: Observables in factory order.
+
+        Raises:
+            NotInitializedError: If `__call__` has not been called.
+
+        """
+        return self._children.values()[0].get_observables()
+
+    def get_gen_parameters(self):
+        """Get the PDF generation parameters.
+
+        Returns:
+            tuple: Generation parameters in factory order.
+
+        Raises:
+            NotInitializedError: If `__call__` has not been called.
+
+        """
+        return tuple(param
+                     for factory in self._children.values()
+                     for param in factory.get_gen_parameters())
+
+    def get_fit_parameters(self, extended=False):
+        """Get the PDF fit parameters.
+
+        Returns:
+            tuple: Fit parameters in factory order.
+
+        Raises:
+            NotInitializedError: If `__call__` has not been called.
+
+        """
+        return tuple(param
+                     for factory in self._children.values()
+                     for param in factory.get_fit_parameters(extended))
 
 
-class NotInitializedError(Exception):
-    """Exception for not initialized."""
+# Sum physics factory
+class SimultaneousPhysicsFactory(BaseFactory):
+    """Simultaneous fit factory."""
 
+    PARAMETERS = []
 
-class MissingParameter(Exception):
-    """Exception for missing mandatory parameter."""
+    def __init__(self, factories, category_var):
+        """Initialize.
+
+        The category var has the types already defined. `factories` keys are tuples
+        in the categories (or a string if there's only one)
+
+        """
+        # Check observable compatibility
+        super(SimultaneousPhysicsFactory, self).__init__({}, None)
+        self._category = category_var
+        self._children = {';'.join(label): factory
+                          for label, factory in factories.items()}
+
+    def get_unbound_pdf(self, name, title):
+        sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
+        for category, child in self._children.items():
+            sim_pdf.addPdf(child.get_extended_pdf('%s^{%s}' % (name, category),
+                                                  '%s^{%s}' % (title, category)),
+                           '{%s}' % category if category.count(';') > 0 else category)
+        return sim_pdf
+
+    def get_extended_pdf(self, name, title, yield_val=None, yield_name=None):
+        logger.warning("The concept of extended RooSimultaneous is not implemented. "
+                       "A RooSimultaneous PDF will be returned even if an extended one has been requested.")
+        return self.get_unbound_pdf(name, title)
+
+    def get_observables(self):
+        """Get the physics observables.
+
+        Returns:
+            tuple: Observables in factory order.
+
+        Raises:
+            NotInitializedError: If `__call__` has not been called.
+
+        """
+        obs_list = OrderedDict()
+        for child in self._children.values():
+            for child_obs in child.get_observables():
+                if child_obs.GetName() not in self._objects:
+                    obs_list[child_obs.GetName()] = self.set(child_obs.GetName(), child_obs)
+                elif child_obs.GetName() not in obs_list:
+                    obs_list[child_obs.GetName()] = self.get(child_obs.GetName())
+        return tuple(obs_list.values())
+
+    def get_gen_parameters(self):
+        """Get the PDF generation parameters.
+
+        Returns:
+            tuple: Generation parameters in factory order.
+
+        Raises:
+            NotInitializedError: If `__call__` has not been called.
+
+        """
+        return tuple(param
+                     for factory in self._children.values()
+                     for param in factory.get_gen_parameters())
+
+    def get_fit_parameters(self, extended=False):
+        """Get the PDF fit parameters.
+
+        Returns:
+            tuple: Fit parameters in factory order.
+
+        Raises:
+            NotInitializedError: If `__call__` has not been called.
+
+        """
+        return tuple(param
+                     for factory in self._children.values()
+                     for param in factory.get_fit_parameters(extended))
+
+    def get_category_var(self):
+        return self._category
+
+    def is_simultaneous(self):
+        return True
 
 # EOF

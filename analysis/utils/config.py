@@ -221,7 +221,7 @@ def configure_parameter(parameter, parameter_config):
     constraint = None
     parameter_name = parameter.GetName()
     # Do something with it
-    action_params = parameter_config.split()
+    action_params = str(parameter_config).split()
     action = 'I' if len(action_params) == 1 else action_params.pop(0)
     parameter.setVal(float(action_params[0]))
     if action == 'I':  # Free parameter, we specify its initial value
