@@ -8,3 +8,7 @@
 *.pcm
 *.d
 *.gch
+# Cache
+.cache
+# Egg
+analysis.egg-info

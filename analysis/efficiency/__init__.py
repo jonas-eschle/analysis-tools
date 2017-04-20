@@ -74,7 +74,7 @@ def load_efficiency_model(model_name):
         model_name (str): Name of the efficiency model.
 
     Raises:
-        OSError: If the efficiecny file does not exist.
+        OSError: If the efficiency file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
     """
