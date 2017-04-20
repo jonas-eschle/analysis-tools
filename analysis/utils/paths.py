@@ -110,16 +110,16 @@ def register_path(path_type,
 
 
 # Register path functions
-register_path('toy', ['data', 'toys', 'gen'], 'hdf')
-register_path('toy_config', ['data', 'toys', 'gen'], 'yaml')
-register_path('toy_fit', ['data', 'toys', 'fit'], 'hdf')
-register_path('toy_fit_config', ['data', 'toys', 'fit'], 'yaml')
-register_path('log', ['data', 'logs'], 'log',
+register_path('toy', ['data_files', 'toys', 'gen'], 'hdf')
+register_path('toy_config', ['data_files', 'toys', 'gen'], 'yaml')
+register_path('toy_fit', ['data_files', 'toys', 'fit'], 'hdf')
+register_path('toy_fit_config', ['data_files', 'toys', 'fit'], 'yaml')
+register_path('log', ['data_files', 'logs'], 'log',
               lambda name, args, kwargs: name + '_${PBS_JOBID}'
               if kwargs.get('isBatch', False) else name)
-register_path('efficiency', ['data', 'efficiency'], 'yaml')
-register_path('acceptance', ['data', 'acceptance'], 'yaml')
-register_path('plot_style', ['data', 'styles'], 'mplstyle',
+register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
+register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
+register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
               lambda name, args, kwargs: 'matplotlib_' + name)
 
 
