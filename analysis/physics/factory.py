@@ -53,6 +53,7 @@ class BaseFactory(object):
         self._children = OrderedDict()
         self._config = config
         self._constraints = []
+        self._category = None
         # Initialize parameters
         self._parameter_names = {param: param for param in self.PARAMETERS}
         self._parameter_names.update(self._config.get('parameter-names', {}))
@@ -337,10 +338,10 @@ class BaseFactory(object):
         return self.get('Yield', None)
 
     def get_category_var(self):
-        return None
+        return self._category
 
     def is_simultaneous(self):
-        return False
+        return self._category is not None
 
     # pylint: disable=R0201
     def transform_dataset(self, dataset):
@@ -709,11 +710,5 @@ class SimultaneousPhysicsFactory(BaseFactory):
         return tuple(param
                      for factory in self._children.values()
                      for param in factory.get_fit_parameters(extended))
-
-    def get_category_var(self):
-        return self._category
-
-    def is_simultaneous(self):
-        return True
 
 # EOF
