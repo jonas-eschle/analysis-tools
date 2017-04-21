@@ -14,6 +14,7 @@ import pandas as pd
 import ROOT
 
 from analysis.physics import configure_model
+from analysis.physics.factory import SumPhysicsFactory, SimultaneousPhysicsFactory
 from analysis.utils.root import destruct_object
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
@@ -63,8 +64,8 @@ def generate(physics_factory, configuration):
     for obs in observables:
         obs_set.add(obs)
     fit_params = physics_factory.get_fit_parameters()
-    return generate_events(physics_factory.get_pdf()("GenPdf", "GenPdf",
-                                                     *(observables + fit_params)),
+    return generate_events(physics_factory.get_pdf("GenPdf", "GenPdf",
+                                                   *(observables + fit_params)),
                            obs_set,
                            configuration['gen']['nevents'])
 
@@ -131,6 +132,9 @@ def run(config_files, link_from):
     except ValueError:
         logger.error("Problem dealing with shared parameters")
         raise
+    if isinstance(physics, (SumPhysicsFactory, SimultaneousPhysicsFactory)):
+        logger.warning("Generating a RooAddPdf or a RooSimultaneous: "
+                       "yields will be generated at a fixed value")
     try:
         dataset = generate(physics, config)
     except ValueError as error:
