@@ -455,19 +455,6 @@ class ProductPhysicsFactory(BaseFactory):
         super(ProductPhysicsFactory, self).__init__({}, parameters)
         # Rename action -> Add the observable in the superscript of each variable
         self._children = factories
-        # for observable, factory in factories.items():
-        #     self._children[observable] = factory
-        #     for param_id in factory.PARAMETERS + ['Yield']:
-        #         param_name = factory.get_parameter_name(param_id)
-        #         subscript_match = re.search(r'\^{(.*?)}', param_name)
-        #         if subscript_match:
-        #             new_param_name = re.sub(r'\^{(.*?)}',
-        #                                     lambda match, obs=observable: '^{%s,%s}' % (match.groups(),
-        #                                                                                 obs),
-        #                                     param_name)
-        #         else:
-        #             new_param_name = '%s^{%s}' % (param_id, observable)
-        #         factory.set_parameter_names({param_id: new_param_name})
 
     def get_unbound_pdf(self, name, title):
         """Get unbound PDF."""
@@ -545,6 +532,22 @@ class ProductPhysicsFactory(BaseFactory):
         return tuple(param
                      for factory in self._children.values()
                      for param in factory.get_fit_parameters(extended))
+
+    def transform_dataset(self, dataset):
+        """Transform dataset according to the factory configuration.
+
+        The transformations of the children are applied in sequence.
+
+        Arguments:
+            dataset (pandas.DataFrame): Data frame to fold.
+
+        Returns:
+            `pandas.DataFrame`: Input dataset with the transformation applied.
+
+        """
+        for factory in self._children.values():
+            dataset = factory.transform_dataset(dataset)
+        return dataset
 
 
 # Sum physics factory
@@ -631,6 +634,21 @@ class SumPhysicsFactory(BaseFactory):
                      for factory in self._children.values()
                      for param in factory.get_fit_parameters(extended))
 
+    def transform_dataset(self, dataset):
+        """Transform dataset according to the factory configuration.
+
+        Since all PDFs of the addition are supposed to need the same transformation,
+        the dataset is transformed according to the first one
+
+        Arguments:
+            dataset (pandas.DataFrame): Data frame to fold.
+
+        Returns:
+            `pandas.DataFrame`: Input dataset with the transformation applied.
+
+        """
+        return self._children.values()[0](dataset)
+
 
 # Sum physics factory
 class SimultaneousPhysicsFactory(BaseFactory):
@@ -710,5 +728,31 @@ class SimultaneousPhysicsFactory(BaseFactory):
         return tuple(param
                      for factory in self._children.values()
                      for param in factory.get_fit_parameters(extended))
+
+    def transform_dataset(self, dataset):
+        """Transform dataset according to the factory configuration.
+
+        The category nane is used as column name to determine each of the
+        samples to transform.
+
+        Arguments:
+            dataset (pandas.DataFrame): Data frame to fold.
+
+        Returns:
+            `pandas.DataFrame`: Input dataset with the transformation applied.
+
+        Raises:
+            ValueError: When the dataset contains categories that have not been configured
+                in the class.
+
+        """
+        cat_var = self._category.GetName()
+        categories = dataset.groupby(cat_var).indices.keys()
+        # A simple check
+        if not set(categories).issubset(set(self._children.keys())):
+            raise ValueError("Dataset contains categories not defined in the SimultaneousPhysicsFactory")
+        for category in categories:
+            dataset[cat_var == category] = self._children[category].transform_dataset([cat_var == category])
+        return dataset
 
 # EOF
