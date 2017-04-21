@@ -18,7 +18,7 @@ from analysis.utils.config import fold_config, unfold_config, configure_paramete
 
 
 logger = get_logger('analysis.physics')
-logger.setLevel(10)
+# logger.setLevel(10)
 
 # def unfold_ordereddict(ordered_dict):
 #     if isinstance(ordered_dict, OrderedDict):

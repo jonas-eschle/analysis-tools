@@ -19,10 +19,12 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.fit import get_fit_strategy, build_fit_model
 from analysis.data import get_data
 from analysis.data.hdf import modify_hdf
 from analysis.data.converters import dataset_from_pandas
+from analysis.physics import configure_model
+from analysis.efficiency import get_acceptance
+from analysis.fit import fit
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
@@ -32,11 +34,15 @@ import analysis.utils.fit as _fit
 logger = get_logger('analysis.toys.fit')
 
 
-def get_datasets(data_info, data_frames, transformers):
+def get_datasets(data_info, acceptance, data_frames, transformers):
     """Build the datasets from the input toys.
+
+    If an acceptance is specified, events are selected using accept-reject.
 
     Arguments:
         data_info (list[dict]): Configuration of input toys.
+        acceptance (analysis.efficiency.acceptance.Acceptance): Acceptance description.
+            Can be None, in which case it is ignored.
         data_frames (list[pandas.DataFrame]): Data frames with the toy information.
         transformers (dict): Dataset transformation functions, with the name of the
             output dataset as key.
@@ -52,7 +58,10 @@ def get_datasets(data_info, data_frames, transformers):
     """
     dataset = None
     sample_sizes = {}
+    weight_var = None
     for data_name, data in data_info.items():
+        if acceptance:
+            data = acceptance.apply_accept_reject(data)
         # Do poisson if it is extended
         sample_sizes[data_name] = poisson.rvs(data['nevents'])
         # Extract suitable number of rows and transform them
@@ -62,9 +71,14 @@ def get_datasets(data_info, data_frames, transformers):
             dataset = rows
         else:
             dataset = pd.concat([dataset, rows])
+    # Get the fit weight
+    if acceptance:
+        weight_var = 'fit_weight'
+        dataset[weight_var] = acceptance.get_fit_weights(dataset)
     # Convert dataset to RooDataset
     return {ds_name: dataset_from_pandas(transform(dataset),
-                                         "data_%s" % ds_name, "data_%s" % ds_name)
+                                         "data_%s" % ds_name, "data_%s" % ds_name,
+                                         weight_var=weight_var)
             for ds_name, transform in transformers.items()},\
         sample_sizes
 
@@ -113,15 +127,9 @@ def run(config_files, link_from, verbose):
     if not models:
         logger.error("No model was specified in the config file!")
         raise KeyError()
-    try:
-        fit_strategies = {strategy_name: get_fit_strategy(strategy_name)
-                          for strategy_name
-                          in config['fit'].get('strategies', ['simple'])}
-    except KeyError as error:
-        logger.error("Unknown fit_strategy configuration -> %s", str(error))
-        raise KeyError("Unknown fit_strategy configuration")
+    fit_strategies = config['fit'].get('strategies', ['simple'])
     if not fit_strategies:
-        logger.error("No fit strategies were specified in the config file!")
+        logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()
     # Some info
     logger.info("Doing %s sample/fit sequences", config['fit']['nfits'])
@@ -158,15 +166,19 @@ def run(config_files, link_from, verbose):
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
             gen_values['%s^{%s}' % (var_name, source_name)] = toy_info[var_name][0]
-    fit_models = {}
-    for model_name, model in models.items():
-        fit_models[model_name] = build_fit_model(model_name, model)
-    # TODO: Acceptance
-    # acceptance = None
-    # if 'acceptance' in config:
-    #     acceptance_vars = config['acceptance']['vars']
-    #     gen_file = config['acceptance']['gen-file']
-    #     reco_file = config['acceptance']['reco-file']
+    try:
+        fit_models = {}
+        for model_name in models:
+            fit_models[model_name] = configure_model(config[model_name])
+    except KeyError:
+        raise KeyError("Missing model definition -> %s" % model_name)
+    # Now load the acceptance
+    try:
+        acceptance = get_acceptance(config['acceptance']) \
+            if 'acceptance' in config \
+            else None
+    except _config.ConfigError as error:
+        raise KeyError("Error loading acceptance -> %s" % error)
     # Prepare output
     gen_events = defaultdict(list)
     # Set seed
@@ -192,6 +204,7 @@ def run(config_files, link_from, verbose):
             logger.debug("Sampling input data")
             datasets, sample_sizes = get_datasets(config['data'],
                                                   data,
+                                                  acceptance,
                                                   {model_name: getattr(model.get_factories()[0],
                                                                        'transform_dataset')
                                                    for model_name, model in fit_models.items()})
@@ -207,10 +220,13 @@ def run(config_files, link_from, verbose):
             # Now fit
             for fit_strategy in fit_strategies:
                 toy_key = (model_name, fit_strategy)
-                fit_result = fit_model.fit(fit_strategy,
-                                           dataset,
-                                           config['fit'].get('minos', True),
-                                           verbose)
+                fit_result = fit(fit_model,
+                                 model_name,
+                                 fit_strategy,
+                                 dataset,
+                                 config['fit'].get('extended', True),
+                                 config['fit'].get('minos', True),
+                                 verbose)
                 # Now results are in fit_parameters
                 result = _fit.fit_parameters_to_dict(fit_model.get_fit_parameters())
                 result['fit_status'] = fit_result.status()

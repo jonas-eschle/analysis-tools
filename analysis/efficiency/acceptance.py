@@ -33,7 +33,7 @@ class Acceptance(object):
         if set(reco_efficiency.get_variables()) != set(var_list):
             raise KeyError("Non-matching variable names in reconstruction")
 
-    def apply_accept_reject(self, data, inplace=False, weight_col='acc_weights'):
+    def apply_accept_reject(self, data, inplace=False, weight_col=None):
         """Apply the accept-reject method to filter an input data frame.
 
         Arguments:
@@ -41,7 +41,7 @@ class Acceptance(object):
             inplace (bool, optional): Modify the input data frame to add the weights?
                 Defaults to False.
             weight_col (str, optional): Name of the weights column to be added.
-                Defaults to 'acc_weights'.
+                Defaults to None, in which case the column is not added.
 
         Returns:
             `pandas.DataFrame`: Filtered data frame, with the weights column added.
@@ -60,12 +60,17 @@ class Acceptance(object):
         if not inplace:
             data = data.copy()
         # Calculate event by event weights
-        data[weight_col] = self.get_weights(data)
+        weights = self.get_gen_weights(data)
         # pylint: disable=E1101
-        return data[data[weight_col] >= np.random.uniform(high=data[weight_col].max(), size=data.shape[0])]
+        filtered_data = data[weights >= np.random.uniform(high=weights.max(), size=data.shape[0])]
+        if weight_col:
+            filtered_data[weight_col] = weights
+        return filtered_data
 
-    def get_weights(self, data):
+    def get_gen_weights(self, data):
         """var_frame is a pandas.DataFrame with the columns.
+
+        Returns reco/gen.
 
         Column names are taken from var_list.
         Returns a pandas.Series.
@@ -74,6 +79,20 @@ class Acceptance(object):
         gen_eff = self._generation.get_efficiency(data[self._var_list])
         reco_eff = self._reconstruction.get_efficiency(data[self._var_list])
         return reco_eff/gen_eff
+
+    def get_fit_weights(self, data):
+        """var_frame is a pandas.DataFrame with the columns.
+
+        Returns gen/reco and normalizes to the data size.
+
+        Column names are taken from var_list.
+        Returns a pandas.Series.
+
+        """
+        gen_eff = self._generation.get_efficiency(data[self._var_list])
+        reco_eff = self._reconstruction.get_efficiency(data[self._var_list])
+        weights = gen_eff/reco_eff
+        return weights * data.shape[0] / weights.sum()
 
 
 # EOF

@@ -13,7 +13,7 @@ from collections import OrderedDict
 import ROOT
 
 from analysis.utils.config import configure_parameter
-from analysis.utils.root import execute_and_return_self
+from analysis.utils.root import execute_and_return_self, list_to_rooargset
 from analysis.utils.logging_color import get_logger
 
 
@@ -99,9 +99,9 @@ class BaseFactory(object):
         return self._children
 
     def get_constraints(self):
-        return self._constraints + [constraint
-                                    for child in self.get_children()
-                                    for constraint in child.get_constraints()]
+        return list_to_rooargset(self._constraints + [constraint
+                                                      for child in self.get_children()
+                                                      for constraint in child.get_constraints()])
 
     def _find_object(self, name):
         """Find object here or in children. Priority is here."""
