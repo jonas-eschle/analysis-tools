@@ -566,7 +566,7 @@ class SumPhysicsFactory(BaseFactory):
 
         """
         # Check observable compatibility
-        if len({tuple([tuple(set(obs.GetName())) for obs in factory.get_observables()])
+        if len({tuple([obs.GetName() for obs in factory.get_observables()])
                 for factory in factories.values()}) != 1:
             raise ValueError("Incompatible observables")
         super(SumPhysicsFactory, self).__init__({}, None)

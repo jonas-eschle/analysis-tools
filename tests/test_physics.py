@@ -16,6 +16,10 @@ import ROOT
 import analysis.physics as phys
 import analysis.physics.factory as phys_factory
 import analysis.physics.pdf_models as pdfs
+from analysis.utils.logging_color import get_logger
+
+
+get_logger('analysis.physics').setLevel(10)
 
 
 # Define a few factories
@@ -333,6 +337,10 @@ pdf:
                         alpha1: L 0.25923 0.1 0.5
                         alpha2: L -1.9749 -3.5 -1.0
                         frac: L 0.84873 0.1 1.0
+                q2:
+                    pdf: flat
+                    parameters:
+                        const: '@sigma'
         background:
             parameters:
                 Yield: 320
@@ -341,6 +349,10 @@ pdf:
                     pdf: exp
                     parameters:
                         tau: F -0.003
+                q2:
+                    pdf: flat
+                    parameters:
+                        const: '@sigma'
     label2:
         signal:
             parameters:
@@ -373,8 +385,8 @@ def test_simfactory_get_pdf(sim_factory):
     return all((isinstance(model, ROOT.RooSimultaneous),
                 model.GetName() == 'TestSimFactory',
                 model.GetTitle() == 'TestSimFactory',
-                model.getVariables()["tau^{label1,background}"].getVal() == -0.003,
-                model.getVariables()["tau^{label1,background}"].isConstant(),
+                model.getVariables()["tau^{label1,background,mass}"].getVal() == -0.003,
+                model.getVariables()["tau^{label1,background,mass}"].isConstant(),
                 model.getComponents()["signal"].createIntegral(
                     ROOT.RooArgSet(sim_factory.get_observables()[0])).getVal() == 173.17543630144118))
 

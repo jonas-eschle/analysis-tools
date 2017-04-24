@@ -56,8 +56,7 @@ def load_config(*file_names, **options):
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
     data = fold_config(unfolded_data)
-    logger.debug('Loaded configuration -> %s',
-                 data)
+    logger.debug('Loaded configuration -> %s', data)
     if 'validate' in options:
         missing_keys = []
         data_keys = ['/'.join(key.split('/')[:entry_num+1])
@@ -161,7 +160,7 @@ def unfold_config(dictionary):
     return output_list
 
 
-def fold_config(unfolded_data):
+def fold_config(unfolded_data, dict_class=dict):
     """Convert an unfolded dictionary (a la viewitems) back to a dictionary.
 
     Note:
@@ -169,18 +168,19 @@ def fold_config(unfolded_data):
 
     Arguments:
         unfolded_data (iterable): Data to fold
+        dict_class (class): Dictionary-like class used to fold the configuration.
 
     Returns:
-        dict
+        dict: Folded configuration.
 
     """
-    output_dict = {}
+    output_dict = dict_class()
     for key, value in unfolded_data:
         current_level = output_dict
         for sub_key in key.split('/'):
             previous_level = current_level
             if sub_key not in current_level:
-                current_level[sub_key] = {}
+                current_level[sub_key] = dict_class()
             current_level = current_level[sub_key]
         # pylint: disable=W0631
         previous_level[sub_key] = value

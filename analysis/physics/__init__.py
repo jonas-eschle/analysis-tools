@@ -7,7 +7,7 @@
 # =============================================================================
 """Physics utilities."""
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import traceback
 
 import ROOT
@@ -18,7 +18,10 @@ from analysis.utils.config import fold_config, unfold_config, configure_paramete
 
 
 logger = get_logger('analysis.physics')
-# logger.setLevel(10)
+
+# Infinitely recursed defultdict
+recurse_dict = lambda: defaultdict(recurse_dict)
+
 
 # def unfold_ordereddict(ordered_dict):
 #     if isinstance(ordered_dict, OrderedDict):
@@ -108,16 +111,19 @@ def configure_model(config, shared_vars=None):
     def configure_factory(observable, config, shared_vars=None):
         logger.debug("Configuring factory -> %s", dict(config))
         return get_physics_factory(observable, config['pdf'])(config,
-                                                              shared_vars.get('parameters', {}))
+                                                              shared_vars['parameters'])
 
     def configure_prod_factory(config, shared_vars=None):
-        logger.debug("Configuring product -> %s", dict(config['pdf']))
-        return factory.ProductPhysicsFactory(OrderedDict((observable,
-                                                          configure_factory(observable,
-                                                                            factory_config,
-                                                                            shared_vars.get('pdf', {}).get(observable, {})))
-                                                         for observable, factory_config in config['pdf'].items()),
-                                             parameters=config.get('parameters', None))
+        logger.debug("Configuring product -> %s", config['pdf'])
+        factories = OrderedDict((observable,
+                                 configure_factory(observable,
+                                                   factory_config,
+                                                   shared_vars['pdf'][observable]))
+                                for observable, factory_config in config['pdf'].items())
+        if len(factories) == 1:
+            return factories.values()[0]
+        else:
+            return factory.ProductPhysicsFactory(factories, parameters=config.get('parameters', None))
 
     def configure_sum_factory(config, shared_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
@@ -126,8 +132,14 @@ def configure_model(config, shared_vars=None):
             if 'parameters' not in pdf_config:
                 pdf_config['parameters'] = OrderedDict()
             pdf_config['parameters'].update(config.get('parameters', {}))
-            factories[pdf_name] = configure_model(pdf_config, shared_vars.get(pdf_name, {}))
-        return factory.SumPhysicsFactory(factories)
+            if isinstance(pdf_config.get('pdf', None), str):
+                factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
+            else:
+                factories[pdf_name] = configure_model(pdf_config, shared_vars[pdf_name])
+        if len(factories) == 1:
+            return factories.values()[0]
+        else:
+            return factory.SumPhysicsFactory(factories)
 
     def configure_simul_factory(config, shared_vars=None):
         logger.debug("Configuring simultaneous -> %s", dict(config))
@@ -149,13 +161,17 @@ def configure_model(config, shared_vars=None):
         for cat_label in config['pdf'].keys():
             for cat_iter, cat_sublabel in enumerate(cat_label.split(',')):
                 cat_list[cat_iter].defineType(cat_sublabel.replace(' ', ''))
-        return factory.SimultaneousPhysicsFactory({tuple(cat_label.replace(' ', '').split(',')):
-                                                   configure_model(cat_config, shared_vars['pdf'].get(cat_label, {}))
-                                                   for cat_label, cat_config in config['pdf'].items()},
-                                                  cat)
+        sim_factory = factory.SimultaneousPhysicsFactory({tuple(cat_label.replace(' ', '').split(',')):
+                                                          configure_model(cat_config,
+                                                                          shared_vars['pdf'][cat_label])
+                                                          for cat_label, cat_config in config['pdf'].items()},
+                                                         cat)
+        for cat in cat_list:
+            sim_factory.set('cat_%s' % cat.GetName(), cat)
+        return sim_factory
 
     import analysis.physics.factory as factory
-
+    # Prepare shared variables
     if shared_vars is None:
         # Create shared vars
         parameter_configs = {config_element: config_value
@@ -179,31 +195,17 @@ def configure_model(config, shared_vars=None):
                 raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
         # Now replace the refs by the shared variables
         shared_vars = fold_config({config_element: refs[ref_val.split('/')[0][1:]]
-                                   for config_element, ref_val in parameter_configs.items()}.viewitems())
+                                   for config_element, ref_val in parameter_configs.items()}.viewitems(),
+                                  recurse_dict)
     # Let's find out what is this
     if 'categories' in config:
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if len(config) == 1:
-                if not isinstance(config.values()[0]['pdf'], str):  # We have to go deeper
-                    pdf_name = config.keys()[0]
-                    pdf_config = config.values()[0]['pdf']
-                    if 'parameters' not in pdf_config.values()[0]:
-                        pdf_config.values()[0]['parameters'] = OrderedDict()
-                    pdf_config.values()[0]['parameters'].update(config.values()[0].get('parameters', {}))
-                    model = configure_model(pdf_config,
-                                            shared_vars[config.keys()[0]]['pdf'])
-                    model.rename_children_parameters([(pdf_name, model)])
-                    return model
-                observable = config.keys()[0]
-                pdf_config = config[observable]
-                if 'parameters' not in pdf_config:
-                    pdf_config['parameters'] = OrderedDict()
-                pdf_config['parameters'].update(config.get('parameters', {}))
-                return configure_factory(observable,
-                                         pdf_config,
-                                         shared_vars[observable])
+            if isinstance(config.values()[0]['pdf'], str):
+                shared = recurse_dict()
+                shared['pdf'] = shared_vars
+                return configure_prod_factory({'pdf': config}, shared)
             else:
                 return configure_sum_factory(config, shared_vars)
         else:
@@ -215,11 +217,11 @@ def configure_model(config, shared_vars=None):
                 if 'parameters' not in pdf_config:
                     pdf_config['parameters'] = OrderedDict()
                 pdf_config['parameters'].update(config.get('parameters'))
-                sh_vars = shared_vars.get('pdf', {}).get(pdf_obs, {}).copy()
+                sh_vars = shared_vars['pdf'][pdf_obs].copy()
                 if 'parameters' in sh_vars:
-                    sh_vars['parameters'].update(shared_vars.get('parameters', {}))
+                    sh_vars['parameters'].update(shared_vars['parameters'])
                 else:
-                    sh_vars['parameters'] = shared_vars.get('parameters', {})
+                    sh_vars['parameters'] = shared_vars['parameters']
                 return configure_factory(pdf_obs, pdf_config, sh_vars)
     raise RuntimeError()
 
