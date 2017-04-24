@@ -228,7 +228,7 @@ def test_prodfactory_get_pdf(prod_factory):
                 model.getVariables()['mu^{mass}'].getVal() == 5246.7,  # Checks naming convention
                 model.createIntegral(
                     ROOT.RooArgSet(*prod_factory.get_observables())).getVal() == 18.93855584296594,
-                model.getComponents()["q2"].createIntegral(
+                model.getComponents()["TestProdFactory^{q2}"].createIntegral(
                     ROOT.RooArgSet(prod_factory.get_observables()[1])).getVal() == 19.0))
 
 
@@ -243,11 +243,10 @@ def test_prodfactory_get_extendedpdf(prod_factory):
 def test_prodfactory_shared(prod_factory):
     """Test that shared parameters are treated correctly."""
     model = prod_factory.get_pdf("TestProdFactory", "TestProdFactory")
-    model.getComponents().Print("v")
-    model.getComponents()['mass'].getComponents()['massCB1'].getVariables().Print("v")
-    sigma1 = model.getComponents()['mass'].getComponents()['massCB1'].getVariables()['sigma']
-    sigma2 = model.getComponents()['mass'].getComponents()['massCB2'].getVariables()['sigma']
-    const = model.getComponents()['q2'].getVariables()['sigma']
+    model.getComponents()['TestProdFactory^{mass}CB1'].getVariables().Print("v")
+    sigma1 = model.getComponents()['TestProdFactory^{mass}CB1'].getVariables()['sigma']
+    sigma2 = model.getComponents()['TestProdFactory^{mass}CB2'].getVariables()['sigma']
+    const = model.getComponents()['TestProdFactory^{q2}'].getVariables()['sigma']
     return all([sigma1 == sigma2,
                 sigma1 == const,
                 sigma2.getVal() == 41.0,
@@ -300,16 +299,16 @@ def test_sumfactory_get_extendedpdf(sum_factory):
                 model.GetTitle() == 'TestSumFactory',
                 model.getVariables()["tau^{background}"].getVal() == -0.003,
                 model.getVariables()["tau^{background}"].isConstant(),
-                model.getComponents()["signal"].createIntegral(
+                model.getComponents()["TestSumFactory^{signal}_{noext}"].createIntegral(
                     ROOT.RooArgSet(sum_factory.get_observables()[0])).getVal() == 173.17543630144118))
 
 
 # pylint: disable=W0621
 def test_sumfactory_shared(sum_factory):
     """Test that shared parameters are treated correctly."""
-    model = sum_factory.get_pdf("TestProdFactory", "TestProdFactory")
-    yield_signal = model.getComponents()['signal'].getVariables()['yield']
-    yield_background = model.getComponents()['background'].getVariables()['yield']
+    model = sum_factory.get_pdf("TestSumFactory", "TestSumFactory")
+    yield_signal = model.getComponents()['TestSumFactory^{signal}'].getVariables()['yield']
+    yield_background = model.getComponents()['TestSumFactory^{background}'].getVariables()['yield']
     return all((yield_signal == yield_background,
                 yield_signal.getVal() == 999))
 
@@ -387,17 +386,18 @@ def test_simfactory_get_pdf(sim_factory):
                 model.GetTitle() == 'TestSimFactory',
                 model.getVariables()["tau^{label1,background,mass}"].getVal() == -0.003,
                 model.getVariables()["tau^{label1,background,mass}"].isConstant(),
-                model.getComponents()["signal"].createIntegral(
+                model.getComponents()["TestSimFactory^{label1,signal}"].createIntegral(
                     ROOT.RooArgSet(sim_factory.get_observables()[0])).getVal() == 173.17543630144118))
 
 
 # pylint: disable=W0621
 def test_simfactory_vs_factory(factory, sim_factory):
+    """Compare that the same configuration gives the same object."""
     fac_model = factory.get_pdf("TestFactory", "TestFactory")
     sim_model = sim_factory.get_pdf("TestSimFactory", "TestSimFactory")
     return fac_model.createIntegral(
         ROOT.RooArgSet(factory.get_observables()[0])).getVal() == \
-        sim_model.getComponents()["signal"].createIntegral(
+        sim_model.getComponents()["TestSimFactory^{label1,signal}"].createIntegral(
             ROOT.RooArgSet(sim_factory.get_observables()[0])).getVal()
 
 

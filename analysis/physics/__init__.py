@@ -18,6 +18,7 @@ from analysis.utils.config import fold_config, unfold_config, configure_paramete
 
 
 logger = get_logger('analysis.physics')
+# logger.setLevel(10)
 
 # Infinitely recursed defultdict
 recurse_dict = lambda: defaultdict(recurse_dict)

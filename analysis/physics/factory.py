@@ -249,6 +249,19 @@ class BaseFactory(object):
             self._parameter_names[base_name] = new_name
         return all_good
 
+    def _add_superscript(self, name, superscript, old_first=True):
+        subscript_match = re.search(r'\^{(.*?)}', name)
+        sub_func = lambda match, name=superscript: '^{%s,%s}' % (match.groups()[0], name) \
+            if old_first \
+            else lambda match, name=superscript: '^{%s,%s}' % (name, match.groups()[0])
+        if subscript_match:
+            new_name = re.sub(r'\^{(.*?)}',
+                              sub_func,
+                              name)
+        else:
+            new_name = '%s^{%s}' % (name, superscript)
+        return new_name
+
     def rename_children_parameters(self, naming=None):
         if not naming:
             naming = self._children.viewitems()
@@ -260,16 +273,8 @@ class BaseFactory(object):
                                                    for child_name, child in factory.get_children().items())
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield']:
-                param_name = factory.get_parameter_name(param_id)
-                subscript_match = re.search(r'\^{(.*?)}', param_name)
-                if subscript_match:
-                    new_param_name = re.sub(r'\^{(.*?)}',
-                                            lambda match, name=label: '^{%s,%s}' % (name,
-                                                                                    match.groups()[0]),
-                                            param_name)
-                else:
-                    new_param_name = '%s^{%s}' % (param_name, label)
-                parameters_to_set[param_id] = new_param_name
+                parameters_to_set[param_id] = self._add_superscript(factory.get_parameter_name(param_id),
+                                                                    label)
             factory.set_parameter_names(parameters_to_set)
 
     def get_pdf(self, name, title):
@@ -460,7 +465,8 @@ class ProductPhysicsFactory(BaseFactory):
         """Get unbound PDF."""
         pdfs = ROOT.RooArgList()
         for observable, factory in self._children.items():
-            pdfs.add(factory.get_pdf(observable, observable))
+            new_name = self._add_superscript(name, observable)
+            pdfs.add(factory.get_pdf(new_name, new_name))
         return ROOT.RooProdPdf(name, title, pdfs)
 
     def get_extended_pdf(self, name, title, yield_val=None, yield_name=None):
@@ -591,7 +597,8 @@ class SumPhysicsFactory(BaseFactory):
         else:
             pdfs = ROOT.RooArgList()
             for child_name, child in self._children.items():
-                pdfs.add(child.get_extended_pdf(child_name, child_name))
+                new_name = self._add_superscript(name, child_name)
+                pdfs.add(child.get_extended_pdf(new_name, new_name))
             return self.set(pdf_name, ROOT.RooAddPdf(name, title, pdfs))
 
     def get_observables(self):
@@ -672,8 +679,9 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_unbound_pdf(self, name, title):
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
         for category, child in self._children.items():
-            sim_pdf.addPdf(child.get_extended_pdf('%s^{%s}' % (name, category),
-                                                  '%s^{%s}' % (title, category)),
+            new_name = self._add_superscript(name, category)
+            sim_pdf.addPdf(child.get_extended_pdf(new_name,
+                                                  new_name),
                            '{%s}' % category if category.count(';') > 0 else category)
         return sim_pdf
 
