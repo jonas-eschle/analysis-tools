@@ -53,6 +53,7 @@ set_global_var('STYLE_PATH',
                             'data_files', 'styles'))
 # add_pdf_paths('pdfs')  # Setup {BASE_PATH}/pdfs as base dir for PDFs
 set_global_var('PDF_PATHS', [])
+set_global_var('FILE_TYPES', {})
 set_global_var('FIT_STRATEGIES', {})
 set_global_var('PHYSICS_FACTORIES', defaultdict(dict))
 set_global_var('EFFICIENCY_MODELS', {})

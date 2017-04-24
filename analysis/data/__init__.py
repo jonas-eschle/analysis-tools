@@ -13,8 +13,6 @@ from analysis import get_global_var
 from analysis.utils.config import load_config
 from analysis.utils.logging_color import get_logger
 
-# File modules
-import analysis.data.loaders as _loaders
 
 logger = get_logger('analysis.data')
 
@@ -75,6 +73,7 @@ def get_data(data_config):
         ValueError: If the requested output format is not available for the input.
 
     """
+    import analysis.data.loaders as _loaders
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:

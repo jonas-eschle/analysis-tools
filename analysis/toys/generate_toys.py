@@ -10,12 +10,13 @@
 import argparse
 import os
 
+import numpy as np
 import pandas as pd
 import ROOT
 
 from analysis.physics import configure_model
 from analysis.physics.factory import SumPhysicsFactory, SimultaneousPhysicsFactory
-from analysis.utils.root import destruct_object
+from analysis.utils.root import destruct_object, list_to_rooargset
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
 # pylint: disable=E0611
@@ -27,16 +28,25 @@ from analysis.data.hdf import modify_hdf
 logger = get_logger('analysis.toys.generate')
 
 
-def generate(physics_factory, configuration):
+def generate(physics_factory, n_events):
     """Perform generation of toys.
+
+    Note:
+        If the factory is simultaneous, events are generated in steps.
+        For that reason, the configuration for 'gen/nevents' must be a dictionary
+        of {label -> nevents} keys.
 
     Arguments:
         physics_factory (`analysis.physics.PhysicsFactory`): Physics factory object to get
             observables, parameters and PDFs from.
-        configuration (dict): Configuration.
+        n_events (dict, int): Number of events to generate.
 
     Returns:
         `pandas.DataFrame`: Generated events.
+
+    Raises:
+        ValueError: If the number of events to generate is not properly specified.
+        KeyError: If an unknown simultaneous category label is requested.
 
     """
     def generate_events(gen_pdf, obs_set, n_events):
@@ -58,16 +68,30 @@ def generate(physics_factory, configuration):
         destruct_object(data)
         return dataframe
 
-    # pylint: disable=C0103
-    observables = physics_factory.get_observables()
-    obs_set = ROOT.RooArgSet()
-    for obs in observables:
-        obs_set.add(obs)
-    fit_params = physics_factory.get_fit_parameters()
-    return generate_events(physics_factory.get_pdf("GenPdf", "GenPdf",
-                                                   *(observables + fit_params)),
-                           obs_set,
-                           configuration['gen']['nevents'])
+    observables = list_to_rooargset(physics_factory.get_observables())
+    if physics_factory.is_simultaneous():
+        if not isinstance(n_events, dict):
+            raise ValueError("Generation of a simultaneous requires a dictionary for the number of events.")
+        output_dataset = None
+        for label, n_events_label in n_events.items():
+            label_factory = physics_factory.get_children().get(label, None)
+            if not label_factory:
+                raise KeyError("Unknown label -> %s" % label)
+            label_df = generate_events(label_factory.get_pdf("GenPdf_%s" % label,
+                                                             "GenPdf_%s" % label),
+                                       observables,
+                                       n_events_label).assign(category=label)
+            if output_dataset is None:
+                output_dataset = label_df
+            else:
+                output_dataset = output_dataset.append(label_df)
+        return output_dataset
+    else:
+        if not isinstance(n_events, int):
+            raise ValueError("Number of events to generate is not an integer")
+        return generate_events(physics_factory.get_pdf("GenPdf", "GenPdf"),
+                               observables,
+                               n_events)
 
 
 def run(config_files, link_from):
@@ -136,17 +160,20 @@ def run(config_files, link_from):
         logger.warning("Generating a RooAddPdf or a RooSimultaneous: "
                        "yields will be generated at a fixed value")
     try:
-        dataset = generate(physics, config)
+        dataset = generate(physics, config['gen']['nevents'])
     except ValueError as error:
         logger.exception("Exception on generation")
         raise RuntimeError(str(error))
     # Get toy information
     toy_info = {var.GetName(): [var.getVal()]
-                for var
-                in physics.get_gen_parameters()}
+                for var in physics.get_gen_parameters()}
+    n_evts = sum(config['gen']['nevents'].values()) \
+        if isinstance(config['gen']['nevents'], dict) \
+        else config['gen']['nevents']
+    logger.warning(n_evts)
     toy_info.update({'seed': [seed],
                      'jobid': [job_id],
-                     'nevents': [config['gen']['nevents']]})
+                     'nevents': n_evts})
     try:
         # Save
         with work_on_file(config['name'],
@@ -195,7 +222,7 @@ def main():
         exit_status = 0
     except KeyError:
         exit_status = 1
-        logger.error("Bad configuration given")
+        logger.exception("Bad configuration given")
     except OSError, error:
         exit_status = 2
         logger.error(str(error))
