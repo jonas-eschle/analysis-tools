@@ -12,6 +12,7 @@ import os
 from analysis import get_global_var
 from analysis.utils.config import load_config
 from analysis.utils.logging_color import get_logger
+import analysis.utils.paths as paths
 
 
 logger = get_logger('analysis.data')
@@ -81,14 +82,14 @@ def get_data(data_config):
     source_name = data_config.pop('source')
     try:
         source_type = data_config.pop('source-type', None)
-        file_name = source_name if source_type \
-            else getattr('get_%s_path' % source_type)(source_name)
+        file_name = source_name if not source_type \
+            else getattr(paths, 'get_%s_path' % source_type)(source_name)
     except AttributeError:
         raise AttributeError("Unknown source type -> %s" % source_type)
     tree_name = data_config.pop('tree')
     output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches
-    input_ext = os.path.splitext(file_name)
+    input_ext = os.path.splitext(file_name)[1]
     try:
         input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:

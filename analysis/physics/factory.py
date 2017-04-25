@@ -99,9 +99,10 @@ class BaseFactory(object):
         return self._children
 
     def get_constraints(self):
-        return list_to_rooargset(self._constraints + [constraint
-                                                      for child in self.get_children()
-                                                      for constraint in child.get_constraints()])
+        child_constraints = ROOT.RooArgSet(list_to_rooargset(self._constraints))
+        for child in self.get_children().values():
+            child_constraints = ROOT.RooArgSet(child_constraints, child.get_constraints())
+        return child_constraints
 
     def _find_object(self, name):
         """Find object here or in children. Priority is here."""

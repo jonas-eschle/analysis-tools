@@ -116,6 +116,10 @@ def configure_model(config, shared_vars=None):
 
     def configure_prod_factory(config, shared_vars=None):
         logger.debug("Configuring product -> %s", config['pdf'])
+        params = config.get('parameters', {})
+        params.update(config['pdf'].pop('parameters', {}))
+        if not params:
+            params = None
         factories = OrderedDict((observable,
                                  configure_factory(observable,
                                                    factory_config,
@@ -124,7 +128,7 @@ def configure_model(config, shared_vars=None):
         if len(factories) == 1:
             return factories.values()[0]
         else:
-            return factory.ProductPhysicsFactory(factories, parameters=config.get('parameters', None))
+            return factory.ProductPhysicsFactory(factories, parameters=params)
 
     def configure_sum_factory(config, shared_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))

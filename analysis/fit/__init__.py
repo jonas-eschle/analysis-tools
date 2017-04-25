@@ -71,6 +71,7 @@ def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, verbose
 
     Raises:
         KeyError: If the fit strategy is not registered.
+        ValueError: If there is a problem getting the PDF.
 
     """
     import ROOT
@@ -79,16 +80,20 @@ def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, verbose
                   ROOT.RooFit.Extended(extended),
                   ROOT.RooFit.Minos(minos),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-    constraints = factory.get_fit_constraints()
+    constraints = factory.get_constraints()
     if constraints.getSize():
         fit_config.append(ROOT.RooFit.ExternalConstraints(constraints))
     try:
         fit_func = get_fit_strategy(strategy)
     except KeyError:
         raise KeyError("Unknown fit strategy -> %s" % strategy)
-    model = factory.get_extended_pdf(pdf_name, pdf_name) \
-        if extended \
-        else factory.get_pdf(pdf_name, pdf_name)
+    try:
+        model = factory.get_extended_pdf(pdf_name, pdf_name) \
+            if extended \
+            else factory.get_pdf(pdf_name, pdf_name)
+    except ValueError as error:
+        logger.error("Problem getting the PDF -> %s", error)
+        raise
     return fit_func(model, dataset, fit_config)
 
 

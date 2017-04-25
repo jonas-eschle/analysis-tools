@@ -34,18 +34,19 @@ import analysis.utils.fit as _fit
 logger = get_logger('analysis.toys.fit')
 
 
-def get_datasets(data_info, acceptance, data_frames, transformers):
+def get_datasets(data_frames, acceptance, fit_models):
     """Build the datasets from the input toys.
 
     If an acceptance is specified, events are selected using accept-reject.
 
     Arguments:
-        data_info (list[dict]): Configuration of input toys.
+        data_frames (dict[tuple(pandas.DataFrame, int, str)]): Data frames with the requested
+            number of events and the corresponding category.
         acceptance (analysis.efficiency.acceptance.Acceptance): Acceptance description.
             Can be None, in which case it is ignored.
-        data_frames (list[pandas.DataFrame]): Data frames with the toy information.
-        transformers (dict): Dataset transformation functions, with the name of the
-            output dataset as key.
+        fit_models (dict): Fit models to use to transform datasets and (possibly) establish
+            the data categories, with the name of the output as key.
+        categories (dict, optional): Category of each data frame.
 
     Returns:
         tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the
@@ -59,28 +60,37 @@ def get_datasets(data_info, acceptance, data_frames, transformers):
     dataset = None
     sample_sizes = {}
     weight_var = None
-    for data_name, data in data_info.items():
+    logger.debug("Loading datasets -> %s", data_frames.keys())
+    for data_name, (data, n_events, category) in data_frames.items():
         if acceptance:
             data = acceptance.apply_accept_reject(data)
         # Do poisson if it is extended
-        sample_sizes[data_name] = poisson.rvs(data['nevents'])
+        sample_sizes[data_name] = poisson.rvs(n_events)
         # Extract suitable number of rows and transform them
-        rows = data_frames[data_name].sample(sample_sizes[data_name])
+        rows = data.sample(sample_sizes[data_name])
+        # Add category column
+        if category:
+            # By default the label is stored in the 'category' column
+            rows['category'] = category
         # Append to merged dataset
         if dataset is None:
             dataset = rows
         else:
             dataset = pd.concat([dataset, rows])
+    logger.debug("Done loading")
     # Get the fit weight
     if acceptance:
+        logger.debug("Adding fitting weights")
         weight_var = 'fit_weight'
         dataset[weight_var] = acceptance.get_fit_weights(dataset)
     # Convert dataset to RooDataset
-    return {ds_name: dataset_from_pandas(transform(dataset),
-                                         "data_%s" % ds_name, "data_%s" % ds_name,
-                                         weight_var=weight_var)
-            for ds_name, transform in transformers.items()},\
-        sample_sizes
+    return ({ds_name: dataset_from_pandas(model.transform_dataset(dataset),
+                                          "data_%s" % ds_name,
+                                          "data_%s" % ds_name,
+                                          weight_var=weight_var,
+                                          category=model.get_category_var())
+             for ds_name, model in fit_models.items()},
+            sample_sizes)
 
 
 def run(config_files, link_from, verbose):
@@ -144,19 +154,21 @@ def run(config_files, link_from, verbose):
     logger.info("Loading input data")
     data = {}
     gen_values = {}
+    if len(set('category' in data_source for data_source in config['data'])) > 1:
+        raise KeyError("Categories in 'data' not consistently specified.")
     for data_source in config['data']:
         try:
             source_toy = data_source['source']
         except KeyError:
             logger.error("Data source not specified")
             raise
-        source_name = data_source.get('pulls-with', None)
-        if not source_name:
-            source_name = source_toy
-            data[source_name] = get_data({'source': source_toy,
-                                          'source-type': 'toy',
-                                          'tree': 'data',
-                                          'output-format': 'pandas'})
+        data[source_toy] = (get_data({'source': source_toy,
+                                      'source-type': 'toy',
+                                      'tree': 'data',
+                                      'output-format': 'pandas',
+                                      'selection': data_source.get('selection', None)}),
+                            data_source['nevents'],
+                            data_source.get('category', None))
         # Generator values
         toy_info = get_data({'source': source_toy,
                              'source-type': 'toy',
@@ -165,13 +177,16 @@ def run(config_files, link_from, verbose):
         for var_name in toy_info.columns:
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
-            gen_values['%s^{%s}' % (var_name, source_name)] = toy_info[var_name][0]
+            gen_values['%s^{%s}' % (var_name, source_toy)] = toy_info[var_name][0]
     try:
         fit_models = {}
         for model_name in models:
+            if model_name not in config:
+                raise KeyError("Missing model definition -> %s" % model_name)
             fit_models[model_name] = configure_model(config[model_name])
     except KeyError:
-        raise KeyError("Missing model definition -> %s" % model_name)
+        logger.exception('Error loading model')
+        raise ValueError('Error loading model')
     # Now load the acceptance
     try:
         acceptance = get_acceptance(config['acceptance']) \
@@ -202,14 +217,12 @@ def run(config_files, link_from, verbose):
         # Get a compound dataset
         try:
             logger.debug("Sampling input data")
-            datasets, sample_sizes = get_datasets(config['data'],
-                                                  data,
+            datasets, sample_sizes = get_datasets(data,
                                                   acceptance,
-                                                  {model_name: getattr(model.get_factories()[0],
-                                                                       'transform_dataset')
-                                                   for model_name, model in fit_models.items()})
+                                                  fit_models)
             for sample_name, sample_size in sample_sizes.items():
                 gen_events['N^{%s}_{gen}' % sample_name].append(sample_size)
+            logger.debug("Sampling finalized")
         except KeyError:
             logger.exception("Bad data configuration")
             raise
@@ -220,13 +233,16 @@ def run(config_files, link_from, verbose):
             # Now fit
             for fit_strategy in fit_strategies:
                 toy_key = (model_name, fit_strategy)
-                fit_result = fit(fit_model,
-                                 model_name,
-                                 fit_strategy,
-                                 dataset,
-                                 config['fit'].get('extended', True),
-                                 config['fit'].get('minos', True),
-                                 verbose)
+                try:
+                    fit_result = fit(fit_model,
+                                     model_name,
+                                     fit_strategy,
+                                     dataset,
+                                     config['fit'].get('extended', True),
+                                     config['fit'].get('minos', True),
+                                     verbose)
+                except ValueError:
+                    raise RuntimeError()
                 # Now results are in fit_parameters
                 result = _fit.fit_parameters_to_dict(fit_model.get_fit_parameters())
                 result['fit_status'] = fit_result.status()
@@ -240,31 +256,35 @@ def run(config_files, link_from, verbose):
     logger.info("Saving to disk")
     data_res = []
     # Get gen values for this model
-    data_gen = {key + '_{gen}': val for key, val in gen_values.items()}
-    nominal_yields = {'N^{%s}_{nominal}' % data_name: data_info['nevents']
-                      for data_name, data_info
-                      in config['data'].items()}
-    # indices = ['model_name', 'fit_strategy'] + data_gen.keys() + nominal_yields.keys()
     for (model_name, fit_strategy), fits in fit_results.items():
         for fit_res in fits:
             fit_res = fit_res.copy()
             fit_res['model_name'] = model_name
             fit_res['fit_strategy'] = fit_strategy
             data_res.append(fit_res)
-            # fit_res.update(data_gen)
-            # fit_res.update(nominal_yields)
-            # Calculate pulls
     data_frame = pd.DataFrame(data_res)
-    gen_frame = pd.concat([pd.concat([pd.concat([pd.DataFrame(data_gen, index=[0]),
-                                                 pd.DataFrame(nominal_yields, index=[0])],
-                                                axis=1)]*data_frame.shape[0]).reset_index(drop=True),
-                           pd.DataFrame(gen_events)],
-                          axis=1)
+    # gen_frame = pd.concat([pd.concat([pd.concat([pd.DataFrame({key + '_{gen}': val
+    #                                                            for key, val in gen_values.items()},
+    #                                                           index=[0]),
+    #                                              pd.DataFrame({'N^{%s}_{nominal}' % data_info['source']:
+    #                                                            data_info['nevents']
+    #                                                            for data_info in config['data']},
+    #                                                           index=[0])],
+    #                                             axis=1)]*data_frame.shape[0]).reset_index(drop=True),
+    #                        pd.DataFrame(gen_events)],
+    #                       axis=1)
     # Currently, fit_result_frame is not indexed. Could be improved in the future.
     # Should I just separate gen_frame from data_frame to save space?
-    fit_result_frame = pd.concat([gen_frame,
+    # TODO: No gen values right now.
+    # fit_result_frame = pd.concat([gen_frame,
+    #                               data_frame,
+    #                               _fit.calculate_pulls(data_frame, gen_frame)],
+    #                              axis=1)
+    fit_result_frame = pd.concat([pd.DataFrame(gen_events),
                                   data_frame,
-                                  _fit.calculate_pulls(data_frame, gen_frame)],
+                                  pd.concat([pd.DataFrame({'seed': [seed],
+                                                           'jobid': [job_id]})]
+                                            * data_frame.shape[0]).reset_index(drop=True)],
                                  axis=1)
     try:
         # pylint: disable=E1101
@@ -276,11 +296,11 @@ def run(config_files, link_from, verbose):
                 # Add link to generated samples for bookeeping
                 if 'gen_info' not in hdf_file:
                     hdf_file.append('gen_info',
-                                    pd.DataFrame([{'name': data_name,
+                                    pd.DataFrame([{'name': data_info['source'],
                                                    'source': _paths.get_toy_path(data_info['source']),
                                                    'nevents': data_info['nevents']}
-                                                  for data_name, data_info
-                                                  in config['data'].items()]).set_index(['name']))
+                                                  for data_info
+                                                  in config['data']]).set_index(['name']))
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
@@ -319,6 +339,7 @@ def main():
                         help="Configuration files")
     args = parser.parse_args()
     if args.verbose:
+        get_logger('analysis').setLevel(1)
         logger.setLevel(1)
     else:
         ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
@@ -333,10 +354,10 @@ def main():
         logger.error(str(error))
     except ValueError:
         exit_status = 3
-        logger.error("Problem configuring physics factories")
+        logger.exception("Problem configuring physics factories")
     except RuntimeError as error:
         exit_status = 4
-        logger.exception("Error in fitting events")
+        logger.error("Error in fitting events")
     # pylint: disable=W0703
     except Exception as error:
         exit_status = 128
