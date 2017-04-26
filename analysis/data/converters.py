@@ -12,7 +12,7 @@ from collections import defaultdict
 import pandas as pd
 import ROOT
 
-from analysis.utils.root import list_to_rooargset
+from analysis.utils.root import list_to_rooargset, destruct_object
 
 
 def pandas_from_dataset(dataset):
@@ -97,19 +97,21 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
         if category else []
     if categories:
         dataset = None
-        for category in categories:
+        for cat in categories:
+            cat_ds = fill_dataset('%s_%s' % (name, cat),
+                                  '%s_%s' % (name, cat),
+                                  dataset_set,
+                                  frame[frame[cat_var] == cat])
             temp_ds = ROOT.RooDataSet(name, name,
                                       dataset_set,
                                       ROOT.RooFit.Index(category),
-                                      ROOT.RooFit.Import(category,
-                                                         fill_dataset('%s_%s' % (name, category),
-                                                                      '%s_%s' % (name, category),
-                                                                      dataset_set,
-                                                                      frame[cat_var == category])))
+                                      ROOT.RooFit.Import(cat, cat_ds))
             if dataset is None:
                 dataset = temp_ds
             else:
                 dataset.append(temp_ds)
+                destruct_object(temp_ds)
+            destruct_object(cat_ds)
     else:
         dataset = fill_dataset(name, title, dataset_set, frame)
     if weight_var:

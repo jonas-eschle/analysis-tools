@@ -120,15 +120,20 @@ def configure_model(config, shared_vars=None):
         params.update(config['pdf'].pop('parameters', {}))
         if not params:
             params = None
-        factories = OrderedDict((observable,
-                                 configure_factory(observable,
-                                                   factory_config,
-                                                   shared_vars['pdf'][observable]))
-                                for observable, factory_config in config['pdf'].items())
-        if len(factories) == 1:
-            return factories.values()[0]
+        if len(config['pdf']) == 1:
+            observable = config['pdf'].keys()[0]
+            factory_config = config['pdf'].values()[0]
+            if 'parameters' not in factory_config:
+                factory_config['parameters'] = {}
+            factory_config['parameters'].update(params)
+            return configure_factory(observable, factory_config, shared_vars['pdf'][observable])
         else:
-            return factory.ProductPhysicsFactory(factories, parameters=params)
+            return factory.ProductPhysicsFactory(OrderedDict((observable,
+                                                              configure_factory(observable,
+                                                                                factory_config,
+                                                                                shared_vars['pdf'][observable]))
+                                                             for observable, factory_config in config['pdf'].items()),
+                                                 parameters=params)
 
     def configure_sum_factory(config, shared_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))

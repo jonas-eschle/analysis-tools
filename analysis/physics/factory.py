@@ -744,6 +744,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
         The category nane is used as column name to determine each of the
         samples to transform.
 
+        Note:
+            For the category, a column named after the category variable is searched
+            for. If not found, the 'category' column is used.
+
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
@@ -753,15 +757,21 @@ class SimultaneousPhysicsFactory(BaseFactory):
         Raises:
             ValueError: When the dataset contains categories that have not been configured
                 in the class.
+            KeyError: If the category is not found in the dataset.
 
         """
         cat_var = self._category.GetName()
+        if cat_var not in dataset.columns:
+            cat_var = 'category'
+            if cat_var not in dataset.columns:
+                raise KeyError("Category var not found in dataset -> %s" % self._category.GetName())
         categories = dataset.groupby(cat_var).indices.keys()
         # A simple check
         if not set(categories).issubset(set(self._children.keys())):
             raise ValueError("Dataset contains categories not defined in the SimultaneousPhysicsFactory")
         for category in categories:
-            dataset[cat_var == category] = self._children[category].transform_dataset([cat_var == category])
+            dataset.loc[dataset[cat_var] == category] = self._children[category] \
+                .transform_dataset(dataset[dataset[cat_var] == category].copy())
         return dataset
 
 # EOF

@@ -84,13 +84,17 @@ def get_datasets(data_frames, acceptance, fit_models):
         weight_var = 'fit_weight'
         dataset[weight_var] = acceptance.get_fit_weights(dataset)
     # Convert dataset to RooDataset
-    return ({ds_name: dataset_from_pandas(model.transform_dataset(dataset),
-                                          "data_%s" % ds_name,
-                                          "data_%s" % ds_name,
-                                          weight_var=weight_var,
-                                          category=model.get_category_var())
-             for ds_name, model in fit_models.items()},
-            sample_sizes)
+    try:
+        return ({ds_name: dataset_from_pandas(model.transform_dataset(dataset),
+                                              "data_%s" % ds_name,
+                                              "data_%s" % ds_name,
+                                              weight_var=weight_var,
+                                              category=model.get_category_var())
+                 for ds_name, model in fit_models.items()},
+                sample_sizes)
+    except KeyError:
+        logger.error("Error transforming dataset.")
+        raise
 
 
 def run(config_files, link_from, verbose):
@@ -162,13 +166,17 @@ def run(config_files, link_from, verbose):
         except KeyError:
             logger.error("Data source not specified")
             raise
-        data[source_toy] = (get_data({'source': source_toy,
-                                      'source-type': 'toy',
-                                      'tree': 'data',
-                                      'output-format': 'pandas',
-                                      'selection': data_source.get('selection', None)}),
-                            data_source['nevents'],
-                            data_source.get('category', None))
+        data_id = data_source.get('id', source_toy)
+        if data_id in data:
+            logger.error("Repeated data source with no id given")
+            raise KeyError()
+        data[data_id] = (get_data({'source': source_toy,
+                                   'source-type': 'toy',
+                                   'tree': 'data',
+                                   'output-format': 'pandas',
+                                   'selection': data_source.get('selection', None)}),
+                         data_source['nevents'],
+                         data_source.get('category', None))
         # Generator values
         toy_info = get_data({'source': source_toy,
                              'source-type': 'toy',
