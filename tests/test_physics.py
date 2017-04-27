@@ -192,7 +192,7 @@ def prod_factory():
     """Load a ProdPhysicsFactory."""
     return load_model("""
 parameters:
-    Yield: 999
+    Yield: G 999 100
 pdf:
     mass:
         pdf: cb
@@ -215,7 +215,9 @@ pdf:
 # pylint: disable=W0621
 def test_prodfactory_load(prod_factory):
     """Test factory loading returns an object of the correct type."""
-    return isinstance(prod_factory, phys_factory.ProductPhysicsFactory)
+    return all((isinstance(prod_factory, phys_factory.ProductPhysicsFactory),
+                isinstance(prod_factory.get_constraints()['YieldConstraint'],
+                           ROOT.RooGaussian)))
 
 
 # pylint: disable=W0621
@@ -260,7 +262,7 @@ def sum_factory():
     return load_model("""
 signal:
     parameters:
-        Yield: '@yield/yield/yield/L 999 500 1500'
+        Yield: '@yield/yield/yield/G 999 100'
     pdf:
         mass:
             pdf: cb
@@ -287,7 +289,13 @@ background:
 # pylint: disable=W0621
 def test_sumfactory_load(sum_factory):
     """Test factory loading returns an object of the correct type."""
-    return isinstance(sum_factory, phys_factory.SumPhysicsFactory)
+    return all((isinstance(sum_factory, phys_factory.SumPhysicsFactory),
+                # Is the constraint loaded properly?
+                isinstance(sum_factory.get_constraints()['yieldConstraint'],
+                           ROOT.RooGaussian),
+                # Is the constraint propagated properly?
+                sum_factory.get_constraints()['yieldConstraint'] == \
+                sum_factory.get_children()['background'].get_constraints()['yieldConstraint']))
 
 
 # pylint: disable=W0621
@@ -401,4 +409,5 @@ def test_simfactory_vs_factory(factory, sim_factory):
             ROOT.RooArgSet(sim_factory.get_observables()[0])).getVal()
 
 
+p = prod_factory()
 # EOF

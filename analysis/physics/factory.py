@@ -29,6 +29,7 @@ class BaseFactory(object):
     """
 
     PARAMETERS = None
+    EXTENDED_PARAMETERS = ['Yield']
     MANDATORY_PARAMETERS = {}
     PARAMETER_DEFAULTS = {}
 
@@ -65,7 +66,10 @@ class BaseFactory(object):
             self._constructor_parameters = parameters.keys()
             for parameter_name in set(param_dict.keys()) & set(parameters.keys()):
                 logger.debug("Skipping parameter %s because it was specified in the constructor", parameter_name)
-            param_dict.update(parameters)  # Constructor parameters have priority
+            for param_name, (param, constraint) in parameters.items():
+                param_dict[param_name] = param  # Constructor parameters have priority
+                if constraint:
+                    self._constraints.append(constraint)
         # Now, build parameters
         missing_parameters = []
         for parameter_name in self.PARAMETERS:
@@ -199,10 +203,10 @@ class BaseFactory(object):
         return self._find_object(key) is not None
 
     def _create_parameter(self, parameter_name, parameter_value):
-        if isinstance(parameter_value, ROOT.TObject):  # It's a string specification
+        if isinstance(parameter_value, ROOT.TObject):  # It's an already built parameter
             self._parameter_names[parameter_name] = parameter_value.GetName()
             constraint = None
-        else:
+        else:  # String specification
             var = ROOT.RooRealVar(self.get_parameter_name(parameter_name),
                                   self.get_parameter_name(parameter_name),
                                   0.0)
@@ -263,11 +267,11 @@ class BaseFactory(object):
             new_name = '%s^{%s}' % (name, superscript)
         return new_name
 
-    def rename_children_parameters(self, naming=None):
-        if not naming:
-            naming = self._children.viewitems()
-        naming = list(naming)
-        for label, factory in naming:
+    def rename_children_parameters(self, naming_scheme=None):
+        if not naming_scheme:
+            naming_scheme = self._children.viewitems()
+        naming_scheme = list(naming_scheme)
+        for label, factory in naming_scheme:
             # Recursively rename children
             if factory.get_children():
                 factory.rename_children_parameters(('%s,%s' % (label, child_name), child)

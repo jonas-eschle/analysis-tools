@@ -110,16 +110,18 @@ def configure_model(config, shared_vars=None):
 
     """
     def configure_factory(observable, config, shared_vars=None):
-        logger.debug("Configuring factory -> %s", dict(config))
+        logger.debug("Configuring factory -> %s", config)
         return get_physics_factory(observable, config['pdf'])(config,
                                                               shared_vars['parameters'])
 
     def configure_prod_factory(config, shared_vars=None):
         logger.debug("Configuring product -> %s", config['pdf'])
-        params = config.get('parameters', {})
-        params.update(config['pdf'].pop('parameters', {}))
-        if not params:
-            params = None
+        params = {param_name: (param_val, None)  # Ugly, but shared parameters must be (param_name, constraint)
+                  for param_name, param_val
+                  in config.get('parameters', {}).items()}
+        params.update({param_name: (param_val, None)
+                       for param_name, param_val
+                       in config['pdf'].pop('parameters', {}).items()})
         if len(config['pdf']) == 1:
             observable = config['pdf'].keys()[0]
             factory_config = config['pdf'].values()[0]
@@ -141,7 +143,9 @@ def configure_model(config, shared_vars=None):
         for pdf_name, pdf_config in config.items():
             if 'parameters' not in pdf_config:
                 pdf_config['parameters'] = OrderedDict()
-            pdf_config['parameters'].update(config.get('parameters', {}))
+            pdf_config['parameters'].update({param_name: (param_val, None)
+                                             for param_name, param_val
+                                             in config.get('parameters', {}).items()})
             if isinstance(pdf_config.get('pdf', None), str):
                 factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
             else:
@@ -189,7 +193,6 @@ def configure_model(config, shared_vars=None):
                              if isinstance(config_value, str) and config_value.startswith('@')}
         # First build the shared var
         refs = {}
-        constraints = []
         for config_element, config_value in parameter_configs.items():
             split_element = config_value[1:].split('/')
             if len(split_element) == 4:
@@ -197,8 +200,8 @@ def configure_model(config, shared_vars=None):
                 if ref_name in refs:
                     raise ValueError("Shared parameter defined twice -> %s" % ref_name)
                 var = ROOT.RooRealVar(var_name, var_title, 0.0)
-                constraints.append(configure_parameter(var, var_config))
-                refs[ref_name] = var
+                constraint = configure_parameter(var, var_config)
+                refs[ref_name] = (var, constraint)
             elif len(split_element) == 1:
                 pass
             else:
@@ -226,7 +229,7 @@ def configure_model(config, shared_vars=None):
                 pdf_config = config['pdf'].values()[0]
                 if 'parameters' not in pdf_config:
                     pdf_config['parameters'] = OrderedDict()
-                pdf_config['parameters'].update(config.get('parameters'))
+                pdf_config['parameters'].update(config.get('parameters', {}))
                 sh_vars = shared_vars['pdf'][pdf_obs].copy()
                 if 'parameters' in sh_vars:
                     sh_vars['parameters'].update(shared_vars['parameters'])
