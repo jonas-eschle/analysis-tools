@@ -250,6 +250,24 @@ def configure_parameter(parameter, parameter_config):
 
 
 def get_shared_vars(config):
+    """Configure shared variables for a given configuration.
+
+    Shared variables are marked with the @-sign and configured with a string such as:
+
+        @id/name/title/config
+
+    where config follows the conventions of `configure_parameter`. In further occurences,
+    `@id` is enough.
+
+    Returns:
+        dict: Shared parameters build in the same parameter hierachy as the model they
+            are included in.
+
+    Raises:
+        ValueError: If one of the parameters is badly configured.
+        KeyError: If a parameter is refered to but never configured.
+
+    """
     # Create shared vars
     parameter_configs = {config_element: config_value
                          for config_element, config_value in unfold_config(config)
@@ -269,7 +287,7 @@ def get_shared_vars(config):
             pass
         else:
             raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
-    # Now replace the refs by the shared variables
+    # Now replace the refs by the shared variables in a recursive defaultdict
     recurse_dict = lambda: defaultdict(recurse_dict)
     return fold_config({config_element: refs[ref_val.split('/')[0][1:]]
                         for config_element, ref_val in parameter_configs.items()}.viewitems(),

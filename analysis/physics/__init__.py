@@ -14,7 +14,7 @@ import ROOT
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-from analysis.utils.config import get_shared_vars
+from analysis.utils.config import get_shared_vars, ConfigError
 
 
 logger = get_logger('analysis.physics')
@@ -103,7 +103,7 @@ def configure_model(config, shared_vars=None):
     """
 
     Raises:
-        ValueError: If the shared parameters are badly configured.
+        ConfigError: If the shared parameters are badly configured.
 
     """
     def configure_factory(observable, config, shared_vars=None):
@@ -184,7 +184,10 @@ def configure_model(config, shared_vars=None):
     import analysis.physics.factory as factory
     # Prepare shared variables
     if shared_vars is None:
-        shared_vars = get_shared_vars(config)
+        try:
+            shared_vars = get_shared_vars(config)
+        except (ValueError, KeyError) as error:
+            return ConfigError("%s" % error)
     # Let's find out what is this
     if 'categories' in config:
         return configure_simul_factory(config, shared_vars)
