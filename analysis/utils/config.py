@@ -9,7 +9,7 @@
 
 import os
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import yaml
 import yamlordereddictloader
@@ -247,6 +247,33 @@ def configure_parameter(parameter, parameter_config):
     else:
         raise KeyError(action)
     return constraint
+
+
+def get_shared_vars(config):
+    # Create shared vars
+    parameter_configs = {config_element: config_value
+                         for config_element, config_value in unfold_config(config)
+                         if isinstance(config_value, str) and config_value.startswith('@')}
+    # First build the shared var
+    refs = {}
+    for config_element, config_value in parameter_configs.items():
+        split_element = config_value[1:].split('/')
+        if len(split_element) == 4:
+            ref_name, var_name, var_title, var_config = split_element
+            if ref_name in refs:
+                raise ValueError("Shared parameter defined twice -> %s" % ref_name)
+            var = ROOT.RooRealVar(var_name, var_title, 0.0)
+            constraint = configure_parameter(var, var_config)
+            refs[ref_name] = (var, constraint)
+        elif len(split_element) == 1:
+            pass
+        else:
+            raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
+    # Now replace the refs by the shared variables
+    recurse_dict = lambda: defaultdict(recurse_dict)
+    return fold_config({config_element: refs[ref_val.split('/')[0][1:]]
+                        for config_element, ref_val in parameter_configs.items()}.viewitems(),
+                       recurse_dict)
 
 
 # Exceptions
