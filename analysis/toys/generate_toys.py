@@ -170,7 +170,6 @@ def run(config_files, link_from):
     n_evts = sum(config['gen']['nevents'].values()) \
         if isinstance(config['gen']['nevents'], dict) \
         else config['gen']['nevents']
-    logger.warning(n_evts)
     toy_info.update({'seed': [seed],
                      'jobid': [job_id],
                      'nevents': n_evts})

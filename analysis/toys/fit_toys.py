@@ -182,7 +182,7 @@ def run(config_files, link_from, verbose):
         for var_name in toy_info.columns:
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
-            gen_values[data_id][var_name] = [toy_info[var_name][0]]  # A list for pandas
+            gen_values[data_id][var_name] = toy_info[var_name][0]
     try:
         fit_models = {}
         for model_name in models:
@@ -192,6 +192,34 @@ def run(config_files, link_from, verbose):
     except KeyError:
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
+    # Let's check these generator values against the output file
+    try:
+        gen_values_frame = {}
+        # pylint: disable=E1101
+        with _paths.work_on_file(config['name'],
+                                 config.get('link-from', None),
+                                 _paths.get_toy_fit_path) as toy_fit_file:
+            with pd.HDFStore(toy_fit_file, mode='r') as hdf_file:
+                logger.debug("Checking generator values")
+                test_gen = [('gen_%s' % data_source) in hdf_file
+                            for data_source in gen_values]
+                if all(test_gen):  # The data were written already, crosscheck values
+                    for source_id, gen_value in gen_values.items():
+                        if not all(hdf_file['gen_%s' % data_source][var_name].iloc[0] == var_value
+                                   for var_name, var_value in gen_value.items()):
+                            raise AttributeError("Generated and stored values don't match for source '%s'" % source_id)
+                elif not any(test_gen):  # No data were there, just overwrite
+                    for source_id, gen_values in gen_values.items():
+                        gen_data = {'id': source_id,
+                                    'source': _paths.get_toy_path(config['data'][source_id]['source']),
+                                    'nevents': config['data'][source_id]['nevents']}
+                        gen_data.update(gen_values)
+                        gen_values_frame['gen_%s' % source_id] = pd.DataFrame([gen_data])
+                else:
+                    raise AttributeError("Inconsistent number of data sources")
+    except OSError, excp:
+        logger.error(str(excp))
+        raise
     # Now load the acceptance
     try:
         acceptance = get_acceptance(config['acceptance']) \
@@ -268,23 +296,6 @@ def run(config_files, link_from, verbose):
             fit_res['fit_strategy'] = fit_strategy
             data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
-    # gen_frame = pd.concat([pd.concat([pd.concat([pd.DataFrame({key + '_{gen}': val
-    #                                                            for key, val in gen_values.items()},
-    #                                                           index=[0]),
-    #                                              pd.DataFrame({'N^{%s}_{nominal}' % data_info['source']:
-    #                                                            data_info['nevents']
-    #                                                            for data_info in config['data']},
-    #                                                           index=[0])],
-    #                                             axis=1)]*data_frame.shape[0]).reset_index(drop=True),
-    #                        pd.DataFrame(gen_events)],
-    #                       axis=1)
-    # Currently, fit_result_frame is not indexed. Could be improved in the future.
-    # Should I just separate gen_frame from data_frame to save space?
-    # TODO: No gen values right now.
-    # fit_result_frame = pd.concat([gen_frame,
-    #                               data_frame,
-    #                               _fit.calculate_pulls(data_frame, gen_frame)],
-    #                              axis=1)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
                                   data_frame,
                                   pd.concat([pd.DataFrame({'seed': [seed],
@@ -297,15 +308,11 @@ def run(config_files, link_from, verbose):
                                  config.get('link-from', None),
                                  _paths.get_toy_fit_path) as toy_fit_file:
             with modify_hdf(toy_fit_file) as hdf_file:
+                # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
-                # Add link to generated samples for bookeeping
-                if 'gen_info' not in hdf_file:
-                    hdf_file.append('gen_info',
-                                    pd.DataFrame([{'name': data_info['source'],
-                                                   'source': _paths.get_toy_path(data_info['source']),
-                                                   'nevents': data_info['nevents']}
-                                                  for data_info
-                                                  in config['data']]).set_index(['name']))
+                # Generator info
+                for key_name, gen_frame in gen_values_frame.items():
+                    hdf_file.append(key_name, gen_frame)
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
@@ -329,6 +336,7 @@ def main():
         2: Files missing (configuration or toys).
         3: Error configuring physics factories.
         4: Error in the event generation. An exception is logged.
+        5: Input data is inconsistent with previous fits.
         128: Uncaught error. An exception is logged.
 
     """
@@ -363,6 +371,9 @@ def main():
     except RuntimeError as error:
         exit_status = 4
         logger.error("Error in fitting events")
+    except AttributeError as error:
+        exit_status = 5
+        logger.error("Inconsistent input data -> %s" % error)
     # pylint: disable=W0703
     except Exception as error:
         exit_status = 128
