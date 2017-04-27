@@ -51,8 +51,7 @@ def load_data(config_file):
 
     """
     config_file = os.path.abspath(config_file)
-    return get_data(load_config(config_file,
-                                validate=('file', 'tree', 'output-format')))
+    return get_data(load_config(config_file))
 
 
 def get_data(data_config):
@@ -75,6 +74,8 @@ def get_data(data_config):
 
     """
     import analysis.data.loaders as _loaders
+    if isinstance(data_config, list):
+        return [get_data(data) for data in data_config]
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
@@ -84,6 +85,8 @@ def get_data(data_config):
         source_type = data_config.pop('source-type', None)
         file_name = source_name if not source_type \
             else getattr(paths, 'get_%s_path' % source_type)(source_name)
+        if not os.path.exists(file_name):
+            raise OSError("Cannot find input file -> %s" % file_name)
     except AttributeError:
         raise AttributeError("Unknown source type -> %s" % source_type)
     tree_name = data_config.pop('tree')
