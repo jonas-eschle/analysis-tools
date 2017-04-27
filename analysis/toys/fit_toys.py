@@ -60,7 +60,7 @@ def get_datasets(data_frames, acceptance, fit_models):
     dataset = None
     sample_sizes = {}
     weight_var = None
-    logger.debug("Loading datasets -> %s", data_frames.keys())
+    logger.debug("Sampling datasets -> %s", data_frames.keys())
     for data_name, (data, n_events, category) in data_frames.items():
         if acceptance:
             data = acceptance.apply_accept_reject(data)
@@ -108,6 +108,7 @@ def run(config_files, link_from, verbose):
     Raises:
         OSError: If there either the configuration file does not exist some
             of the input toys cannot be found.
+        AttributeError: If the input data are incompatible with a previous fit.
         KeyError: If some configuration data are missing.
         ValueError: If there is any problem in configuring the PDF factories.
         RuntimeError: If there is a problem during the fitting.
@@ -119,8 +120,7 @@ def run(config_files, link_from, verbose):
                                                'name',
                                                'data'])
     except OSError:
-        raise OSError("Cannot load configuration files: %s",
-                      config_files)
+        raise OSError("Cannot load configuration files: %s" % config_files)
     except _config.ConfigError as error:
         if 'fit/nfits' in error.missing_keys:
             logger.error("Number of fits not specified")
@@ -160,16 +160,12 @@ def run(config_files, link_from, verbose):
     gen_values = {}
     if len(set('category' in data_source for data_source in config['data'])) > 1:
         raise KeyError("Categories in 'data' not consistently specified.")
-    for data_source in config['data']:
+    for data_id, data_source in config['data'].items():
         try:
             source_toy = data_source['source']
         except KeyError:
             logger.error("Data source not specified")
             raise
-        data_id = data_source.get('id', source_toy)
-        if data_id in data:
-            logger.error("Repeated data source with no id given")
-            raise KeyError()
         data[data_id] = (get_data({'source': source_toy,
                                    'source-type': 'toy',
                                    'tree': 'data',
@@ -182,10 +178,11 @@ def run(config_files, link_from, verbose):
                              'source-type': 'toy',
                              'tree': 'toy_info',
                              'output-format': 'pandas'})
+        gen_values[data_id] = {}
         for var_name in toy_info.columns:
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
-            gen_values['%s^{%s}' % (var_name, source_toy)] = toy_info[var_name][0]
+            gen_values[data_id][var_name] = [toy_info[var_name][0]]  # A list for pandas
     try:
         fit_models = {}
         for model_name in models:

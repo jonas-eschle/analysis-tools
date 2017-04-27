@@ -113,18 +113,16 @@ def configure_model(config, shared_vars=None):
 
     def configure_prod_factory(config, shared_vars=None):
         logger.debug("Configuring product -> %s", config['pdf'])
-        params = {param_name: (param_val, None)  # Ugly, but shared parameters must be (param_name, constraint)
-                  for param_name, param_val
-                  in config.get('parameters', {}).items()}
-        params.update({param_name: (param_val, None)
-                       for param_name, param_val
-                       in config['pdf'].pop('parameters', {}).items()})
-        if len(config['pdf']) == 1:
-            observable = config['pdf'].keys()[0]
-            factory_config = config['pdf'].values()[0]
+        params = config.get('parameters', {})
+        params.update(config['pdf'].pop('parameters', {}))
+        # Propagate parameters down
+        for observable, factory_config in config['pdf'].items():
             if 'parameters' not in factory_config:
                 factory_config['parameters'] = {}
             factory_config['parameters'].update(params)
+        if len(config['pdf']) == 1:
+            observable = config['pdf'].keys()[0]
+            factory_config = config['pdf'].values()[0]
             return configure_factory(observable, factory_config, shared_vars['pdf'][observable])
         else:
             return factory.ProductPhysicsFactory(OrderedDict((observable,
@@ -132,7 +130,8 @@ def configure_model(config, shared_vars=None):
                                                                                 factory_config,
                                                                                 shared_vars['pdf'][observable]))
                                                              for observable, factory_config in config['pdf'].items()),
-                                                 parameters=params)
+                                                 parameters={param_name: (param_val, None)
+                                                             for param_name, param_val in params.items()})
 
     def configure_sum_factory(config, shared_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
