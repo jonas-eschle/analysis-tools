@@ -135,7 +135,6 @@ def load_model(config_str):
     return phys.configure_model(factory_config)
 
 
-
 @pytest.fixture
 def factory():
     """Load a PhysicsFactory."""
@@ -408,6 +407,4 @@ def test_simfactory_vs_factory(factory, sim_factory):
         sim_model.getComponents()["TestSimFactory^{label1,signal}"].createIntegral(
             ROOT.RooArgSet(sim_factory.get_observables()[0])).getVal()
 
-
-p = prod_factory()
 # EOF
