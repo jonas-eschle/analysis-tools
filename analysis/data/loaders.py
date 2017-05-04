@@ -152,24 +152,24 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         raise OSError("Cannot find input file -> %s" % file_name)
     try:
         name = kwargs['name']
-        title = kwargs['title']
+        title = kwargs.get('title', name)
     except KeyError as error:
         raise KeyError("Missing configuration key -> %s" % error)
     tfile = ROOT.TFile.Open(file_name)
     tree = tfile.Get(tree_name)
     if not tree:
         raise KeyError("Cannot find tree in input file -> %s" % tree_name)
-    leaves = set(get_list_of_leaves)
-    variables = set(kwargs.get('variables', None))
-    if not variables:
-        variables = leaves
+    leaves = set(get_list_of_leaves(tree))
+    variables = set(kwargs.get('variables', leaves))
     if variables - leaves:
         raise ValueError("Cannot find leaves in input -> %s" % variables - leaves)
     selection = kwargs.get('selection', None)
     leave_set = ROOT.RooArgSet()
+    leave_list = []
     if selection:
-        for var in leave_set:
-            leave_set.add(ROOT.RooRealVar(var, var, 0.0))
+        for var in leaves:
+            leave_list.append(ROOT.RooRealVar(var, var, 0.0))
+            leave_set.add(leave_list[-1])
         name = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits)
                        for _ in range(10))
         temp_ds = ROOT.RooDataSet(name, name,
@@ -179,8 +179,10 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         destruct_object(tree)
         tree = temp_ds
     var_set = ROOT.RooArgSet()
+    var_list = []
     for var in variables:
-        var_set.add(ROOT.RooRealVar(var, var, 0.0))
+        var_list.append(ROOT.RooRealVar(var, var, 0.0))
+        var_set.add(var_list[-1])
     name = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits)
                    for _ in range(10))
     dataset = ROOT.RooDataSet(name, name, var_set, ROOT.RooFit.Import(tree))
@@ -189,10 +191,10 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     destruct_object(tree)
     destruct_object(tfile)
     if selection:
-        for _ in leaves:
-            destruct_object(leave_set.pop(0))
-    for _ in variables:
-        destruct_object(var_set.pop(0))
+        for leave in leave_list:
+            destruct_object(leave)
+    for var in variables:
+        destruct_object(var_list)
     # Let's return
     dataset.SetName(name)
     dataset.SetTitle(title)
