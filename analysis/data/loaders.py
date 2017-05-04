@@ -165,6 +165,19 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         variables = leaves
     if variables - leaves:
         raise ValueError("Cannot find leaves in input -> %s" % variables - leaves)
+    selection = kwargs.get('selection', None)
+    leave_set = ROOT.RooArgSet()
+    if selection:
+        for var in leave_set:
+            leave_set.add(ROOT.RooRealVar(var, var, 0.0))
+        name = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits)
+                       for _ in range(10))
+        temp_ds = ROOT.RooDataSet(name, name,
+                                  leave_set,
+                                  ROOT.RooFit.Import(tree),
+                                  ROOT.RooFit.Cut(selection))
+        destruct_object(tree)
+        tree = temp_ds
     var_set = ROOT.RooArgSet()
     for var in variables:
         var_set.add(ROOT.RooRealVar(var, var, 0.0))
@@ -175,6 +188,9 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     tfile.Close()
     destruct_object(tree)
     destruct_object(tfile)
+    if selection:
+        for _ in leaves:
+            destruct_object(leave_set.pop(0))
     for _ in variables:
         destruct_object(var_set.pop(0))
     # Let's return
@@ -203,7 +219,8 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
     if not os.path.exists(file_name):
         raise OSError("Cannot find input file -> %s" % file_name)
     return read_root(file_name, tree_name,
-                     columns=kwargs.get('variables', None))
+                     columns=kwargs.get('variables', None),
+                     where=kwargs.get('selection', None))
 
 
 # EOF

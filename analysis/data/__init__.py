@@ -19,7 +19,7 @@ logger = get_logger('analysis.data')
 
 
 def register_file_type(extension, file_type):
-    """Register a file type with a given selection.
+    """Register a file type with a given extension.
 
     Returns:
         int: Number of extensions registered with that particular file type.
