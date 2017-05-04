@@ -282,7 +282,7 @@ background:
         mass:
             pdf: exp
             parameters:
-                tau: F -0.003
+                tau: C -0.003
 """)
 
 
@@ -355,7 +355,7 @@ pdf:
                 mass:
                     pdf: exp
                     parameters:
-                        tau: F -0.003
+                        tau: C -0.003
                 q2:
                     pdf: flat
                     parameters:

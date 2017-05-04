@@ -197,7 +197,7 @@ def configure_parameter(parameter, parameter_config):
         * 'I' is used for free parameters. Only one argument is required: its
         initial value. This is optional; if no action is specified the parameter
         is considered free.
-        * 'F' indicates a fixed parameter. The following argument indicates
+        * 'C' indicates a constant parameter. The following argument indicates
         at which value to fix it.
         * 'G' is used for a Gaussian-constrained parameter. The arguments of that
         Gaussian, ie, its mean and sigma, have to be given after the letter.
@@ -226,7 +226,7 @@ def configure_parameter(parameter, parameter_config):
     parameter.setVal(float(action_params[0]))
     if action == 'I':  # Free parameter, we specify its initial value
         parameter.setConstant(False)
-    elif action == 'F':  # Fixed parameter
+    elif action == 'C':  # Fixed parameter
         parameter.setConstant(True)
     elif action == 'G':  # Gaussian constraint
         try:
