@@ -188,7 +188,7 @@ def fold_config(unfolded_data, dict_class=dict):
 
 
 # Interpretation
-def configure_parameter(parameter, parameter_config):
+def configure_parameter(name, title, parameter_config):
     """Configure a parameter according to a configuration string.
 
     The configuration string consists in two parts. The first one
@@ -205,11 +205,13 @@ def configure_parameter(parameter, parameter_config):
         upper limit follow.
 
     Arguments:
-        parameter (ROOT.RooRealVar): Variable to configure.
+        name (str): Name of the parameter.
+        title (str): Title of the parameter.
+        parameter_config (str): Parameter configuration.
 
     Returns:
-        ROOT.RooGaussian: External constraint to apply to the parameter
-            (if requested by the configuration). If no constraint has been
+        tuple (ROOT.RooRealVar, ROOT.RooGaussian): Parameter and external constraint
+            to apply to it (if requested by the configuration). If no constraint has been
             required, None is returned.
 
     Raises:
@@ -219,11 +221,10 @@ def configure_parameter(parameter, parameter_config):
 
     """
     constraint = None
-    parameter_name = parameter.GetName()
     # Do something with it
     action_params = str(parameter_config).split()
     action = 'I' if len(action_params) == 1 else action_params.pop(0)
-    parameter.setVal(float(action_params[0]))
+    parameter = ROOT.RooRealVar(name, title, float(action_params[0]))
     if action == 'I':  # Free parameter, we specify its initial value
         parameter.setConstant(False)
     elif action == 'C':  # Fixed parameter
@@ -233,8 +234,8 @@ def configure_parameter(parameter, parameter_config):
             initial_value, sigma = action_params
         except ValueError:
             raise ValueError(action_params)
-        constraint = ROOT.RooGaussian(parameter_name + 'Constraint',
-                                      parameter_name + 'Constraint',
+        constraint = ROOT.RooGaussian(name + 'Constraint',
+                                      name + 'Constraint',
                                       parameter,
                                       ROOT.RooFit.RooConst(float(initial_value)),
                                       ROOT.RooFit.RooConst(float(sigma)))
@@ -246,7 +247,7 @@ def configure_parameter(parameter, parameter_config):
         parameter.setConstant(False)
     else:
         raise KeyError(action)
-    return constraint
+    return parameter, constraint
 
 
 def get_shared_vars(config):
@@ -280,8 +281,7 @@ def get_shared_vars(config):
             ref_name, var_name, var_title, var_config = split_element
             if ref_name in refs:
                 raise ValueError("Shared parameter defined twice -> %s" % ref_name)
-            var = ROOT.RooRealVar(var_name, var_title, 0.0)
-            constraint = configure_parameter(var, var_config)
+            var, constraint = configure_parameter(var_name, var_title, var_config)
             refs[ref_name] = (var, constraint)
         elif len(split_element) == 1:
             pass
