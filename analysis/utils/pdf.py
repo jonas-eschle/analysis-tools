@@ -46,7 +46,7 @@ def add_pdf_paths(*paths):
 
 
 # Default PDF path
-add_pdf_paths('pdf')
+add_pdf_paths('pdfs')
 
 
 def load_pdf_by_name(name):

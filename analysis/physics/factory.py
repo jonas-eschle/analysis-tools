@@ -207,11 +207,9 @@ class BaseFactory(object):
             self._parameter_names[parameter_name] = parameter_value.GetName()
             constraint = None
         else:  # String specification
-            var = ROOT.RooRealVar(self.get_parameter_name(parameter_name),
-                                  self.get_parameter_name(parameter_name),
-                                  0.0)
-            constraint = configure_parameter(var, parameter_value)
-            parameter_value = var
+            parameter_value, constraint = configure_parameter(self.get_parameter_name(parameter_name),
+                                                              self.get_parameter_name(parameter_name),
+                                                              parameter_value)
         return execute_and_return_self(parameter_value,
                                        'setStringAttribute',
                                        'originalName',
