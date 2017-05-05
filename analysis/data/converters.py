@@ -91,11 +91,14 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             else:
                 raise KeyError("Cannot find category variable -> %s" % cat_var)
     var_names = var_list if var_list else list(frame.columns)
+    if category and cat_var in var_names:
+        var_names.pop(var_names.index(cat_var))
     roovar_list = [ROOT.RooRealVar(var_name, var_name, 0.0) for var_name in var_names]
     dataset_set = list_to_rooargset(roovar_list)
     categories = frame.groupby(cat_var).indices.keys() \
         if category else []
     if categories:
+        temp_ds = None
         dataset = None
         for cat in categories:
             cat_ds = fill_dataset('%s_%s' % (name, cat),
