@@ -735,7 +735,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        list = OrderedDict()
+        obs_list = OrderedDict()
         for child in self._children.values():
             for child_obs in child.get_observables():
                 if child_obs.GetName() not in self._objects:
