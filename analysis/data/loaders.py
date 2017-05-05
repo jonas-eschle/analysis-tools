@@ -106,7 +106,8 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     # Convert it
     return dataset_from_pandas(frame, name, title,
                                var_list=kwargs.get('variables', None),
-                               weight_var=kwargs.get('weight-var', None))
+                               weight_var=kwargs.get('weight-var', None),
+                               category=kwargs.get('category', None))
 
 
 ###############################################################################

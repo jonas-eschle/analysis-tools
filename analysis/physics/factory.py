@@ -44,9 +44,9 @@ class BaseFactory(object):
             KeyError: When parameters or observables are missing.
 
         """
+        # pylint: disable=C0103
         if not isinstance(self.OBSERVABLES, OrderedDict):
             self.OBSERVABLES = OrderedDict((obs[0], obs) for obs in self.OBSERVABLES)
-        # pylint: disable=C0103
         if self.PARAMETERS is None:
             if not self.MANDATORY_PARAMETERS:
                 logger.warning("Instantiating Factory with no parameters")
