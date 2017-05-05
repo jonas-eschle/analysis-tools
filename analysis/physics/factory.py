@@ -323,9 +323,6 @@ class BaseFactory(object):
     def get_observables(self):
         """Get the physics observables.
 
-        Raises:
-            NotImplementedError
-
         """
         return tuple((self.get(obs_id)
                       if obs_id in self
@@ -361,7 +358,6 @@ class BaseFactory(object):
             if obs_id in self:
                 self._objects[obs_id].setUnit(units)
         self.OBSERVABLES[obs_id] = tuple(new_config)
-        return self.OBSERVABLES[obs_id]
 
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
@@ -546,6 +542,17 @@ class ProductPhysicsFactory(BaseFactory):
                      for factory in self._children.values()
                      for obs in factory.get_observables())
 
+    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+        has_changed = False
+        for child in self._children.values():
+            try:
+                child.set_observable(obs_id, name, title, limits, units)
+                has_changed = True
+            except KeyError:
+                pass
+        if not has_changed:
+            raise KeyError("Unknown observable -> %s" % obs_id)
+
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
@@ -648,6 +655,10 @@ class SumPhysicsFactory(BaseFactory):
         """
         return self._children.values()[0].get_observables()
 
+    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+        for child in self._children.values():
+            child.set_observable(obs_id, name, title, limits, units)
+
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
@@ -743,6 +754,17 @@ class SimultaneousPhysicsFactory(BaseFactory):
                 elif child_obs.GetName() not in obs_list:
                     obs_list[child_obs.GetName()] = self.get(child_obs.GetName())
         return tuple(obs_list.values())
+
+    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+        has_changed = False
+        for child in self._children.values():
+            try:
+                child.set_observable(obs_id, name, title, limits, units)
+                has_changed = True
+            except KeyError:
+                pass
+        if not has_changed:
+            raise KeyError("Unknown observable -> %s" % obs_id)
 
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
