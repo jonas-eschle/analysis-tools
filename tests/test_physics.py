@@ -31,18 +31,7 @@ class MassFactory(phys_factory.PhysicsFactory):
 
     """
 
-    def get_observables(self):
-        """Get the observables for the mass PDF.
-
-        Returns:
-            tuple[`ROOT.RooRealVar`]: Mass variable.
-
-        """
-        return (self.get("mass")
-                if "mass" in self
-                else self.set("mass", ROOT.RooRealVar("mass", "mass",
-                                                      5000, 5500,
-                                                      "MeV/c^{2}")),)
+    OBSERVABLES = (('mass', 'mass', 5000, 5500, "MeV/c^{2}"),)
 
 
 class DoubleCBFactory(pdfs.DoubleCBPdfMixin, MassFactory):

@@ -28,6 +28,7 @@ class BaseFactory(object):
 
     """
 
+    OBSERVABLES = OrderedDict()
     PARAMETERS = None
     EXTENDED_PARAMETERS = ['Yield']
     MANDATORY_PARAMETERS = {}
@@ -40,14 +41,17 @@ class BaseFactory(object):
             **config (dict): Configuration of the factory.
 
         Raises:
-            KeyError: When parameters are missing.
+            KeyError: When parameters or observables are missing.
 
         """
-        if self.PARAMETERS is None and not self.MANDATORY_PARAMETERS:
-            logger.warning("Instantiating Factory with no parameters")
+        if not isinstance(self.OBSERVABLES, OrderedDict):
+            self.OBSERVABLES = OrderedDict((obs[0], obs) for obs in self.OBSERVABLES)
         # pylint: disable=C0103
         if self.PARAMETERS is None:
-            self.PARAMETERS = list(self.MANDATORY_PARAMETERS)
+            if not self.MANDATORY_PARAMETERS:
+                logger.warning("Instantiating Factory with no parameters")
+            else:
+                self.PARAMETERS = list(self.MANDATORY_PARAMETERS)
         self.PARAMETERS = list(self.PARAMETERS)
         # Initialize objects
         self._objects = {}
@@ -58,6 +62,9 @@ class BaseFactory(object):
         # Initialize parameters
         self._parameter_names = {param: param for param in self.PARAMETERS}
         self._parameter_names.update(self._config.get('parameter-names', {}))
+        # Update observable names
+        for obs_name, new_obs_name in self._config.get('observable-names', {}):
+            self.set_observable(obs_name, name=new_obs_name)
         # Set the parameter dictionary
         param_dict = self.PARAMETER_DEFAULTS.copy()
         param_dict.update(config.get('parameters', {}))
@@ -320,7 +327,41 @@ class BaseFactory(object):
             NotImplementedError
 
         """
-        raise NotImplementedError()
+        return tuple((self.get(obs_id)
+                      if obs_id in self
+                      else self.set(obs_id, ROOT.RooRealVar(obs_name, obs_title,
+                                                            obs_min, obs_max, unit)))
+                     for obs_id, (obs_name, obs_title, obs_min, obs_max, unit)
+                     in self.OBSERVABLES.items())
+
+    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+        if obs_id not in self.OBSERVABLES:
+            raise KeyError("Unknown observable -> %s" % obs_id)
+        new_config = list(self.OBSERVABLES[obs_id])
+        if name:
+            new_config[0] = name
+            if obs_id in self:
+                self._objects[obs_id].SetName(name)
+        if title:
+            new_config[1] = title
+            if obs_id in self:
+                self._objects[obs_id].SetTitle(title)
+        if limits:
+            if len(limits) == 2:
+                min_, max_ = limits
+                range_name = ""
+            elif len(limits) == 3:
+                range_name, min_, max_ = limits
+            new_config[2] = min_
+            new_config[3] = max_
+            if obs_id in self:
+                self._objects[obs_id].setRange(range_name, min_, max_)
+        if units:
+            new_config[4] = units
+            if obs_id in self:
+                self._objects[obs_id].setUnit(units)
+        self.OBSERVABLES[obs_id] = tuple(new_config)
+        return self.OBSERVABLES[obs_id]
 
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
@@ -414,15 +455,6 @@ class PhysicsFactory(BaseFactory):
                                                       title,
                                                       self.get_pdf(name+'_{noext}', title+'_{noext}'),
                                                       self.get('Yield')))
-
-    def get_observables(self):
-        """Get the physics observables.
-
-        Raises:
-            NotImplementedError
-
-        """
-        raise NotImplementedError()
 
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
@@ -703,7 +735,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        obs_list = OrderedDict()
+        list = OrderedDict()
         for child in self._children.values():
             for child_obs in child.get_observables():
                 if child_obs.GetName() not in self._objects:
