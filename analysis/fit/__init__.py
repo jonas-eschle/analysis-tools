@@ -66,7 +66,7 @@ def get_fit_strategy(name):
 
 # Perform fit
 # pylint: disable=R0913
-def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, verbose=False):
+def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, sumw2=False, verbose=False):
     """Fit a dataset.
 
     Raises:
@@ -79,6 +79,7 @@ def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, verbose
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.Extended(extended),
                   ROOT.RooFit.Minos(minos),
+                  ROOT.RooFit.SumW2Error(sumw2),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
     constraints = factory.get_constraints()
     if constraints.getSize():
