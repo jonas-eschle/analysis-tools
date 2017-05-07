@@ -168,9 +168,14 @@ def configure_model(config, shared_vars=None):
             cat = ROOT.RooSuperCategory('x'.join(categories),
                                         'x'.join(categories),
                                         cat_set)
+        labels = [set() for _ in range(len(categories))]
         for cat_label in config['pdf'].keys():
             for cat_iter, cat_sublabel in enumerate(cat_label.split(',')):
-                cat_list[cat_iter].defineType(cat_sublabel.replace(' ', ''))
+                cat_sublabel = cat_sublabel.strip()
+                if cat_sublabel not in labels[cat_iter]:
+                    logger.debug("Registering label for %s -> %s", cat_list[cat_iter].GetName(), cat_sublabel)
+                    cat_list[cat_iter].defineType(cat_sublabel)
+                labels[cat_iter].add(cat_sublabel)
         sim_factory = factory.SimultaneousPhysicsFactory({tuple(cat_label.replace(' ', '').split(',')):
                                                           configure_model(cat_config,
                                                                           shared_vars['pdf'][cat_label])

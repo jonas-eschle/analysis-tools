@@ -12,7 +12,11 @@ from collections import defaultdict
 import pandas as pd
 import ROOT
 
-from analysis.utils.root import list_to_rooargset, destruct_object
+from analysis.utils.root import list_to_rooargset
+from analysis.utils.logging_color import get_logger
+
+
+logger = get_logger('analysis.data.converters')
 
 
 def pandas_from_dataset(dataset):
@@ -78,45 +82,49 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             for var_name in var_names:
                 if isinstance(row[var_name], (float, int)):
                     var_set.setRealValue(var_name, row[var_name])
+            for cat_name in cat_names:
+                var_set.setCatLabel(cat_name, row[cat_name])
             dataset.add(var_set)
         return dataset
 
     if weight_var and weight_var not in frame.columns:
         raise KeyError("Cannot find weight variable -> %s" % weight_var)
-    if category:
-        cat_var = category.GetName()
-        if cat_var not in frame.columns:
-            if 'category' in frame.columns:
-                cat_var = 'category'
-            else:
-                raise KeyError("Cannot find category variable -> %s" % cat_var)
     var_names = var_list if var_list else list(frame.columns)
-    if category and cat_var in var_names:
-        var_names.pop(var_names.index(cat_var))
-    roovar_list = [ROOT.RooRealVar(var_name, var_name, 0.0) for var_name in var_names]
+    cat_names = []
+    roovar_list = []
+    if category:
+        if isinstance(category, ROOT.RooSuperCategory):
+            logger.debug("Found RooSuperCategory, going to subcategories")
+            cat_iterator = category.serverIterator()
+            while True:
+                current_cat = cat_iterator.Next()
+                if not current_cat:
+                    break
+                cat_var = current_cat.GetName()
+                logger.debug("Subcategory: %s", cat_var)
+                if cat_var not in frame.columns:
+                    raise KeyError("Cannot find category variable -> %s" % cat_var)
+                roovar_list.append(current_cat)
+                if cat_var in var_names:
+                    var_names.pop(var_names.index(cat_var))
+                cat_names.append(cat_var)
+            if category.GetName() in var_names:
+                var_names.pop(var_names.index(category.GetName()))
+        else:
+            cat_var = category.GetName()
+            if cat_var not in frame.columns:
+                if 'category' in frame.columns:
+                    cat_var = 'category'
+                    category.SetName('category')
+                else:
+                    raise KeyError("Cannot find category variable -> %s" % cat_var)
+            roovar_list.append(category)
+            if cat_var in var_names:
+                var_names.pop(var_names.index(cat_var))
+            cat_names.append(cat_var)
+    roovar_list.extend([ROOT.RooRealVar(var_name, var_name, 0.0) for var_name in var_names])
     dataset_set = list_to_rooargset(roovar_list)
-    categories = frame.groupby(cat_var).indices.keys() \
-        if category else []
-    if categories:
-        temp_ds = None
-        dataset = None
-        for cat in categories:
-            cat_ds = fill_dataset('%s_%s' % (name, cat),
-                                  '%s_%s' % (name, cat),
-                                  dataset_set,
-                                  frame[frame[cat_var] == cat])
-            temp_ds = ROOT.RooDataSet(name, name,
-                                      dataset_set,
-                                      ROOT.RooFit.Index(category),
-                                      ROOT.RooFit.Import(cat, cat_ds))
-            if dataset is None:
-                dataset = temp_ds
-            else:
-                dataset.append(temp_ds)
-                destruct_object(temp_ds)
-            destruct_object(cat_ds)
-    else:
-        dataset = fill_dataset(name, title, dataset_set, frame)
+    dataset = fill_dataset(name, title, dataset_set, frame)
     if weight_var:
         dataset = ROOT.RooDataSet(name, title, dataset_set,
                                   ROOT.RooFit.Import(dataset),

@@ -81,6 +81,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     Optional keys are:
         + `variables`: List of variables to load.
         + `weight-var`: Variable defining a weight.
+        + `category`: RooCategory variable to use.
 
     Arguments:
         file_name (str): File to load.
