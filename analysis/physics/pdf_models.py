@@ -31,11 +31,39 @@ class GaussianPdfMixin(object):
         """Get the physics PDF.
 
         Returns:
-            BifurcatedCB.
+            ROOT.RooGaussian.
 
         """
         return ROOT.RooGaussian(name, title,
                                 *(self.get_observables()+self.get_fit_parameters()))
+
+
+# pylint: disable=R0903
+class CBPdfMixin(object):
+    """Mixin defining a CB.
+
+    Parameter names, and their defaults (when applicable):
+        - 'mu'
+        - 'sigma'
+        - 'alpha'
+        - 'n'
+
+    """
+
+    MANDATORY_PARAMETERS = ('mu',
+                            'sigma',
+                            'alpha',
+                            'n')
+
+    def get_unbound_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Returns:
+            ROOT.RooCBShape.
+
+        """
+        return ROOT.RooCBShape(name, title,
+                               *(self.get_observables()+self.get_fit_parameters()))
 
 
 # pylint: disable=R0903
@@ -63,7 +91,7 @@ class BifurcatedCBPdfMixin(object):
         """Get the physics PDF.
 
         Returns:
-            BifurcatedCB.
+            ROOT.BifurcatedCB.
 
         """
         return load_pdf_by_name('BifurcatedCB')(name,
@@ -100,7 +128,7 @@ class DoubleCBPdfMixin(object):
         """Get the physics PDF.
 
         Returns:
-            RooAddPdf: Sum of two `CBShape`.
+            ROOT.RooAddPdf: Sum of two `ROOT.CBShape`.
 
         """
         obs = self.get_observables()[0]
@@ -134,7 +162,7 @@ class ExponentialPdfMixin(object):
         """Get the physics PDF.
 
         Returns:
-            RooExponential.
+            ROOT.RooExponential.
 
         """
         return ROOT.RooExponential(name, title,
@@ -162,7 +190,7 @@ class ArgusConvGaussPdfMixin(object):
                             'mu',
                             'sigma')
 
-    def __init__(self, config):
+    def __init__(self, config, parameters=None):
         """Configure the partially reconstructed background factory.
 
         Arguments:
