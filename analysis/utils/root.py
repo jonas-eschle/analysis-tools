@@ -117,4 +117,23 @@ def list_to_rooargset(iterable):
         arg_set.add(element)
     return arg_set
 
+
+def rooargset_to_set(rooargset):
+    """Convert RooArgSet to a set.
+
+    Arguments:
+        rooargset (ROOT.RooArgSet): RooArgSet to convert.
+
+    Returns:
+        set
+
+    """
+    iter_ = rooargset.createIterator()
+    output = set()
+    while True:
+        var = iter_.Next()
+        if not var:
+            return output
+        output.add(var)
+
 # EOF

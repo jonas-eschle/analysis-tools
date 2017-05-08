@@ -81,7 +81,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     Optional keys are:
         + `variables`: List of variables to load.
         + `weight-var`: Variable defining a weight.
-        + `category`: RooCategory variable to use.
+        + `categories`: RooCategory variables to use.
 
     Arguments:
         file_name (str): File to load.
@@ -108,7 +108,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     return dataset_from_pandas(frame, name, title,
                                var_list=kwargs.get('variables', None),
                                weight_var=kwargs.get('weight-var', None),
-                               category=kwargs.get('category', None))
+                               categories=kwargs.get('categories', None))
 
 
 ###############################################################################

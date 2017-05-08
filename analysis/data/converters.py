@@ -43,7 +43,7 @@ def pandas_from_dataset(dataset):
     return pd.DataFrame(values)
 
 
-def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, category=None):
+def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, categories=None):
     """Build RooDataset from a Pandas DataFrame.
 
     Arguments:
@@ -54,8 +54,8 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             If not given, all variables are converted.
         weight_var (str, optional): Assign the given variable name as weight.
             Defaults to None.
-        category (`ROOT.RooCategory`, optional): Category to separate the data in. Its name
-            must correspond to a column in the `frame`.
+        categories (list[`ROOT.RooCategory`], optional): Categories to separate the data in.
+            Their name must correspond to a column in the `frame`.
 
     Returns:
         ROOT.RooDataSet: Frame converted to dataset.
@@ -92,36 +92,18 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
     var_names = var_list if var_list else list(frame.columns)
     cat_names = []
     roovar_list = []
-    if category:
-        if isinstance(category, ROOT.RooSuperCategory):
-            logger.debug("Found RooSuperCategory, going to subcategories")
-            cat_iterator = category.serverIterator()
-            while True:
-                current_cat = cat_iterator.Next()
-                if not current_cat:
-                    break
-                cat_var = current_cat.GetName()
-                logger.debug("Subcategory: %s", cat_var)
-                if cat_var not in frame.columns:
-                    raise KeyError("Cannot find category variable -> %s" % cat_var)
-                roovar_list.append(current_cat)
-                if cat_var in var_names:
-                    var_names.pop(var_names.index(cat_var))
-                cat_names.append(cat_var)
-            if category.GetName() in var_names:
-                var_names.pop(var_names.index(category.GetName()))
-        else:
+    if categories:
+        for category in categories:
             cat_var = category.GetName()
             if cat_var not in frame.columns:
-                if 'category' in frame.columns:
-                    cat_var = 'category'
-                    category.SetName('category')
-                else:
-                    raise KeyError("Cannot find category variable -> %s" % cat_var)
+                raise KeyError("Cannot find category variable -> %s" % cat_var)
             roovar_list.append(category)
             if cat_var in var_names:
                 var_names.pop(var_names.index(cat_var))
             cat_names.append(cat_var)
+        super_category = 'x'.join(cat.GetName() for cat in categories)
+        if super_category in var_names:
+            var_names.pop(var_names.index(super_category))
     roovar_list.extend([ROOT.RooRealVar(var_name, var_name, 0.0) for var_name in var_names])
     dataset_set = list_to_rooargset(roovar_list)
     dataset = fill_dataset(name, title, dataset_set, frame)

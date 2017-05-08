@@ -54,7 +54,7 @@ def load_data(config_file):
     return get_data(load_config(config_file))
 
 
-def get_data(data_config):
+def get_data(data_config, **kwargs):
     """Get data.
 
     Detects the input file extension and uses the proper loader.
@@ -75,7 +75,8 @@ def get_data(data_config):
     """
     import analysis.data.loaders as _loaders
     if isinstance(data_config, list):
-        return [get_data(data) for data in data_config]
+        from analysis.data.mergers import merge
+        return merge([get_data(data) for data in data_config], **kwargs)
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:

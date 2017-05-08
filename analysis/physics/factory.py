@@ -385,6 +385,21 @@ class BaseFactory(object):
     def get_category_var(self):
         return self._category
 
+    def get_category_vars(self):
+        if isinstance(self._category, ROOT.RooSuperCategory):
+            cats = []
+            cat_iter = self._category.serverIterator()
+            while True:
+                cat = cat_iter.Next()
+                if not cat:
+                    break
+                if cat.GetName() not in self._objects:
+                    cat = self.set(cat.GetName(), cat)
+                cats.append(cat)
+            return tuple(cats)
+        else:
+            return (self._category,)
+
     def is_simultaneous(self):
         return self._category is not None
 
