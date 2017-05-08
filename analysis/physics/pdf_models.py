@@ -162,14 +162,15 @@ class ArgusConvGaussPdfMixin(object):
                             'mu',
                             'sigma')
 
-    def __init__(self, **config):
+    def __init__(self, config):
         """Configure the partially reconstructed background factory.
 
         Arguments:
-            **config (dict): PDF configuration. If it contains 'buffer_fraction', it is
-                used to set the RooFFTConvPdf buffer fraction.
+            config (dict): PDF configuration. If it contains 'buffer_fraction', it is
+              used to set the RooFFTConvPdf buffer fraction.
 
         """
+        super(ArgusConvGaussPdfMixin, self).__init__(config, parameters)
         self._buffer_fraction = config.get('buffer_fraction', 1.0)
 
     def get_unbound_pdf(self, name, title):
@@ -200,5 +201,72 @@ class ArgusConvGaussPdfMixin(object):
                                                                                              *params[4:])))),
                                        'setBufferFraction',
                                        self._buffer_fraction)
+
+
+class RooWorkspaceMixin(object):
+    """Load a PDF from a RooWorkspace."""
+
+    PARAMETERS = []
+
+    def __init__(self, config, parameters=None):
+        """Load the workspace.
+
+        Raises:
+            KeyError: On any errors.
+
+        """
+        super(RooWorkspaceMixin, self).__init__(config, parameters)
+        try:
+            workspace_path = config['workspace-path']
+        except KeyError:
+            raise KeyError("Workspace path ('workspace-path') is missing")
+        try:
+            workspace_name = config['workspace-name']
+        except KeyError:
+            raise KeyError("Workspace name ('workspace-name') is missing")
+        # Load PDF
+        try:
+            pdf_name = config['workspace-pdf-name']
+        except KeyError:
+            raise KeyError("PDF name ('workspace-pdf-name') is missing")
+        tfile = ROOT.TFile.Open(workspace_path)
+        if not tfile:
+            raise KeyError("Cannot open wokspace file -> %s" % workspace_path)
+        workspace = tfile.Get(workspace_name)
+        if not workspace:
+            raise KeyError("Cannot get workspace from file -> %s" % workspace_name)
+        self._workspace = workspace
+        pdf = workspace.pdf(pdf_name)
+        if not pdf:
+            raise KeyError("PDF cannot be found in workspace -> %s" % pdf_name)
+        self._workspace_pdf = pdf
+        # Close the TFile
+        tfile.Close()
+
+    def get_observables(self):
+        """Override the generic RooRealVars with objects from the RooWorkspace."""
+        for obs_id, (obs_name, obs_title, obs_min, obs_max, unit) in self.OBSERVABLES.items():
+            var = self._workspace.var(obs_name)
+            if not var:
+                raise KeyError("Observable %s not present in RooWorkspace" % obs_name)
+            if obs_id not in self._objects or var != self._objects[obs_id]:
+                self.set(obs_id, var)
+                self.set_observable(obs_id, title=obs_title, limits=(obs_min, obs_max), units=unit)
+        return super(RooWorkspaceMixin, self).get_observables()
+
+    def get_unbound_pdf(self, name, title):
+        """Get the RooKeysPdf.
+
+        Returns a copy of the RooKeysPdf from the RooWorkspace.
+
+        Returns:
+            ROOT.RooKeysPdf.
+
+        """
+        # Do proper observable replacement
+        self.get_observables()
+        pdf = self._workspace_pdf.Clone(name)
+        pdf.SetTitle(title)
+        return pdf
 
 # EOF
