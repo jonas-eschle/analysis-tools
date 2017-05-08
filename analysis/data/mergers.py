@@ -10,7 +10,7 @@
 import pandas as pd
 import ROOT
 
-from analysis.utils.root import rooargset_to_set
+from analysis.utils.root import rooargset_to_set, destruct_object
 
 
 def merge(data_list, **kwargs):
@@ -42,7 +42,7 @@ def merge(data_list, **kwargs):
         raise AttributeError("Unknown dataset type -> %s" % type(data_list[0]))
 
 
-def merge_root(name, title, data_list):
+def merge_root(name, title, data_list, destruct_data=True):
     """Merge RooDataSets.
 
     Arguments:
@@ -68,6 +68,8 @@ def merge_root(name, title, data_list):
     output_ds = ROOT.RooDataSet(name, title, data_list[0].get())
     for data in data_list:
         output_ds.append(data)
+        if destruct_data:
+            destruct_object(data)
     if is_weighted:
         pass
     return output_ds

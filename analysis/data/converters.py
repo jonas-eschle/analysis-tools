@@ -103,6 +103,8 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             cat_names.append(cat_var)
         super_category = 'x'.join(cat.GetName() for cat in categories)
         if super_category in var_names:
+            logger.warning("You asked for variable %s but this is the name of a SuperCategory. Ignoring it.",
+                           super_category)
             var_names.pop(var_names.index(super_category))
     roovar_list.extend([ROOT.RooRealVar(var_name, var_name, 0.0) for var_name in var_names])
     dataset_set = list_to_rooargset(roovar_list)
