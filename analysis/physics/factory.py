@@ -68,11 +68,9 @@ class BaseFactory(object):
         # Set the parameter dictionary
         param_dict = self.PARAMETER_DEFAULTS.copy()
         param_dict.update(config.get('parameters', {}))
-        self._constructor_parameters = set()
         if parameters:
             # First parameters
             params = parameters.pop('parameters', {})
-            self._constructor_parameters = set(params.keys())
             for parameter_name in set(param_dict.keys()) & set(params.keys()):
                 logger.debug("Skipping parameter %s because it was specified in the constructor", parameter_name)
             for param_name, (param, constraint) in params.items():
@@ -204,7 +202,7 @@ class BaseFactory(object):
             return self._objects[parameter_name]
         if isinstance(parameter_value, tuple):  # It's a parameter with a constraint
             parameter_value, constraint = parameter_value
-        if isinstance(parameter_value, ROOT.TObject):  # It's an already built parameter
+        elif isinstance(parameter_value, ROOT.TObject):  # It's an already built parameter
             self._parameter_names[parameter_name] = parameter_value.GetName()
             constraint = None
         else:  # String specification
@@ -244,13 +242,12 @@ class BaseFactory(object):
         if not set(name_dict.keys()).issubset(set(self.PARAMETERS + ['Yield', 'Fraction'])):
             raise KeyError("Bad renaming scheme!")
         all_good = True
-        # logger.debug("Requesting a parameter name change -> %s", name_dict)
+        logger.debug("Requesting a parameter name change -> %s", name_dict)
         for base_name, new_name in name_dict.items():
-            if base_name in self._constructor_parameters:
-                all_good = False
-                continue
-            # Now rename the parameters if necessary
             if base_name in self._objects:
+                if self._objects[base_name].getStringAttribute('shared') == 'true':
+                    all_good = False
+                    continue
                 self._objects[base_name].SetName(new_name)
                 self._objects[base_name].SetTitle(new_name)
             self._parameter_names[base_name] = new_name
@@ -274,7 +271,6 @@ class BaseFactory(object):
             naming_scheme = self._children.viewitems()
         for label, factory in list(naming_scheme):
             # Recursively rename children
-            logger.error("Renaming %s -> %s", label, factory)
             factory.rename_children_parameters(('%s,%s' % (label, child_name), child)
                                                for child_name, child in factory.get_children().items())
             parameters_to_set = {}
@@ -315,7 +311,12 @@ class BaseFactory(object):
 
         """
         # Configure yield
-        self.set_yield_value(yield_val)
+        if 'Yield' not in self._objects:
+            if yield_val is None:
+                raise ValueError("Yield value not given -> %s" % self)
+            self.set_yield_var(yield_val)
+        elif yield_val is not None:
+            self._objects['Yield'].setVal(yield_val)
         # Avoid name clashes
         pdf_name = 'pdfext_%s' % name
         return self.get(pdf_name) \
@@ -391,14 +392,6 @@ class BaseFactory(object):
     def set_yield_var(self, yield_):
         raise NotImplementedError()
 
-    def set_yield_value(self, yield_val):
-        if 'Yield' not in self._objects:
-            if yield_val is None:
-                raise ValueError("Yield value not given -> %s" % self)
-            self.set_yield_var(self._create_parameter('Yield', yield_val))
-        elif yield_val is not None:
-            self._objects['Yield'].setVal(yield_val)
-
     def get_category_var(self):
         return self._category
 
@@ -449,10 +442,8 @@ class PhysicsFactory(BaseFactory):
     def __init__(self, config, parameters=None):
         super(PhysicsFactory, self).__init__(config, parameters)
         # Configure yields
-        if parameters and 'yield' in parameters:
-            config['yield'] = parameters.pop('yield')
-        if 'yield' in config:
-            self.set_yield_var(self._create_parameter('Yield', config['yield']))
+        if 'yield' in parameters:
+            self.set_yield_var(parameters['yield'])
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
@@ -502,11 +493,20 @@ class PhysicsFactory(BaseFactory):
         return self.get_fit_parameters()
 
     def set_yield_var(self, yield_):
-        yield_, constraint = sanitize_parameter(yield_)
-        self._objects['Yield'] = yield_
-        if constraint:
-            self._constraints.add(constraint)
-        self._constructor_parameters.add('Yield')
+        if 'Yield' not in self._objects:
+            self._create_parameter('Yield', yield_)
+        else:
+            if isinstance(yield_, tuple):
+                yield_ = yield_[0]
+            if isinstance(self._objects['Yield'], ROOT.RooRealVar):
+                if isinstance(yield_, ROOT.RooRealVar):
+                    self._objects['Yield'].setVal(yield_.getVal())
+                    self._objects['Yield'].SetName(yield_.GetName())
+                    self._objects['Yield'].SetTitle(yield_.GetTitle())
+                elif isinstance(yield_, (float, int)):
+                    self._objects['Yield'].setVal(yield_)
+            else:
+                logger.warning("Trying to set a yield that cannot be overriden")
 
 
 # Product Physics Factory
@@ -524,9 +524,9 @@ class ProductPhysicsFactory(BaseFactory):
         super(ProductPhysicsFactory, self).__init__({}, parameters)
         # Set children
         self._children = factories
-        # Set yield
-        if parameters and 'yield' in parameters:
-            self.set_yield_var(self._create_parameter('Yield', parameters.pop('yield')))
+        # Configure yields
+        if 'yield' in parameters:
+            self.set_yield_var(parameters['yield'])
 
     def get_unbound_pdf(self, name, title):
         """Get unbound PDF."""
@@ -606,10 +606,20 @@ class ProductPhysicsFactory(BaseFactory):
                      for param in factory.get_fit_parameters(extended))
 
     def set_yield_var(self, yield_):
-        yield_, constraint = sanitize_parameter(yield_, 'Yield', 'Yield')
-        self._objects['Yield'] = yield_
-        if constraint:
-            self._constraints.add(constraint)
+        constraint = None
+        if isinstance(yield_, tuple):
+            yield_, constraint = yield_
+        if 'Yield' not in self._objects:
+            self._objects['Yield'] = yield_
+            if constraint:
+                self._constraints.add(constraint)
+        else:
+            if isinstance(self._objects['Yield'], ROOT.RooRealVar):
+                self._objects['Yield'].setVal(yield_.getVal())
+                self._objects['Yield'].SetName(yield_.GetName())
+                self._objects['Yield'].SetTitle(yield_.GetTitle())
+            else:
+                logger.warning("Trying to set a yield that cannot be overriden")
 
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
@@ -656,42 +666,42 @@ class SumPhysicsFactory(BaseFactory):
         self._children = factories
         # Set yields
         yield_ = None
-        children_yields_values = OrderedDict()
-        children_yields_constraints = OrderedDict()
-        for child_name, child_yield in children_yields.items():
-            child_yield, child_constraint = sanitize_parameter(child_yield, 'Yield', 'Yield')
-            children_yields_values[child_name] = child_yield
-            if child_constraint:
-                children_yields_constraints[child_name] = child_constraint
         if parameters and 'yield' in parameters:
-            yield_ = parameters.pop('yield')
+            yield_, constraint = parameters.pop('yield')
+        yield_values = [child_yield for child_yield, _ in children_yields.values()]
         if len(factories) == len(children_yields):  # Extended
             if yield_ is not None:
                 raise KeyError("Specified yield on a sum of RooExtendPdf")
-            self._objects['Yield'] = ROOT.RooAddition("Yield", "Yield",
-                                                      list_to_rooarglist(children_yields_values.values()))
+            self._objects['Yield'] = ROOT.RooAddition("Yield", "Yield", list_to_rooarglist(yield_values))
+            self._constraints.update({constraint for _, constraint in children_yields.values()})
             for child_name, child in self._children.items():
-                child.set_yield_var((children_yields_values[child_name],
-                                     children_yields_constraints.get(child_name, None)))
+                child.set_yield_var(children_yields[child_name])
         elif (len(factories) - len(children_yields)) == 1:
             # Check order is correct
             if self._children.keys()[-1] in children_yields.keys():
                 logger.error("The last child should not be in `children_keys` to ensure consistency.")
                 raise ValueError("Wrong PDF ordering")
             # Store the fractions and propagate
-            self._objects['Fractions'] = list_to_rooarglist(children_yields_values.values())
+            for yield_val in yield_values:
+                # Not very good heuristics
+                if yield_val.getStringAttribute('shared') != 'true':
+                    yield_val.SetName(yield_val.GetName().replace('Yield', 'Fraction'))
+                    yield_val.SetTitle(yield_val.GetTitle().replace('Yield', 'Fraction'))
+            self._objects['Fractions'] = yield_values
             for child_name, child in self._children.items():
-                if child_name in children_yields:
-                    child['Fraction'] = children_yields_values[child_name]
-                    child._constraints.add(children_yields_constraints.get(child_name, None))
+                if child_name in children_yields.keys():
+                    child_yield, child_constraint = children_yields[child_name]
+                    child['Fraction'] = child_yield
+                    child._constraints.add(child_constraint)
                 else:
                     set_1 = list_to_rooarglist([ROOT.RooFit.RooConst(coef) for coef in [1] + [-1]*len(children_yields)])
-                    set_2 = list_to_rooarglist([ROOT.RooFit.RooConst(1)] + children_yields_values.values())
+                    set_2 = list_to_rooarglist([ROOT.RooFit.RooConst(1)] + yield_values)
                     child['Fraction'] = ROOT.RooAddition("Fraction", "Fraction", set_1, set_2)
                     child['Fraction_set1'] = set_1
                     child['Fraction_set2'] = set_2
+                    child._constraints.update({constraint for _, constraint in children_yields.values() if constraint})
             if yield_ is not None:
-                self.set_yield_var(yield_)
+                self.set_yield_var((yield_, constraint))
         else:
             raise KeyError("Badly specified yields/fractions")
 
@@ -701,11 +711,12 @@ class SumPhysicsFactory(BaseFactory):
                            "Returning an extended PDF")
             return self.get_extended_pdf(name, title)
         pdfs = ROOT.RooArgList()
-        fractions = self._objects['Fractions']
         for child_name, child in self._children.items():
             new_name = self._add_superscript(name, child_name)
             pdfs.add(child.get_pdf(new_name, new_name))
-        return ROOT.RooAddPdf(name, title, pdfs, fractions)
+        return ROOT.RooAddPdf(name, title,
+                              pdfs,
+                              list_to_rooarglist(self._objects['Fractions']))
 
     def get_unbound_extended_pdf(self, name, title):
         if 'Fractions' in self:
@@ -766,21 +777,27 @@ class SumPhysicsFactory(BaseFactory):
                      for param in factory.get_fit_parameters(extended))
 
     def set_yield_var(self, yield_):
-        if 'Yield' not in self._objects:
-            # Sum of non-extended PDFs
-            if 'Fractions' not in self._objects:
-                raise ValueError("Inconsistent state! I don't have yield nor fractions")
+        if 'Fractions' not in self._objects:
+            logger.warning("Trying to set the yield of an Extended RooAddPdf. Ignoring.")
+        elif 'Yield' not in self._objects:
             yield_ = self._create_parameter('Yield', yield_)
             for child in self._children.values():
-                child.set_yield_var(ROOT.RooProduct("Yield", "Yield",
-                                                    list_to_rooarglist([yield_,
-                                                                        child['Fraction']])))
+                if 'Yield' in child:
+                    raise ValueError("Inconsistent state: trying to set the yield of an already configured Factory.")
+                # Again, not very good heuristics
+                child.set_yield_var(ROOT.RooProduct(child['Fraction'].GetName().replace('Fraction', 'Yield'),
+                                                    child['Fraction'].GetTitle().replace('Fraction', 'Yield'),
+                                                    list_to_rooarglist([yield_, child['Fraction']])))
         else:
             if isinstance(self._objects['Yield'], ROOT.RooRealVar):
                 if isinstance(yield_, ROOT.RooRealVar):
                     self._objects['Yield'].setVal(yield_.getVal())
+                    self._objects['Yield'].SetName(yield_.GetName())
+                    self._objects['Yield'].SetTitle(yield_.GetTitle())
                 elif isinstance(yield_, (float, int)):
                     self._objects['Yield'].setVal(yield_)
+            else:
+                logger.warning("Trying to set a yield that cannot be overriden")
 
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
@@ -818,14 +835,13 @@ class SimultaneousPhysicsFactory(BaseFactory):
                           for label, factory in factories.items()}
 
     def get_unbound_pdf(self, name, title):
-        logger.debug("Requested a non-extended RooSimultaneous, so it will be made of RooAbsPdfs. "
-                     "Be aware that name clashes are possible.")
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
         for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
-            sim_pdf.addPdf(child.get_pdf(new_name,
-                                         new_name),
-                           '{%s}' % category if category.count(';') > 0 else category)
+            sim_pdf.addPdf(child.get_pdf(new_name, new_name),
+                           '{%s}' % category
+                           if category.count(';') > 0
+                           else category)
         return sim_pdf
 
     def get_unbound_extended_pdf(self, name, title):
@@ -838,7 +854,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
                            if category.count(';') > 0
                            else category)
             yields.add(child.get_yield_var())
-        self._objects['Yield'] = ROOT.RooProduct('Yield', 'Yield', yields)
+        self._objects['Yield'] = ROOT.RooAddition('Yield', 'Yield', yields)
         return sim_pdf
 
     def get_observables(self):
@@ -935,14 +951,5 @@ class SimultaneousPhysicsFactory(BaseFactory):
                 .transform_dataset(dataset[dataset[cat_var] == category].copy())
         return dataset
 
-
-# Helper
-def sanitize_parameter(param, name, title):
-    constraint = None
-    if isinstance(param, tuple):
-        param, constraint = param
-    if not isinstance(param, ROOT.TObject):
-        param, constraint = configure_parameter(name, title, param)
-    return param, constraint
 
 # EOF

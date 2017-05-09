@@ -14,7 +14,7 @@ import ROOT
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-from analysis.utils.config import get_shared_vars, ConfigError
+from analysis.utils.config import get_shared_vars, configure_parameter, ConfigError
 
 
 logger = get_logger('analysis.physics')
@@ -106,12 +106,25 @@ def configure_model(config, shared_vars=None):
         ConfigError: If the shared parameters are badly configured.
 
     """
-    def configure_factory(observable, config, shared_vars=None):
-        logger.debug("Configuring factory -> %s", config)
-        return get_physics_factory(observable, config['pdf'])(config,
-                                                              shared_vars)
+    def sanitize_parameter(param, name, title):
+        constraint = None
+        if isinstance(param, tuple):
+            param, constraint = param
+        if not isinstance(param, ROOT.TObject):
+            param, constraint = configure_parameter(name, title, param)
+        return param, constraint
 
-    def configure_prod_factory(config, shared_vars=None):
+    def configure_factory(observable, config, shared_vars):
+        logger.debug("Configuring factory -> %s", config)
+        if 'yield' in config:
+            yield_ = config.pop('yield')
+            if 'yield' not in shared_vars:
+                shared_vars['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
+        # if 'yield' in shared_vars:
+        #     shared_vars['yield'][0].setStringAttribute('shared', 'true')
+        return get_physics_factory(observable, config['pdf'])(config, shared_vars)
+
+    def configure_prod_factory(config, shared_vars):
         logger.debug("Configuring product -> %s", config['pdf'])
         # Parameter propagated disabled
         # params = config.get('parameters', {})
@@ -130,6 +143,12 @@ def configure_model(config, shared_vars=None):
             for child_config in config['pdf'].values():
                 if 'yield' in child_config:
                     raise ConfigError("Yield of a RooProductPdf defined in one of the children.")
+            if shared_vars and 'yield' in shared_vars:
+                config['yield'] = shared_vars['yield']
+            elif 'yield' in config:
+                config['yield'] = sanitize_parameter(config['yield'], 'Yield', 'Yield')
+            # if 'yield' in config:
+            #     config['yield'][0].setStringAttribute('shared', 'true')
             # Create the product
             return factory.ProductPhysicsFactory(OrderedDict((observable,
                                                               configure_factory(observable,
@@ -141,7 +160,7 @@ def configure_model(config, shared_vars=None):
                                                  # parameters={param_name: (param_val, None)
                                                  #             for param_name, param_val in params.items()})
 
-    def configure_sum_factory(config, shared_vars=None):
+    def configure_sum_factory(config, shared_vars):
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
@@ -152,10 +171,13 @@ def configure_model(config, shared_vars=None):
             # pdf_config['parameters'].update({param_name: (param_val, None)
             #                                  for param_name, param_val
             #                                  in config.get('parameters', {}).items()})
+            if 'yield' in shared_vars[pdf_name]:
+                yields[pdf_name] = shared_vars[pdf_name].pop('yield')
             if 'yield' in pdf_config:
-                yields[pdf_name] = pdf_config.pop('yield')
-                if 'yield' in shared_vars[pdf_name]:
-                    yields[pdf_name] = shared_vars[pdf_name].pop('yield')
+                yield_ = pdf_config.pop('yield')
+                if pdf_name not in yields:
+                    yields[pdf_name] = sanitize_parameter(yield_, 'Yield', 'Yield')
+                    # yields[pdf_name][0].setStringAttribute('shared', 'true')
             if isinstance(pdf_config.get('pdf', None), str):
                 factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
             else:
@@ -171,12 +193,14 @@ def configure_model(config, shared_vars=None):
                 if yields.keys()[-1] == factories.keys()[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
                 if 'yield' in config:
-                    parameters['yield'] = config.pop('yield')
-                    if 'yield' in shared_vars:
-                        parameters['yield'] = shared_vars.pop('yield')
+                    yield_ = config.pop('yield')
+                    if 'yield' not in shared_vars:
+                        parameters['yield'] = sanitize_parameter(config.pop('yield'), 'Yield', 'Yield')
+                # if 'yield' in parameters:
+                #     parameters['yield'][0].setStringAttribute('shared', 'true')
             return factory.SumPhysicsFactory(factories, yields, parameters)
 
-    def configure_simul_factory(config, shared_vars=None):
+    def configure_simul_factory(config, shared_vars):
         logger.debug("Configuring simultaneous -> %s", dict(config))
         categories = config['categories'].split(',') \
             if isinstance(config['categories'], str) \

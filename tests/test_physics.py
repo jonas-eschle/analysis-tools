@@ -381,6 +381,24 @@ def test_sumfactory_shared(sum_factory):
                 yield_signal.getVal() == 999))
 
 
+def test_sumfactory_fractions(sum_factory_frac):
+    """Test that the sum works well with fractions."""
+    model = sum_factory_frac.get_extended_pdf("TestSumFactory", "TestSumFactory", 1000)
+    frac_signal = model.getVariables()['Fraction^{signal}']
+    frac_background = sum_factory_frac.get_children()['background'].get('Fraction')
+    if frac_signal.getVal() + frac_background.getVal() != 1.0:
+        return False
+    if sum_factory_frac.get_yield_var().getVal() != 1000.0:
+        return False
+    if sum_factory_frac.get_children()['signal'].get_yield_var().getVal() != 500.0:
+        return False
+    frac_signal.setVal(0.7)
+    if frac_signal.getVal() + frac_background.getVal() != 1.0:
+        return False
+    if sum_factory_frac.get_children()['signal'].get_yield_var().getVal() != 700.0:
+        return False
+
+
 @pytest.fixture
 def sim_factory():
     """Load a SimultaneousPhysicsFactory."""

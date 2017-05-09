@@ -282,6 +282,7 @@ def get_shared_vars(config):
             if ref_name in refs:
                 raise ValueError("Shared parameter defined twice -> %s" % ref_name)
             var, constraint = configure_parameter(var_name, var_title, var_config)
+            var.setStringAttribute('shared', 'true')
             refs[ref_name] = (var, constraint)
         elif len(split_element) == 1:
             pass
