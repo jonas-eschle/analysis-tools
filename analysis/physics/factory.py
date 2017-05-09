@@ -780,7 +780,7 @@ class SumPhysicsFactory(BaseFactory):
                 if isinstance(yield_, ROOT.RooRealVar):
                     self._objects['Yield'].setVal(yield_.getVal())
                 elif isinstance(yield_, (float, int)):
-                    self._objects['Yield'].setVal(yiield_)
+                    self._objects['Yield'].setVal(yield_)
 
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
