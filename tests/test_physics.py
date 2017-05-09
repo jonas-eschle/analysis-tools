@@ -319,6 +319,33 @@ background:
 """)
 
 
+@pytest.fixture
+def sum_factory_frac():
+    """Load a SumPhysicsFactory."""
+    return load_model("""
+signal:
+    yield: 0.5
+    pdf:
+        mass:
+            pdf: cb
+            parameters:
+                mu: L 5246.7 5200 5300
+                sigma1: '@sigma/sigma/sigma/L 41 35 45'
+                sigma2: '@sigma'
+                n1: L 5.6689 2 9
+                n2: L 1.6 0.2 2
+                alpha1: L 0.25923 0.1 0.5
+                alpha2: L -1.9749 -3.5 -1.0
+                frac: L 0.84873 0.1 1.0
+background:
+    pdf:
+        mass:
+            pdf: exp
+            parameters:
+                tau: C -0.003
+""")
+
+
 # pylint: disable=W0621
 def test_sumfactory_load(sum_factory):
     """Test factory loading returns an object of the correct type."""

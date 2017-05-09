@@ -241,7 +241,7 @@ class BaseFactory(object):
             KeyError: If some of the parameter names are unknown.
 
         """
-        if not set(name_dict.keys()).issubset(set(self.PARAMETERS + ['Yield'])):
+        if not set(name_dict.keys()).issubset(set(self.PARAMETERS + ['Yield', 'Fraction'])):
             raise KeyError("Bad renaming scheme!")
         all_good = True
         # logger.debug("Requesting a parameter name change -> %s", name_dict)
@@ -276,9 +276,9 @@ class BaseFactory(object):
             # Recursively rename children
             logger.error("Renaming %s -> %s", label, factory)
             factory.rename_children_parameters(('%s,%s' % (label, child_name), child)
-                                                   for child_name, child in factory.get_children().items())
+                                               for child_name, child in factory.get_children().items())
             parameters_to_set = {}
-            for param_id in factory.PARAMETERS + ['Yield']:
+            for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
                 parameters_to_set[param_id] = self._add_superscript(factory.get_parameter_name(param_id),
                                                                     label)
             factory.set_parameter_names(parameters_to_set)
@@ -502,9 +502,7 @@ class PhysicsFactory(BaseFactory):
         return self.get_fit_parameters()
 
     def set_yield_var(self, yield_):
-        constraint = None
-        if isinstance(yield_, tuple):
-            yield_, constraint = yield_
+        yield_, constraint = sanitize_parameter(yield_)
         self._objects['Yield'] = yield_
         if constraint:
             self._constraints.add(constraint)
@@ -685,11 +683,11 @@ class SumPhysicsFactory(BaseFactory):
             for child_name, child in self._children.items():
                 if child_name in children_yields:
                     child['Fraction'] = children_yields_values[child_name]
-                    child._constraints.add(children_yields_constraints[child_name])
+                    child._constraints.add(children_yields_constraints.get(child_name, None))
                 else:
                     set_1 = list_to_rooarglist([ROOT.RooFit.RooConst(coef) for coef in [1] + [-1]*len(children_yields)])
                     set_2 = list_to_rooarglist([ROOT.RooFit.RooConst(1)] + children_yields_values.values())
-                    child['Fraction'] = ROOT.RooProduct("Fraction", "Fraction", set_1, set_2)
+                    child['Fraction'] = ROOT.RooAddition("Fraction", "Fraction", set_1, set_2)
                     child['Fraction_set1'] = set_1
                     child['Fraction_set2'] = set_2
             if yield_ is not None:
@@ -778,7 +776,11 @@ class SumPhysicsFactory(BaseFactory):
                                                     list_to_rooarglist([yield_,
                                                                         child['Fraction']])))
         else:
-            logger.warning("Cannot set yield of a sum of RooExtendPdf. Ignoring set_yield_var")
+            if isinstance(self._objects['Yield'], ROOT.RooRealVar):
+                if isinstance(yield_, ROOT.RooRealVar):
+                    self._objects['Yield'].setVal(yield_.getVal())
+                elif isinstance(yield_, (float, int)):
+                    self._objects['Yield'].setVal(yiield_)
 
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
