@@ -66,7 +66,7 @@ def get_fit_strategy(name):
 
 # Perform fit
 # pylint: disable=R0913
-def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, sumw2=False, verbose=False):
+def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     """Fit a dataset.
 
     Raises:
@@ -77,10 +77,13 @@ def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, sumw2=F
     import ROOT
 
     fit_config = [ROOT.RooFit.Save(True),
-                  ROOT.RooFit.Extended(extended),
-                  ROOT.RooFit.Minos(minos),
-                  ROOT.RooFit.SumW2Error(sumw2),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
+    for command, val in kwargs.items():
+        roo_cmd = getattr(ROOT.RooFit, command, None)
+        if not roo_cmd:
+            logger.warning("Specified unknown RooArgCmd %s", command)
+            continue
+        fit_config.append(roo_cmd(val))
     constraints = factory.get_constraints()
     if constraints.getSize():
         fit_config.append(ROOT.RooFit.ExternalConstraints(constraints))
@@ -90,7 +93,7 @@ def fit(factory, pdf_name, strategy, dataset, extended=True, minos=True, sumw2=F
         raise KeyError("Unknown fit strategy -> %s" % strategy)
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
-            if extended \
+            if kwargs.get('Extended', True) \
             else factory.get_pdf(pdf_name, pdf_name)
     except ValueError as error:
         logger.error("Problem getting the PDF -> %s", error)
