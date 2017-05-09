@@ -109,47 +109,72 @@ def configure_model(config, shared_vars=None):
     def configure_factory(observable, config, shared_vars=None):
         logger.debug("Configuring factory -> %s", config)
         return get_physics_factory(observable, config['pdf'])(config,
-                                                              shared_vars['parameters'])
+                                                              shared_vars)
 
     def configure_prod_factory(config, shared_vars=None):
         logger.debug("Configuring product -> %s", config['pdf'])
-        params = config.get('parameters', {})
-        params.update(config['pdf'].pop('parameters', {}))
-        # Propagate parameters down
-        for observable, factory_config in config['pdf'].items():
-            if 'parameters' not in factory_config:
-                factory_config['parameters'] = {}
-            factory_config['parameters'].update(params)
+        # Parameter propagated disabled
+        # params = config.get('parameters', {})
+        # params.update(config['pdf'].pop('parameters', {}))
+        # # Propagate parameters down
+        # for observable, factory_config in config['pdf'].items():
+        #     if 'parameters' not in factory_config:
+        #         factory_config['parameters'] = {}
+        #     factory_config['parameters'].update(params)
         if len(config['pdf']) == 1:
             observable = config['pdf'].keys()[0]
             factory_config = config['pdf'].values()[0]
             return configure_factory(observable, factory_config, shared_vars['pdf'][observable])
         else:
+            # Check the yields
+            for child_config in config['pdf'].values():
+                if 'yield' in child_config:
+                    raise ConfigError("Yield of a RooProductPdf defined in one of the children.")
+            # Create the product
             return factory.ProductPhysicsFactory(OrderedDict((observable,
                                                               configure_factory(observable,
                                                                                 factory_config,
                                                                                 shared_vars['pdf'][observable]))
-                                                             for observable, factory_config in config['pdf'].items()),
-                                                 parameters={param_name: (param_val, None)
-                                                             for param_name, param_val in params.items()})
+                                                             for observable, factory_config
+                                                             in config.pop('pdf').items()),
+                                                 parameters=config)
+                                                 # parameters={param_name: (param_val, None)
+                                                 #             for param_name, param_val in params.items()})
 
     def configure_sum_factory(config, shared_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
+        yields = OrderedDict()
         for pdf_name, pdf_config in config.items():
-            if 'parameters' not in pdf_config:
-                pdf_config['parameters'] = OrderedDict()
-            pdf_config['parameters'].update({param_name: (param_val, None)
-                                             for param_name, param_val
-                                             in config.get('parameters', {}).items()})
+            # Disable parameter propagation
+            # if 'parameters' not in pdf_config:
+            #     pdf_config['parameters'] = OrderedDict()
+            # pdf_config['parameters'].update({param_name: (param_val, None)
+            #                                  for param_name, param_val
+            #                                  in config.get('parameters', {}).items()})
+            if 'yield' in pdf_config:
+                yields[pdf_name] = pdf_config.pop('yield')
+                if 'yield' in shared_vars[pdf_name]:
+                    yields[pdf_name] = shared_vars[pdf_name].pop('yield')
             if isinstance(pdf_config.get('pdf', None), str):
                 factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
             else:
                 factories[pdf_name] = configure_model(pdf_config, shared_vars[pdf_name])
+        logger.debug("Found yields -> %s", yields)
         if len(factories) == 1:
             return factories.values()[0]
         else:
-            return factory.SumPhysicsFactory(factories)
+            parameters = {}
+            if (len(factories) - len(yields)) > 1:
+                raise ConfigError("Missing at least one yield in sum factory definition")
+            elif (len(factories) - len(yields)) == 1:
+                if yields.keys()[-1] == factories.keys()[-1]:  # The last one should not have a yield!
+                    raise ConfigError("Wrong order in yield/factory specification")
+                if 'yield' in config:
+                    parameters['yield'] = config.pop('yield')
+                    if 'yield' in shared_vars:
+                        parameters['yield'] = shared_vars.pop('yield')
+            return factory.SumPhysicsFactory(factories, yields, parameters)
 
     def configure_simul_factory(config, shared_vars=None):
         logger.debug("Configuring simultaneous -> %s", dict(config))

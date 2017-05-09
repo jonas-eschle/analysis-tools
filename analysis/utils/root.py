@@ -102,6 +102,37 @@ def execute_and_return_self(obj, func, *args, **kwargs):
 
 
 # Helpers
+def list_to_rooabscollection(iterable, collection_type):
+    """Convert a list into a RooAbsCollection.
+
+    Arguments:
+        iterable (iterable): Iterable to convert.
+        collection_type (ROOT.RooAbsCollection): Type of collection to
+            convert to.
+
+    Returns:
+        `collection_type`.
+
+    """
+    collection = collection_type()
+    for element in iterable:
+        collection.add(element)
+    return collection
+
+
+def list_to_rooarglist(iterable):
+    """Convert a list into a RooArgSet.
+
+    Arguments:
+        iterable (iterable): Iterable to convert.
+
+    Returns:
+        `ROOT.RooArgList`.
+
+    """
+    return list_to_rooabscollection(iterable, ROOT.RooArgList)
+
+
 def list_to_rooargset(iterable):
     """Convert a list into a RooArgSet.
 
@@ -112,10 +143,7 @@ def list_to_rooargset(iterable):
         `ROOT.RooArgSet`.
 
     """
-    arg_set = ROOT.RooArgSet()
-    for element in iterable:
-        arg_set.add(element)
-    return arg_set
+    return list_to_rooabscollection(iterable, ROOT.RooArgSet)
 
 
 def rooargset_to_set(rooargset):

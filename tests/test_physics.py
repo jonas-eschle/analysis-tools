@@ -17,6 +17,7 @@ import analysis.physics as phys
 import analysis.physics.factory as phys_factory
 import analysis.physics.pdf_models as pdfs
 from analysis.utils.logging_color import get_logger
+from analysis.utils.config import ConfigError
 
 
 get_logger('analysis.physics').setLevel(10)
@@ -140,6 +141,23 @@ def factory():
         frac: L 0.84873 0.1 1.0""")
 
 
+@pytest.fixture
+def factory_with_yield():
+    """Load a PhysicsFactory with yield."""
+    return load_model("""mass:
+    pdf: cb
+    yield: L 1000 300 2000
+    parameters:
+        mu: L 5246.7 5200 5300
+        sigma1: '@sigma/sigma/sigma/L 41 35 45'
+        sigma2: '@sigma'
+        n1: L 5.6689 2 9
+        n2: L 1.6 0.2 2
+        alpha1: L 0.25923 0.1 0.5
+        alpha2: L -1.9749 -3.5 -1.0
+        frac: L 0.84873 0.1 1.0""")
+
+
 # pylint: disable=W0621
 def test_factory_load(factory):
     """Test factory loading returns an object of the correct type."""
@@ -157,10 +175,12 @@ def test_factory_get_pdf(factory):
 
 
 # pylint: disable=W0621
-def test_factory_get_extendedpdf(factory):
+def test_factory_get_extendedpdf(factory, factory_with_yield):
     """Test the PDF from the factory has the correct properties."""
-    model = factory.get_extended_pdf("TestFactory", "TestFactory", 999)
-    return model.getVariables()["Yield"].getVal() == 999.0
+    model = factory.get_extended_pdf("TestFactory", "TestFactory", 1000)
+    model_yield = factory_with_yield.get_extended_pdf("TestFactoryWithYield", "TestFactoryWithYield")
+    return all((model.getVariables()["Yield"].getVal() == 1000.0,
+                model_yield.getVariables()["Yield"].getVal() == 1000.0))
 
 
 # pylint: disable=W0621
@@ -179,8 +199,7 @@ def test_factory_shared(factory):
 def prod_factory():
     """Load a ProdPhysicsFactory."""
     return load_model("""
-parameters:
-    Yield: G 999 100
+yield: G 999 100
 pdf:
     mass:
         pdf: cb
@@ -244,13 +263,40 @@ def test_prodfactory_shared(prod_factory):
                 sigma2.getMax() == 45.0])
 
 
+def test_prodfactory_error():
+    """Test if a badly configured ProdFactory is picked up."""
+    try:
+        load_model("""
+yield: G 999 100
+pdf:
+    mass:
+        pdf: cb
+        yield: G 999 100
+        parameters:
+            mu: L 5246.7 5200 5300
+            sigma1: '@sigma/sigma/sigma/L 41 35 45'
+            sigma2: '@sigma'
+            n1: L 5.6689 2 9
+            n2: L 1.6 0.2 2
+            alpha1: L 0.25923 0.1 0.5
+            alpha2: L -1.9749 -3.5 -1.0
+            frac: L 0.84873 0.1 1.0
+    q2:
+        pdf: flat
+        parameters:
+            const: '@sigma'
+""")
+        return False
+    except ConfigError:
+        return True
+
+
 @pytest.fixture
 def sum_factory():
     """Load a SumPhysicsFactory."""
     return load_model("""
 signal:
-    parameters:
-        Yield: '@yield/yield/yield/G 999 100'
+    yield: '@yield/yield/yield/G 999 100'
     pdf:
         mass:
             pdf: cb
@@ -264,8 +310,7 @@ signal:
                 alpha2: L -1.9749 -3.5 -1.0
                 frac: L 0.84873 0.1 1.0
 background:
-    parameters:
-        Yield: '@yield'
+    yield: '@yield'
     pdf:
         mass:
             pdf: exp
@@ -318,8 +363,7 @@ categories:
 pdf:
     label1:
         signal:
-            parameters:
-                Yield: 999
+            yield: 999
             pdf:
                 mass:
                     pdf: cb
@@ -337,8 +381,7 @@ pdf:
                     parameters:
                         const: '@sigma'
         background:
-            parameters:
-                Yield: 320
+            yield: 320
             pdf:
                 mass:
                     pdf: exp
@@ -350,8 +393,7 @@ pdf:
                         const: '@sigma'
     label2:
         signal:
-            parameters:
-                Yield: 231
+            yield: 231
             pdf:
                 mass:
                     pdf: cb
@@ -395,5 +437,6 @@ def test_simfactory_vs_factory(factory, sim_factory):
         ROOT.RooArgSet(factory.get_observables()[0])).getVal() == \
         sim_model.getComponents()["TestSimFactory^{label1,signal}"].createIntegral(
             ROOT.RooArgSet(sim_factory.get_observables()[0])).getVal()
+
 
 # EOF
