@@ -40,18 +40,19 @@ register_file_type('hdf', 'pandas')
 register_file_type('root', 'root')
 
 
-def load_data(config_file):
+def load_data(config_file, key=None):
     """Load from file.
 
     Returns:
         object: Data object.
 
-    Raises:
-        analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
     """
     config_file = os.path.abspath(config_file)
-    return get_data(load_config(config_file))
+    if not os.path.exists(config_file):
+        raise OSError("Cannot find config file -> %s" % config_file)
+    config = load_config(config_file)[key] if key else load_config(config_file)
+    return get_data(config)
 
 
 def get_data(data_config, **kwargs):

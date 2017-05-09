@@ -46,9 +46,12 @@ def _load_pandas(file_name, tree_name, variables, selection):
     with pd.HDFStore(file_name, 'r') as store:
         if tree_name not in store:
             raise KeyError("Cannot find tree in input file -> %s" % tree_name)
-        output_data = store.select(tree_name,
-                                   columns=variables,
-                                   where=selection)
+        if selection:
+            output_data = store[tree_name].query(selection)
+            if variables:
+                output_data = output_data[variables]
+        else:
+            output_data = store.select(tree_name, columns=variables)
     return output_data
 
 
@@ -222,9 +225,15 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
                  file_name, tree_name)
     if not os.path.exists(file_name):
         raise OSError("Cannot find input file -> %s" % file_name)
-    return read_root(file_name, tree_name,
-                     columns=kwargs.get('variables', None),
-                     where=kwargs.get('selection', None))
+    selection = kwargs.get('selection', None)
+    variables = kwargs.get('variables', None)
+    if selection:
+        output_data = read_root(file_name, tree_name).query(selection)
+        if variables:
+            output_data = output_data[variables]
+    else:
+        output_data = read_root(file_name, tree_name, columns=variables)
+    return output_data
 
 
 # EOF
