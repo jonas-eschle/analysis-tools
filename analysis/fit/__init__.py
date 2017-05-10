@@ -36,7 +36,7 @@ def register_fit_strategy(name, fit_function):
 
     """
     if len(inspect.getargspec(fit_function).args) != 3:
-        raise ValueError("The stragey function needs to have 3 arguments")
+        raise ValueError("The strategy function needs to have 3 arguments")
     logger.debug("Registering %s fitting strategy", name)
     get_global_var('FIT_STRATEGIES').update({name: fit_function})
     return len(get_global_var('FIT_STRATEGIES'))
@@ -78,6 +78,8 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
 
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
+    if 'Range' not in kwargs:
+        kwargs['Range'] = 'Full'
     for command, val in kwargs.items():
         roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:
