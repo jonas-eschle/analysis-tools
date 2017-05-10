@@ -78,6 +78,7 @@ def get_data(data_config, **kwargs):
     # Do we need to merge?
     if isinstance(data_config, list):
         from analysis.data.mergers import merge
+        logger.debug("Multiple datasets specified. Merging...")
         return merge([get_data(data) for data in data_config], **kwargs)
     # Merge data_config and keyword arguments
     data_config.update(kwargs)
