@@ -63,7 +63,7 @@ class BaseFactory(object):
         self._parameter_names = {param: param for param in self.PARAMETERS}
         self._parameter_names.update(self._config.get('parameter-names', {}))
         # Update observable names
-        for obs_name, new_obs_name in self._config.get('observable-names', {}):
+        for obs_name, new_obs_name in self._config.get('observable-names', {}).items():
             self.set_observable(obs_name, name=new_obs_name)
         # Set the parameter dictionary
         param_dict = self.PARAMETER_DEFAULTS.copy()
