@@ -683,6 +683,8 @@ class SumPhysicsFactory(BaseFactory):
                 raise ValueError("Wrong PDF ordering")
             # Store the fractions and propagate
             for yield_val in yield_values:
+                if yield_val.getVal() > 1:
+                    raise ValueError("Specified a fraction larger than 1 -> %s" % yield_val.GetName())
                 # Not very good heuristics
                 if yield_val.getStringAttribute('shared') != 'true':
                     yield_val.SetName(yield_val.GetName().replace('Yield', 'Fraction'))
@@ -692,14 +694,16 @@ class SumPhysicsFactory(BaseFactory):
                 if child_name in children_yields.keys():
                     child_yield, child_constraint = children_yields[child_name]
                     child['Fraction'] = child_yield
-                    child._constraints.add(child_constraint)
+                    child.get_constraints().add(child_constraint)
                 else:
                     set_1 = list_to_rooarglist([ROOT.RooFit.RooConst(coef) for coef in [1] + [-1]*len(children_yields)])
                     set_2 = list_to_rooarglist([ROOT.RooFit.RooConst(1)] + yield_values)
                     child['Fraction'] = ROOT.RooAddition("Fraction", "Fraction", set_1, set_2)
                     child['Fraction_set1'] = set_1
                     child['Fraction_set2'] = set_2
-                    child._constraints.update({constraint for _, constraint in children_yields.values() if constraint})
+                    child.get_constraints().update({constraint
+                                                    for _, constraint in children_yields.values()
+                                                    if constraint})
             if yield_ is not None:
                 self.set_yield_var((yield_, constraint))
         else:
