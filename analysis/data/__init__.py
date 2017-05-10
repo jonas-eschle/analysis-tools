@@ -40,7 +40,7 @@ register_file_type('hdf', 'pandas')
 register_file_type('root', 'root')
 
 
-def load_data(config_file, key=None):
+def load_data(config_file, key=None, **kwargs):
     """Load from file.
 
     Returns:
@@ -52,7 +52,7 @@ def load_data(config_file, key=None):
     if not os.path.exists(config_file):
         raise OSError("Cannot find config file -> %s" % config_file)
     config = load_config(config_file)[key] if key else load_config(config_file)
-    return get_data(config)
+    return get_data(config, **kwargs)
 
 
 def get_data(data_config, **kwargs):
@@ -75,9 +75,12 @@ def get_data(data_config, **kwargs):
 
     """
     import analysis.data.loaders as _loaders
+    # Merge data_config and keyword arguments
+    data_config.update(kwargs)
+    # Do we need to merge?
     if isinstance(data_config, list):
         from analysis.data.mergers import merge
-        return merge([get_data(data) for data in data_config], **kwargs)
+        return merge([get_data(data) for data in data_config], **data_config)
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
