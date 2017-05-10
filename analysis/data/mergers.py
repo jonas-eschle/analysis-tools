@@ -37,12 +37,13 @@ def merge(data_list, **kwargs):
             raise KeyError("No name specified for dataset merging.")
         return merge_root(kwargs['name'], kwargs.get('title', kwargs['name']), data_list)
     elif isinstance(data_list[0], (pd.DataFrame, pd.Series)):
-        return merge_pandas(data_list)
+        raise NotImplementedError()
+        # return merge_pandas(data_list)
     else:
         raise AttributeError("Unknown dataset type -> %s" % type(data_list[0]))
 
 
-def merge_root(name, title, data_list, destruct_data=True):
+def merge_root(data_list, name=None, title=None, destruct_data=True):
     """Merge RooDataSets.
 
     Arguments:
@@ -55,6 +56,7 @@ def merge_root(name, title, data_list, destruct_data=True):
 
     Raises:
         ValueError: If the datasets are incompatible.
+        KeyError: If some keyword argument is missing
 
     """
     # Cross check variables
@@ -76,7 +78,18 @@ def merge_root(name, title, data_list, destruct_data=True):
 
 
 def merge_pandas(data_list):
-    """Merge pandas data frames."""
+    """Merge pandas data frames.
+
+    Arguments:
+        data_list (list[pandas.DataFrame]): Datasets to merge.
+
+    Returns:
+        pandas.DataFrame: Merged dataset.
+
+    Raises:
+        ValueError: If the datasets are incompatible.
+
+    """
     pass
 
 # EOF
