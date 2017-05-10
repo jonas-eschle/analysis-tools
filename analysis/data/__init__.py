@@ -75,12 +75,12 @@ def get_data(data_config, **kwargs):
 
     """
     import analysis.data.loaders as _loaders
-    # Merge data_config and keyword arguments
-    data_config.update(kwargs)
     # Do we need to merge?
     if isinstance(data_config, list):
         from analysis.data.mergers import merge
-        return merge([get_data(data) for data in data_config], **data_config)
+        return merge([get_data(data) for data in data_config], **kwargs)
+    # Merge data_config and keyword arguments
+    data_config.update(kwargs)
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
