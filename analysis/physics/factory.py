@@ -694,14 +694,14 @@ class SumPhysicsFactory(BaseFactory):
                 if child_name in children_yields.keys():
                     child_yield, child_constraint = children_yields[child_name]
                     child['Fraction'] = child_yield
-                    child.get_constraints().add(child_constraint)
+                    child._constraints.add(child_constraint)
                 else:
                     set_1 = list_to_rooarglist([ROOT.RooFit.RooConst(coef) for coef in [1] + [-1]*len(children_yields)])
                     set_2 = list_to_rooarglist([ROOT.RooFit.RooConst(1)] + yield_values)
                     child['Fraction'] = ROOT.RooAddition("Fraction", "Fraction", set_1, set_2)
                     child['Fraction_set1'] = set_1
                     child['Fraction_set2'] = set_2
-                    child.get_constraints().update({constraint
+                    child._constraints.update({constraint
                                                     for _, constraint in children_yields.values()
                                                     if constraint})
             if yield_ is not None:

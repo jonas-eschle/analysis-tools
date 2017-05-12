@@ -55,7 +55,7 @@ def load_config(*file_names, **options):
                                                              Loader=yamlordereddictloader.Loader)))
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
-    data = fold_config(unfolded_data)
+    data = fold_config(unfolded_data, OrderedDict)
     logger.debug('Loaded configuration -> %s', data)
     if 'validate' in options:
         missing_keys = []
@@ -306,6 +306,8 @@ class ConfigError(Exception):
             missing_keys (list): Missing keys after validation.
 
         """
+        if not isinstance(missing_keys, (list, tuple)):
+            missing_keys = [missing_keys]
         self.missing_keys = missing_keys
         super(ConfigError, self).__init__("Failed validation: %s are missing",
                                           ','.join(missing_keys))

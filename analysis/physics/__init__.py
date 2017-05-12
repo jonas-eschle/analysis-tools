@@ -225,10 +225,11 @@ def configure_model(config, shared_vars=None):
                     logger.debug("Registering label for %s -> %s", cat_list[cat_iter].GetName(), cat_sublabel)
                     cat_list[cat_iter].defineType(cat_sublabel)
                 labels[cat_iter].add(cat_sublabel)
-        sim_factory = factory.SimultaneousPhysicsFactory({tuple(cat_label.replace(' ', '').split(',')):
-                                                          configure_model(cat_config,
-                                                                          shared_vars['pdf'][cat_label])
-                                                          for cat_label, cat_config in config['pdf'].items()},
+        sim_factory = factory.SimultaneousPhysicsFactory(OrderedDict((tuple(cat_label.replace(' ', '').split(',')),
+                                                                      configure_model(cat_config,
+                                                                                      shared_vars['pdf'][cat_label]))
+                                                                     for cat_label, cat_config
+                                                                     in config['pdf'].items()),
                                                          cat)
         for cat in cat_list:
             sim_factory.set('cat_%s' % cat.GetName(), cat)
@@ -241,12 +242,13 @@ def configure_model(config, shared_vars=None):
             shared_vars = get_shared_vars(config)
         except (ValueError, KeyError) as error:
             return ConfigError("%s" % error)
+
     # Let's find out what is this
     if 'categories' in config:
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if isinstance(config.values()[0]['pdf'], str):
+            if isinstance(config.values()[0].get('pdf', None), str):
                 shared = {'pdf': shared_vars}
                 return configure_prod_factory({'pdf': config}, shared)
             else:
