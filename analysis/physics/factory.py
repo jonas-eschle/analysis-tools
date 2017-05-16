@@ -156,18 +156,21 @@ class BaseFactory(object):
         """
         return self._objects[key]
 
-    def set(self, key, object_):
+    def set(self, key, object_, overwrite=False):
         """Set an object in the internal ROOT workspace.
 
         Arguments:
             key (str): Object identifier.
             object_ (object): Object to store.
+            overwrite (bool, optional): Replace the existing object?
+                Defaults to False.
 
         Returns:
             object: The object.
 
         """
-        self._objects[key] = object_
+        if overwrite or key not in self._objects:
+            self._objects[key] = object_
         return self[key]
 
     def __setitem__(self, key, object_):
@@ -190,7 +193,7 @@ class BaseFactory(object):
             bool: Wether the object is in the workspace.
 
         """
-        return self.get(key, None) is not None
+        return key in self._objects
 
     def _create_parameter(self, parameter_name, parameter_value):
         if parameter_name in self._objects:

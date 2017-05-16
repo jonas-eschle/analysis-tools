@@ -134,12 +134,12 @@ class DoubleCBPdfMixin(object):
         obs = self.get_observables()[0]
         params = self.get_fit_parameters()
         return ROOT.RooAddPdf(name, title,
-                              self.get(name+'CB1',
+                              self.set(name+'CB1',
                                        ROOT.RooCBShape(name+'CB1',
                                                        title+'CB1',
                                                        obs,
                                                        *params[0:4])),
-                              self.get(name+'CB2',
+                              self.set(name+'CB2',
                                        ROOT.RooCBShape(name+'CB2',
                                                        title+'CB2',
                                                        obs,
