@@ -112,10 +112,10 @@ class BaseFactory(object):
                 return child[name]
         return None
 
-    def get(self, key, init_val=None, recursive=True):
+    def get(self, key, default=None, recursive=False):
         """Get object from the ROOT workspace.
 
-        If the object is not there and `init_val` is given, it is added
+        If the object is not there and `default` is given, it is added
         and returned.
 
         We look in children too.
@@ -129,7 +129,7 @@ class BaseFactory(object):
             object: Object in the workspace.
 
         Raises:
-            KeyError: if `key` is not in the internal workspace and no `init_val`
+            KeyError: if `key` is not in the internal workspace and no `default`
                 is given.
 
         """
@@ -137,11 +137,7 @@ class BaseFactory(object):
             obj = self._find_object(key)
         else:
             obj = self._objects.get(key, None)
-        if not obj:
-            if init_val is not None:
-                self._objects[key] = init_val
-            return self._objects[key]
-        return obj
+        return obj if obj else default
 
     def __getitem__(self, key):
         """Get object from internal ROOT workspace.
@@ -156,10 +152,7 @@ class BaseFactory(object):
             KeyError: if `key` is not in the internal workspace.
 
         """
-        obj = self._find_object(key)
-        if not obj:
-            raise KeyError("Cannot find %s in object" % key)
-        return obj
+        return self._objects[key]
 
     def set(self, key, object_):
         """Set an object in the internal ROOT workspace.
@@ -195,7 +188,7 @@ class BaseFactory(object):
             bool: Wether the object is in the workspace.
 
         """
-        return self._find_object(key) is not None
+        return self.get(key, None) is not None
 
     def _create_parameter(self, parameter_name, parameter_value):
         if parameter_name in self._objects:
