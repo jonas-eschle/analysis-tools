@@ -25,7 +25,7 @@ from analysis.efficiency import get_efficiency_model_class, load_efficiency_mode
 logger = get_logger('analysis.efficiency.calculate_efficiency')
 # Register plot path
 get_efficiency_plot_path = _paths.register_path('efficiency_plot',
-                                                ['data', 'efficiency'],
+                                                ['data_files', 'efficiency'],
                                                 'eps',
                                                 lambda name, args, kwargs: name + '_%s' % kwargs['var'])
 
