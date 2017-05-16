@@ -95,7 +95,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
         raise KeyError("Unknown fit strategy -> %s" % strategy)
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
-            if kwargs.get('Extended', True) \
+            if factory.is_extended() \
             else factory.get_pdf(pdf_name, pdf_name)
     except ValueError as error:
         logger.error("Problem getting the PDF -> %s", error)

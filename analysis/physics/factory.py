@@ -286,6 +286,9 @@ class BaseFactory(object):
             NotImplementedError
 
         """
+        if self.has_to_be_extended():
+            raise ValueError("Requested non-extended PDF, "
+                             "but the factory needs to be extended")
         pdf_name = 'pdf_%s' % name
         return self.get(pdf_name) \
             if pdf_name in self \
@@ -311,12 +314,12 @@ class BaseFactory(object):
 
         """
         # Configure yield
-        if 'Yield' not in self._objects:
+        if not self.is_extended():
             if yield_val is None:
                 raise ValueError("Yield value not given -> %s" % self)
             self.set_yield_var(yield_val)
         elif yield_val is not None:
-            self._objects['Yield'].setVal(yield_val)
+            logger.warning("Specified yield value but it's already defined. Ignoring.")
         # Avoid name clashes
         pdf_name = 'pdfext_%s' % name
         return self.get(pdf_name) \
@@ -325,6 +328,12 @@ class BaseFactory(object):
 
     def get_unbound_extended_pdf(self, name, title):
         """Get an extedned physics PDF."""
+        raise NotImplementedError()
+
+    def is_extended(self):
+        return 'Yield' in self
+
+    def has_to_be_extended(self):
         raise NotImplementedError()
 
     def get_observables(self):
@@ -387,7 +396,7 @@ class BaseFactory(object):
         raise NotImplementedError()
 
     def get_yield_var(self):
-        return self._objects['Yield']
+        return self._objects.get('Yield', None)
 
     def set_yield_var(self, yield_):
         raise NotImplementedError()
@@ -468,6 +477,9 @@ class PhysicsFactory(BaseFactory):
                                  title,
                                  self.get_pdf(name+'_{noext}', title+'_{noext}'),
                                  self._objects['Yield'])
+
+    def has_to_be_extended(self):
+        return False
 
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
@@ -551,6 +563,9 @@ class ProductPhysicsFactory(BaseFactory):
                                  title,
                                  self.get_pdf(name+'_{noext}', title+'_{noext}'),
                                  self._objects['Yield'])
+
+    def has_to_be_extended(self):
+        return False
 
     def get_observables(self):
         """Get the physics observables.
@@ -736,6 +751,9 @@ class SumPhysicsFactory(BaseFactory):
                 pdfs.add(child.get_extended_pdf(new_name, new_name))
             return ROOT.RooAddPdf(name, title, pdfs)
 
+    def has_to_be_extended(self):
+        return 'Fractions' not in self
+
     def get_observables(self):
         """Get the physics observables.
 
@@ -860,6 +878,21 @@ class SimultaneousPhysicsFactory(BaseFactory):
             yields.add(child.get_yield_var())
         self._objects['Yield'] = ROOT.RooAddition('Yield', 'Yield', yields)
         return sim_pdf
+
+    def is_extended(self):
+        children_are_extended = (child.is_extended()
+                                 for child in self.get_children().values())
+        if all(children_are_extended):
+            return True
+        elif any(children_are_extended):
+            return False
+        else:
+            # Mix of children, a bit inconsistent
+            raise ValueError("Inconsistent children state")
+
+    def has_to_be_extended(self):
+        return any(child.has_to_be_extended()
+                   for child in self.get_children().values())
 
     def get_observables(self):
         """Get the physics observables.

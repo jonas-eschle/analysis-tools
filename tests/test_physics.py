@@ -374,7 +374,7 @@ def test_sumfactory_get_extendedpdf(sum_factory):
 # pylint: disable=W0621
 def test_sumfactory_shared(sum_factory):
     """Test that shared parameters are treated correctly."""
-    model = sum_factory.get_pdf("TestSumFactory", "TestSumFactory")
+    model = sum_factory.get_extended_pdf("TestSumFactory", "TestSumFactory")
     yield_signal = model.getComponents()['TestSumFactory^{signal}'].getVariables()['yield']
     yield_background = model.getComponents()['TestSumFactory^{background}'].getVariables()['yield']
     return all((yield_signal == yield_background,
@@ -463,7 +463,7 @@ def test_simfactory_load(sim_factory):
 # pylint: disable=W0621
 def test_simfactory_get_pdf(sim_factory):
     """Test the PDF from the product factory has the correct properties."""
-    model = sim_factory.get_pdf("TestSimFactory", "TestSimFactory")
+    model = sim_factory.get_extended_pdf("TestSimFactory", "TestSimFactory")
     return all((isinstance(model, ROOT.RooSimultaneous),
                 model.GetName() == 'TestSimFactory',
                 model.GetTitle() == 'TestSimFactory',
@@ -477,7 +477,7 @@ def test_simfactory_get_pdf(sim_factory):
 def test_simfactory_vs_factory(factory, sim_factory):
     """Compare that the same configuration gives the same object."""
     fac_model = factory.get_pdf("TestFactory", "TestFactory")
-    sim_model = sim_factory.get_pdf("TestSimFactory", "TestSimFactory")
+    sim_model = sim_factory.get_extended_pdf("TestSimFactory", "TestSimFactory")
     return fac_model.createIntegral(
         ROOT.RooArgSet(factory.get_observables()[0])).getVal() == \
         sim_model.getComponents()["TestSimFactory^{label1,signal}"].createIntegral(
