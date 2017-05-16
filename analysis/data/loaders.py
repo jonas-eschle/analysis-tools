@@ -13,12 +13,13 @@ import string
 
 import ROOT
 
+import numpy as np
 import pandas as pd
 from root_pandas import read_root
 
 from analysis.data.converters import dataset_from_pandas
 from analysis.utils.logging_color import get_logger
-from analysis.utils.root import destruct_object
+from analysis.utils.root import destruct_object, list_to_rooarglist
 
 
 logger = get_logger('analysis.data.loaders')
@@ -83,7 +84,9 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
 
     Optional keys are:
         + `variables`: List of variables to load.
-        + `weight-var`: Variable defining a weight.
+        + `weights`: Variables defining the weight.
+        + `weight-var`: Name of the weight variable. If there is only one weight,
+            it is not needed. Otherwise it has to be specified.
         + `categories`: RooCategory variables to use.
 
     Arguments:
@@ -103,14 +106,40 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         title = kwargs.get('title', name)
     except KeyError as error:
         raise KeyError("Missing configuration key -> %s" % error)
+    # Check weights
+    weights = kwargs.get('weights', [])
+    weight_var = kwargs.get('weight_var', None)
+    if not isinstance(weights, (list, tuple)):
+        weights = [weights]
+    if weights:
+        if not weight_var:
+            if len(weights) == 1:
+                weight_var = weights[0]
+            else:
+                raise KeyError("Missing name of the weight variable")
+    elif weight_var:
+        if not weights:
+            weights = [weight_var]
+    # Variables
+    var_list = kwargs.get('variables', None)
+    if weights and var_list:
+        if var_list:
+            var_list = list(set(var_list) | set(weights))
     # Load the data
     frame = _load_pandas(file_name, tree_name,
-                         kwargs.get('variables', None),
+                         var_list,
                          kwargs.get('selection', None))
+    # TODO: Acceptance
+    # Apply weights, normalizing them
+    if weight_var:
+        frame[weight_var] = np.prod([frame[w_var] for w_var in weights], axis=0)
+        frame[weight_var] = frame[weight_var]/frame[weight_var].sum()*frame.shape[0]
+    if var_list is not None:
+        var_list.append(weight_var)
     # Convert it
     return dataset_from_pandas(frame, name, title,
-                               var_list=kwargs.get('variables', None),
-                               weight_var=kwargs.get('weight-var', None),
+                               var_list=var_list,
+                               weight_var=weight_var,
                                categories=kwargs.get('categories', None))
 
 
@@ -166,8 +195,25 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         raise KeyError("Cannot find tree in input file -> %s" % tree_name)
     leaves = set(get_list_of_leaves(tree))
     variables = set(kwargs.get('variables', leaves))
+    # Check weights
+    weights = kwargs.get('weights', None)
+    weight_var = kwargs.get('weight_var', None)
+    if not isinstance(weights, (list, tuple, None)):
+        weights = [weights]
+    if weights:
+        if not weight_var:
+            if len(weights) == 1:
+                weight_var = weights[0]
+            else:
+                raise KeyError("Missing name of the weight variable")
+    elif weight_var:
+        if not weights:
+            weights = [weight_var]
+    if weights:
+        variables = set(variables) | set(weights)
+    # Crosscheck leaves
     if variables - leaves:
-        raise ValueError("Cannot find leaves in input -> %s" % variables - leaves)
+        raise ValueError("Cannot find leaves in input -> %s" % (variables - leaves))
     selection = kwargs.get('selection', None)
     leave_set = ROOT.RooArgSet()
     leave_list = []
@@ -188,9 +234,26 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     for var in variables:
         var_list.append(ROOT.RooRealVar(var, var, 0.0))
         var_set.add(var_list[-1])
-    name = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits)
-                   for _ in range(10))
-    dataset = ROOT.RooDataSet(name, name, var_set, ROOT.RooFit.Import(tree))
+    dataset = ROOT.RooDataSet(name, title, var_set, ROOT.RooFit.Import(tree))
+    if weights:
+        non_normalized_w = ROOT.RooFormulaVar("%s_not_normalized" % weight_var,
+                                              "%s_not_normalized" % weight_var,
+                                              "*".join(weights),
+                                              list_to_rooarglist(weights))
+        var_set.append("%s_not_normalized" % weight_var)
+        dataset.addColumn(non_normalized_w)
+        sum_weights = sum(dataset.get(entry)["%s_not_normalized" % weight_var].getVal()
+                          for entry in dataset.sumEntries())
+        normalized_w = ROOT.RooFormulaVar(weight_var, weight_var,
+                                          "%s_not_normalized/%s" % (weight_var, sum_weights),
+                                          ROOT.RooArgList(non_normalized_w))
+        var_set.append(weight_var)
+        dataset.addColumn(normalized_w)
+        dataset_w = ROOT.RooDataSet(name, title, var_set,
+                                    ROOT.RooFit.Import(dataset),
+                                    ROOT.RooFit.WeightVar(weight_var))
+        destruct_object(dataset)
+        dataset = dataset_w
     # ROOT Cleanup
     tfile.Close()
     destruct_object(tree)

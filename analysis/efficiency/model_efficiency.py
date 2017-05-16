@@ -10,11 +10,10 @@
 import os
 import argparse
 
-import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 from analysis import get_global_var
+from analysis.data import get_data
 from analysis.utils.logging_color import get_logger
 import analysis.utils.config as _config
 import analysis.utils.paths as _paths
@@ -50,7 +49,7 @@ def run(config_files, link_from):
     try:
         config = _config.load_config(*config_files,
                                      validate=['name',
-                                               'data/file',
+                                               'data/source',
                                                'data/tree',
                                                'parameters',
                                                'model',
@@ -75,9 +74,6 @@ def run(config_files, link_from):
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
     # Do checks and load things
-    input_data = config['data']['file']
-    if not os.path.exists(input_data):
-        raise OSError("Cannot find input data -> %s", input_data)
     plot_files = {}
     if config.get('plot', False):
         for var_name in config['variables']:
@@ -92,43 +88,43 @@ def run(config_files, link_from):
                for file_name in plot_files.values()) or \
             not os.path.exists(_paths.get_efficiency_path(config['name'])):  # If plots don't exist, we load data
         logger.info("Loading data, this may take a while...")
-        with pd.HDFStore(input_data) as store:
-            weight_var = config['data']['weight'] if 'weight' in config['data'] else None
-            columns = config['variables']
-            if weight_var:
-                columns.append(weight_var)
+        weight_var = config['data'].get('weight-var', None)
+        # Prepare data
+        config['data']['output-format'] = 'pandas'
+        config['data']['variables'] = list(config['variables'])
+        if weight_var:
+            config['data']['variables'].append(weight_var)
+        input_data = get_data(config['data'])
+        if weight_var:
+            logger.info("Data loaded, using %s as weight", weight_var)
+        else:
+            logger.info("Data loaded, not using any weights")
+
+        if not os.path.exists(_paths.get_efficiency_path(config['name'])):
+            logger.info("Fitting efficiency model")
             try:
-                data = store.select(config['data']['tree'], columns=columns)
-            except KeyError:
-                raise OSError("Cannot find data tree in input file -> %s", config['data']['tree'])
-            if weight_var:
-                logger.info("Data loaded, using %s as weight", weight_var)
-            else:
-                logger.info("Data loaded, not using any weights")
-            if not os.path.exists(_paths.get_efficiency_path(config['name'])):
-                logger.info("Fitting efficiency model")
-                try:
-                    eff = efficiency_class.fit(data, config['variables'], weight_var, **config['parameters'])
-                except (ValueError, TypeError) as error:
-                    raise ValueError("Cannot configure the efficiency model -> %s", error.message)
-                except KeyError as error:
-                    raise RuntimeError("Missing key -> %s", error)
-                except Exception as error:
-                    raise RuntimeError(error)
-                output_file = eff.write_to_disk(config['name'], link_from)
-                logger.info("Written efficiency file -> %s", output_file)
-            else:
-                logger.warning("Output efficiency already exists, only redoing plots")
-                eff = load_efficiency_model(config['name'])
-            if plot_files:
-                sns.set_style("white")
-                plt.style.use('file://%s' % os.path.join(get_global_var('STYLE_PATH'),
-                                                         'matplotlib_LHCb.mplstyle'))
-                plots = eff.plot(data, weight_var, labels=config.get('plot-labels', {}))
-                for var_name, plot in plots.items():
-                    logger.info("Plotting '%s' efficiency -> %s",
-                                var_name, plot_files[var_name])
-                    plot.savefig(plot_files[var_name], bbox_inches='tight')
+                eff = efficiency_class.fit(input_data, config['variables'], weight_var, **config['parameters'])
+            except (ValueError, TypeError) as error:
+                raise ValueError("Cannot configure the efficiency model -> %s", error.message)
+            except KeyError as error:
+                raise RuntimeError("Missing key -> %s", error)
+            except Exception as error:
+                raise RuntimeError(error)
+            output_file = eff.write_to_disk(config['name'], link_from)
+            logger.info("Written efficiency file -> %s", output_file)
+        else:
+            logger.warning("Output efficiency already exists, only redoing plots")
+            eff = load_efficiency_model(config['name'])
+        if plot_files:
+            import seaborn as sns
+            sns.set_style("white")
+            plt.style.use('file://%s' % os.path.join(get_global_var('STYLE_PATH'),
+                                                     'matplotlib_LHCb.mplstyle'))
+            plots = eff.plot(input_data, weight_var, labels=config.get('plot-labels', {}))
+            for var_name, plot in plots.items():
+                logger.info("Plotting '%s' efficiency -> %s",
+                            var_name, plot_files[var_name])
+                plot.savefig(plot_files[var_name], bbox_inches='tight')
     else:
         logger.info("Nothing to do!")
 

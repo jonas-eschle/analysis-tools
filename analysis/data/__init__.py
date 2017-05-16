@@ -67,6 +67,9 @@ def get_data(data_config, **kwargs):
         + `tree`: Tree within the file.
         + 'output-format': Type of data we want. Currently `root` or `pandas`.
 
+    Optional config keys:
+        + 'input-type'
+
     Raises:
         AttributeError: If the specified source type is unknown.
         KeyError: If the input file extension is not recognized.
@@ -100,7 +103,9 @@ def get_data(data_config, **kwargs):
     # Optional: output-type, cuts, branches
     input_ext = os.path.splitext(file_name)[1]
     try:
-        input_type = get_global_var('FILE_TYPES')[input_ext]
+        input_type = data_config.get('input-type', None)
+        if not input_type:
+            input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:
         raise KeyError("Unknown file extension -> %s. Cannot load file." % input_ext)
     try:
@@ -109,6 +114,7 @@ def get_data(data_config, **kwargs):
     except AttributeError:
         raise ValueError("Output format unavailable for input file"
                          "with extension %s -> %s" % (input_ext, output_format))
+    logger.debug("Loading data file -> %s:%s", file_name, tree_name)
     return get_data_func(file_name, tree_name, data_config)
 
 
