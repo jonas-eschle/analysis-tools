@@ -184,7 +184,11 @@ def configure_model(config, shared_vars=None):
                 factories[pdf_name] = configure_model(pdf_config, shared_vars[pdf_name])
         logger.debug("Found yields -> %s", yields)
         if len(factories) == 1:
-            return factories.values()[0]
+            # Set the yield
+            factory_name, factory_obj = factories.items()[0]
+            if factory_name in yields:
+                factory_obj.set_yield_var(yields[factory_name])
+            return factory_obj
         else:
             parameters = {}
             if (len(factories) - len(yields)) > 1:
