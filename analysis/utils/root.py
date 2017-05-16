@@ -116,7 +116,8 @@ def list_to_rooabscollection(iterable, collection_type):
     """
     collection = collection_type()
     for element in iterable:
-        collection.add(element)
+        if element:
+            collection.add(element)
     return collection
 
 

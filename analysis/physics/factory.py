@@ -98,9 +98,11 @@ class BaseFactory(object):
         return self._children
 
     def get_constraints(self):
-        child_constraints = ROOT.RooArgSet(list_to_rooargset(self._constraints))
+        child_constraints = list_to_rooargset(self._constraints)
         for child in self.get_children().values():
-            child_constraints = ROOT.RooArgSet(child_constraints, child.get_constraints())
+            tmp_constraints = child.get_constraints()
+            if tmp_constraints:
+                child_constraints = ROOT.RooArgSet(child_constraints, child.get_constraints())
         return child_constraints
 
     def _find_object(self, name):
