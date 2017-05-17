@@ -709,14 +709,10 @@ class SumPhysicsFactory(BaseFactory):
                     child['Fraction'] = child_yield
                     child._constraints.add(child_constraint)
                 else:
-                    set_1 = list_to_rooarglist([ROOT.RooFit.RooConst(coef) for coef in [1] + [-1]*len(children_yields)])
-                    set_2 = list_to_rooarglist([ROOT.RooFit.RooConst(1)] + yield_values)
-                    child['Fraction'] = ROOT.RooAddition("Fraction", "Fraction", set_1, set_2)
-                    child['Fraction_set1'] = set_1
-                    child['Fraction_set2'] = set_2
+                    child['Fraction'] = ROOT.RooFracRemainder("Fraction", "Fraction", list_to_rooargset(yield_values))
                     child._constraints.update({constraint
-                                                    for _, constraint in children_yields.values()
-                                                    if constraint})
+                                               for _, constraint in children_yields.values()
+                                               if constraint})
             if yield_ is not None:
                 self.set_yield_var((yield_, constraint))
         else:
