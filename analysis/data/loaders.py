@@ -156,7 +156,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     if weight_var:
         frame[weight_var] = np.prod([frame[w_var] for w_var in weights], axis=0)
         frame[weight_var] = frame[weight_var]/frame[weight_var].sum()*frame.shape[0]
-    if var_list is not None:
+    if var_list is not None and weight_var:
         var_list.append(weight_var)
     # Convert it
     return dataset_from_pandas(frame, name, title,
