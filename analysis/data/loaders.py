@@ -96,6 +96,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
 
     Raises:
         KeyError: If there are missing variables in `kwargs`.
+        ValueError: If there is an error in loading the acceptance.
 
     """
     logger.debug("Loading pandas file in RooDataSet format -> %s:%s",
@@ -122,14 +123,35 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
             weights = [weight_var]
     # Variables
     var_list = kwargs.get('variables', None)
-    if weights and var_list:
+    acc_var = None
+    if weights:
+        if 'acceptance' in kwargs:
+            if 'acceptance_fit' in weights:
+                acc_var = 'acceptance_fit'
+            if 'acceptance_gen' in weights:
+                if acc_var:
+                    raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
+                acc_var = 'acceptance_gen'
+            if not acc_var:
+                logger.warning("Requested acceptance but it has not been specified as a weight to use. Ignorning.")
         if var_list:
             var_list = list(set(var_list) | set(weights))
     # Load the data
     frame = _load_pandas(file_name, tree_name,
                          var_list,
                          kwargs.get('selection', None))
-    # TODO: Acceptance
+    if acc_var:
+        from analysis.efficiency import get_acceptance
+        try:
+            acceptance = get_acceptance(kwargs['acceptance'])
+        except Exception as error:
+            raise ValueError(str(error))
+        if acc_var in frame.columns:
+            raise ValueError("Name clash: the column 'acceptance_fit' is present in the dataset")
+        if acc_var == 'acceptance_fit':
+            frame['acceptance_fit'] = acceptance.get_fit_weights(frame)
+        else:
+            frame['acceptance_gen'] = acceptance.get_gen_weights(frame)
     # Apply weights, normalizing them
     if weight_var:
         frame[weight_var] = np.prod([frame[w_var] for w_var in weights], axis=0)
@@ -195,6 +217,9 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         raise KeyError("Cannot find tree in input file -> %s" % tree_name)
     leaves = set(get_list_of_leaves(tree))
     variables = set(kwargs.get('variables', leaves))
+    # Acceptance
+    if 'acceptance' in kwargs:
+        raise NotImplementedError("Acceptance weights are not implemented for ROOT files")
     # Check weights
     weights = kwargs.get('weights', None)
     weight_var = kwargs.get('weight_var', None)
