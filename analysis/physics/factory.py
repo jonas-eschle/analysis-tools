@@ -879,10 +879,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
         if all(children_are_extended):
             return True
         elif any(children_are_extended):
-            return False
-        else:
             # Mix of children, a bit inconsistent
             raise ValueError("Inconsistent children state")
+        else:
+            return False
 
     def has_to_be_extended(self):
         return any(child.has_to_be_extended()
