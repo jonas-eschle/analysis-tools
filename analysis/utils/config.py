@@ -8,6 +8,8 @@
 """Configuration files."""
 
 import os
+import random
+import string
 
 from collections import OrderedDict, defaultdict
 
@@ -336,11 +338,9 @@ def get_shared_vars(config, external_vars=None):
             new_config.append((config_element,
                                refs[ref_val.split('/')[0][1:]]))
         else:  # Composite parameter definition, such as SHIFT
-            try:
-                var_name, var_title, var_config = ref_val.split('/')
-            except ValueError:
-                raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
-            var, constraint = configure_parameter(var_name, var_title, var_config, refs)
+            var_name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(15))
+            var, constraint = configure_parameter(var_name, var_name, ref_val, refs)
+            var.setStringAttribute('tempName', 'true')
             new_config.append((config_element, (var, constraint)))
     return fold_config(new_config, recurse_dict)
 

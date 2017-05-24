@@ -203,7 +203,12 @@ class BaseFactory(object):
         if isinstance(parameter_value, tuple):  # It's a parameter with a constraint
             parameter_value, constraint = parameter_value
         elif isinstance(parameter_value, ROOT.TObject):  # It's an already built parameter
-            self._parameter_names[parameter_name] = parameter_value.GetName()
+            if parameter_value.getStringAttribute('tempName') == 'true':
+                parameter_value.SetName(self.get_parameter_name(parameter_name))
+                parameter_value.SetTitle(self.get_parameter_name(parameter_name))
+                parameter_value.setStringAttribute('tempName', '')
+            else:
+                self._parameter_names[parameter_name] = parameter_value.GetName()
             constraint = None
         else:  # String specification
             parameter_value, constraint = configure_parameter(self.get_parameter_name(parameter_name),
