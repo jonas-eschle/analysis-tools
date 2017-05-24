@@ -88,6 +88,9 @@ def rename_on_recursion_end(func):
         """
         import analysis.physics.factory as factory
         res_factory = func(*args, **kwargs)
+        if isinstance(res_factory, Exception):
+            logger.error("Uncaught exception")
+            raise res_factory
         if not isinstance(res_factory, factory.BaseFactory):
             raise RuntimeError("rename_on_recursion_end used on a non-compliant function.")
         if len([frame[2]
@@ -99,7 +102,7 @@ def rename_on_recursion_end(func):
 
 
 @rename_on_recursion_end
-def configure_model(config, shared_vars=None):
+def configure_model(config, shared_vars=None, external_vars=None):
     """
 
     Raises:
@@ -243,10 +246,9 @@ def configure_model(config, shared_vars=None):
     # Prepare shared variables
     if shared_vars is None:
         try:
-            shared_vars = get_shared_vars(config)
+            shared_vars = get_shared_vars(config, external_vars)
         except (ValueError, KeyError) as error:
-            return ConfigError("%s" % error)
-
+            raise ConfigError("%s" % error)
     # Let's find out what is this
     if 'categories' in config:
         return configure_simul_factory(config, shared_vars)

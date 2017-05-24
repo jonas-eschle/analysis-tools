@@ -68,7 +68,7 @@ def load_config(*file_names, **options):
             if key not in data_keys:
                 missing_keys.append(key)
         if missing_keys:
-            raise ConfigError(missing_keys)
+            raise ConfigError("Failed validation: %s are missing" % ','.join(missing_keys))
     return data
 
 
@@ -188,21 +188,21 @@ def fold_config(unfolded_data, dict_class=dict):
 
 
 # Interpretation
-def configure_parameter(name, title, parameter_config):
+def configure_parameter(name, title, parameter_config, external_vars=None):
     """Configure a parameter according to a configuration string.
 
     The configuration string consists in two parts. The first one
     consists in a letter that indicates the "action" to apply on the parameter,
     followed by the configuration of that action. There are several possibilities:
-        * 'I' is used for free parameters. Only one argument is required: its
-        initial value. This is optional; if no action is specified the parameter
-        is considered free.
-        * 'C' indicates a constant parameter. The following argument indicates
+        * 'VAR' (or nothing) is used for parameters without constraints. If one configuration
+        element is given, the parameter doesn't have limits. If three are given, the last two
+        specify the low and upper limits. Parameter is set to not constant.
+        * 'CONST' indicates a constant parameter. The following argument indicates
         at which value to fix it.
-        * 'G' is used for a Gaussian-constrained parameter. The arguments of that
+        * 'GAUSS' is used for a Gaussian-constrained parameter. The arguments of that
         Gaussian, ie, its mean and sigma, have to be given after the letter.
-        * 'L' is used for a limited parameter. Initial value, lower limit and
-        upper limit follow.
+        * 'SHIFT'
+        * 'SCALE'
 
     Arguments:
         name (str): Name of the parameter.
@@ -216,41 +216,72 @@ def configure_parameter(name, title, parameter_config):
 
     Raises:
         KeyError: If the specified action is unknown.
-        ValueError: If the number of arguments after the action is not
-            correct.
-
+        ValueError: If the action is badly configured.
     """
+    if external_vars is None:
+        external_vars = {}
     constraint = None
     # Do something with it
     action_params = str(parameter_config).split()
-    action = 'I' if len(action_params) == 1 else action_params.pop(0)
-    parameter = ROOT.RooRealVar(name, title, float(action_params[0]))
-    if action == 'I':  # Free parameter, we specify its initial value
-        parameter.setConstant(False)
-    elif action == 'C':  # Fixed parameter
-        parameter.setConstant(True)
-    elif action == 'G':  # Gaussian constraint
+    action = 'VAR' if not action_params[0].isalpha() else action_params.pop(0).upper()
+    if action in ('VAR', 'CONST', 'GAUSS'):
+        parameter = ROOT.RooRealVar(name, title, float(action_params[0]))
+        if action == 'VAR':  # Free parameter, we specify its initial value
+            parameter.setConstant(False)
+            if len(action_params) > 1:
+                try:
+                    _, min_val, max_val = action_params
+                except ValueError:
+                    raise ValueError("Wrongly specified var (need to give 1 or 3 arguments) -> %s" % action_params)
+                parameter.setMin(float(min_val))
+                parameter.setMax(float(max_val))
+                parameter.setConstant(False)
+        elif action == 'CONST':  # Fixed parameter
+            parameter.setConstant(True)
+        elif action == 'GAUSS':  # Gaussian constraint
+            try:
+                initial_value, sigma = action_params
+            except ValueError:
+                raise ValueError("Wrongly specified Gaussian constraint -> %s" % action_params)
+            constraint = ROOT.RooGaussian(name + 'Constraint',
+                                          name + 'Constraint',
+                                          parameter,
+                                          ROOT.RooFit.RooConst(float(initial_value)),
+                                          ROOT.RooFit.RooConst(float(sigma)))
+            parameter.setConstant(False)
+    elif action in ('SHIFT', 'SCALE'):
+        # SHIFT @var val
         try:
-            initial_value, sigma = action_params
+            ref_var, second_var = action_params
         except ValueError:
-            raise ValueError(action_params)
-        constraint = ROOT.RooGaussian(name + 'Constraint',
-                                      name + 'Constraint',
-                                      parameter,
-                                      ROOT.RooFit.RooConst(float(initial_value)),
-                                      ROOT.RooFit.RooConst(float(sigma)))
-        parameter.setConstant(False)
-    elif action == 'L':  # Uniform constraint -> set limits
-        _, min_val, max_val = action_params
-        parameter.setMin(float(min_val))
-        parameter.setMax(float(max_val))
-        parameter.setConstant(False)
+            raise ValueError("Wrong number of arguments for %s -> %s" % (action, action_params))
+        try:
+            if ref_var.startswith('@'):
+                ref_var = ref_var[1:]
+            else:
+                raise ValueError("The first value for a %s must be a reference." % action)
+            ref_var, constraint = external_vars[ref_var]
+            if second_var.startswith('@'):
+                second_var = second_var[1:]
+                second_var, const = external_vars[second_var]
+                if not constraint:
+                    constraint = const
+                else:
+                    raise NotImplementedError("Two constrained variables in SHIFT or SCALED are not allowed")
+            else:
+                second_var = ROOT.RooFit.RooConst(float(second_var))
+        except KeyError, error:
+            raise ValueError("Missing parameter definition -> %s" % error)
+        if action == 'SHIFT':
+            parameter = ROOT.RooAddition(name, title, ref_var, second_var)
+        elif action == 'SCALE':
+            parameter = ROOT.RooProduct(name, title, ref_var, second_var)
     else:
-        raise KeyError(action)
+        raise KeyError('Unknown action -> %s' % action)
     return parameter, constraint
 
 
-def get_shared_vars(config):
+def get_shared_vars(config, external_vars=None):
     """Configure shared variables for a given configuration.
 
     Shared variables are marked with the @-sign and configured with a string such as:
@@ -259,6 +290,12 @@ def get_shared_vars(config):
 
     where config follows the conventions of `configure_parameter`. In further occurences,
     `@id` is enough.
+
+    Arguments:
+        config (OrderedDict): Variable configuration from which to extract the
+            shared variables.
+        external_vars (dict, optional): Externally defined variables, which take precedence
+            over the configuration. Defaults to None.
 
     Returns:
         dict: Shared parameters build in the same parameter hierachy as the model they
@@ -272,18 +309,20 @@ def get_shared_vars(config):
     # Create shared vars
     parameter_configs = {config_element: config_value
                          for config_element, config_value in unfold_config(config)
-                         if isinstance(config_value, str) and config_value.startswith('@')}
+                         if isinstance(config_value, str) and '@' in config_value}
     # First build the shared var
-    refs = {}
+    refs = {} if not external_vars else external_vars
     for config_element, config_value in parameter_configs.items():
-        split_element = config_value[1:].split('/')
+        config_val = config_value[1:] if config_value.startswith('@') else config_value
+        split_element = config_val.split('/')
         if len(split_element) == 4:
             ref_name, var_name, var_title, var_config = split_element
             if ref_name in refs:
                 raise ValueError("Shared parameter defined twice -> %s" % ref_name)
-            var, constraint = configure_parameter(var_name, var_title, var_config)
-            var.setStringAttribute('shared', 'true')
-            refs[ref_name] = (var, constraint)
+            var, constraint = configure_parameter(var_name, var_title, var_config, refs)
+            if config_value.startswith('@'):  # Only save truly shared
+                var.setStringAttribute('shared', 'true')
+                refs[ref_name] = (var, constraint)
         elif len(split_element) == 1:
             pass
         else:
@@ -298,18 +337,5 @@ def get_shared_vars(config):
 # Exceptions
 class ConfigError(Exception):
     """Error in loading configuration file."""
-
-    def __init__(self, missing_keys):
-        """Initialize exception.
-
-        Arguments:
-            missing_keys (list): Missing keys after validation.
-
-        """
-        if not isinstance(missing_keys, (list, tuple)):
-            missing_keys = [missing_keys]
-        self.missing_keys = missing_keys
-        super(ConfigError, self).__init__("Failed validation: %s are missing",
-                                          ','.join(missing_keys))
 
 # EOF

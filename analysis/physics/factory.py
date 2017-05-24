@@ -31,7 +31,7 @@ class BaseFactory(object):
     OBSERVABLES = OrderedDict()
     PARAMETERS = None
     MANDATORY_PARAMETERS = {}
-    PARAMETER_DEFAULTS = {}
+    PARAMETER_DEFAULTS = OrderedDict()
 
     def __init__(self, config, parameters=None):
         """Initialize the internal object cache.
@@ -67,7 +67,7 @@ class BaseFactory(object):
             self.set_observable(obs_name, name=new_obs_name)
         # Set the parameter dictionary
         param_dict = self.PARAMETER_DEFAULTS.copy()
-        param_dict.update(config.get('parameters', {}))
+        param_dict.update(config.get('parameters', OrderedDict()))
         if parameters:
             # First parameters
             params = parameters.pop('parameters', {})
@@ -83,13 +83,15 @@ class BaseFactory(object):
             if parameter_name not in param_dict:
                 missing_parameters.append(parameter_name)
                 continue
-            self._create_parameter(parameter_name, param_dict.pop(parameter_name))
+            self._create_parameter(parameter_name,
+                                   param_dict.pop(parameter_name),
+                                   {key.split('/')[-1]: val for key, val in param_dict.items()})
         if missing_parameters:
             raise KeyError("Missing parameters -> %s" % ','.join(missing_parameter
                                                                  for missing_parameter in missing_parameters))
         if param_dict:
-            logger.warning("Trying to set unsupported params in config. I skipped them -> %s",
-                           ','.join(param_dict.keys()))
+            logger.debug("Trying to set unsupported params in config. I skipped them -> %s",
+                         ','.join(param_dict.keys()))
 
     def get_config(self):
         return self._config
@@ -195,7 +197,7 @@ class BaseFactory(object):
         """
         return key in self._objects
 
-    def _create_parameter(self, parameter_name, parameter_value):
+    def _create_parameter(self, parameter_name, parameter_value, external_vars=None):
         if parameter_name in self._objects:
             return self._objects[parameter_name]
         if isinstance(parameter_value, tuple):  # It's a parameter with a constraint
@@ -206,7 +208,8 @@ class BaseFactory(object):
         else:  # String specification
             parameter_value, constraint = configure_parameter(self.get_parameter_name(parameter_name),
                                                               self.get_parameter_name(parameter_name),
-                                                              parameter_value)
+                                                              parameter_value,
+                                                              external_vars)
         if constraint:
             self._constraints.add(constraint)
         return self.set(parameter_name,

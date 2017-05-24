@@ -131,14 +131,14 @@ def factory():
     return load_model("""mass:
     pdf: cb
     parameters:
-        mu: L 5246.7 5200 5300
-        sigma1: '@sigma/sigma/sigma/L 41 35 45'
+        mu: 5246.7 5200 5300
+        sigma1: '@sigma/sigma/sigma/41 35 45'
         sigma2: '@sigma'
-        n1: L 5.6689 2 9
-        n2: L 1.6 0.2 2
-        alpha1: L 0.25923 0.1 0.5
-        alpha2: L -1.9749 -3.5 -1.0
-        frac: L 0.84873 0.1 1.0""")
+        n1: 5.6689 2 9
+        n2:  1.6 0.2 2
+        alpha1: 0.25923 0.1 0.5
+        alpha2:  -1.9749 -3.5 -1.0
+        frac: 0.84873 0.1 1.0""")
 
 
 @pytest.fixture
@@ -146,16 +146,16 @@ def factory_with_yield():
     """Load a PhysicsFactory with yield."""
     return load_model("""mass:
     pdf: cb
-    yield: L 1000 300 2000
+    yield: 1000 300 2000
     parameters:
-        mu: L 5246.7 5200 5300
-        sigma1: '@sigma/sigma/sigma/L 41 35 45'
+        mu: 5246.7 5200 5300
+        sigma1: '@sigma/sigma/sigma/41 35 45'
         sigma2: '@sigma'
-        n1: L 5.6689 2 9
-        n2: L 1.6 0.2 2
-        alpha1: L 0.25923 0.1 0.5
-        alpha2: L -1.9749 -3.5 -1.0
-        frac: L 0.84873 0.1 1.0""")
+        n1: 5.6689 2 9
+        n2: 1.6 0.2 2
+        alpha1: 0.25923 0.1 0.5
+        alpha2: -1.9749 -3.5 -1.0
+        frac: 0.84873 0.1 1.0""")
 
 
 # pylint: disable=W0621
@@ -198,19 +198,19 @@ def test_factory_shared(factory):
 def prod_factory():
     """Load a ProdPhysicsFactory."""
     return load_model("""
-yield: G 999 100
+yield: GAUSS 999 100
 pdf:
     mass:
         pdf: cb
         parameters:
-            mu: L 5246.7 5200 5300
-            sigma1: '@sigma/sigma/sigma/L 41 35 45'
+            mu: 5246.7 5200 5300
+            sigma1: '@sigma/sigma/sigma/41 35 45'
             sigma2: '@sigma'
-            n1: L 5.6689 2 9
-            n2: L 1.6 0.2 2
-            alpha1: L 0.25923 0.1 0.5
-            alpha2: L -1.9749 -3.5 -1.0
-            frac: L 0.84873 0.1 1.0
+            n1: 5.6689 2 9
+            n2: 1.6 0.2 2
+            alpha1: 0.25923 0.1 0.5
+            alpha2: -1.9749 -3.5 -1.0
+            frac: 0.84873 0.1 1.0
     q2:
         pdf: flat
         parameters:
@@ -261,20 +261,20 @@ def test_prodfactory_error():
     """Test if a badly configured ProdFactory is picked up."""
     try:
         load_model("""
-yield: G 999 100
+yield: GAUSS 999 100
 pdf:
     mass:
         pdf: cb
-        yield: G 999 100
+        yield: GAUSS 999 100
         parameters:
-            mu: L 5246.7 5200 5300
-            sigma1: '@sigma/sigma/sigma/L 41 35 45'
+            mu: 5246.7 5200 5300
+            sigma1: '@sigma/sigma/sigma/41 35 45'
             sigma2: '@sigma'
-            n1: L 5.6689 2 9
-            n2: L 1.6 0.2 2
-            alpha1: L 0.25923 0.1 0.5
-            alpha2: L -1.9749 -3.5 -1.0
-            frac: L 0.84873 0.1 1.0
+            n1: 5.6689 2 9
+            n2: 1.6 0.2 2
+            alpha1: 0.25923 0.1 0.5
+            alpha2: -1.9749 -3.5 -1.0
+            frac: 0.84873 0.1 1.0
     q2:
         pdf: flat
         parameters:
@@ -291,26 +291,26 @@ def sum_factory():
     """Load a SumPhysicsFactory."""
     return load_model("""
 signal:
-    yield: '@yield/yield/yield/G 999 100'
+    yield: '@yield/yield/yield/GAUSS 999 100'
     pdf:
         mass:
             pdf: cb
             parameters:
-                mu: L 5246.7 5200 5300
-                sigma1: '@sigma/sigma/sigma/L 41 35 45'
+                mu: 5246.7 5200 5300
+                sigma1: '@sigma/sigma/sigma/41 35 45'
                 sigma2: '@sigma'
-                n1: L 5.6689 2 9
-                n2: L 1.6 0.2 2
-                alpha1: L 0.25923 0.1 0.5
-                alpha2: L -1.9749 -3.5 -1.0
-                frac: L 0.84873 0.1 1.0
+                n1: 5.6689 2 9
+                n2: 1.6 0.2 2
+                alpha1: 0.25923 0.1 0.5
+                alpha2: -1.9749 -3.5 -1.0
+                frac: 0.84873 0.1 1.0
 background:
     yield: '@yield'
     pdf:
         mass:
             pdf: exp
             parameters:
-                tau: C -0.003
+                tau: CONST -0.003
 """)
 
 
@@ -324,20 +324,20 @@ signal:
         mass:
             pdf: cb
             parameters:
-                mu: L 5246.7 5200 5300
-                sigma1: '@sigma/sigma/sigma/L 41 35 45'
+                mu: 5246.7 5200 5300
+                sigma1: '@sigma/sigma/sigma/41 35 45'
                 sigma2: '@sigma'
-                n1: L 5.6689 2 9
-                n2: L 1.6 0.2 2
-                alpha1: L 0.25923 0.1 0.5
-                alpha2: L -1.9749 -3.5 -1.0
-                frac: L 0.84873 0.1 1.0
+                n1: 5.6689 2 9
+                n2: 1.6 0.2 2
+                alpha1: 0.25923 0.1 0.5
+                alpha2: -1.9749 -3.5 -1.0
+                frac: 0.84873 0.1 1.0
 background:
     pdf:
         mass:
             pdf: exp
             parameters:
-                tau: C -0.003
+                tau: CONST -0.003
 """)
 
 
@@ -401,14 +401,14 @@ pdf:
                 mass:
                     pdf: cb
                     parameters:
-                        mu: L 5246.7 5200 5300
-                        sigma1: '@sigma/sigma/sigma/L 41 35 45'
+                        mu: 5246.7 5200 5300
+                        sigma1: '@sigma/sigma/sigma/41 35 45'
                         sigma2: '@sigma'
-                        n1: L 5.6689 2 9
-                        n2: L 1.6 0.2 2
-                        alpha1: L 0.25923 0.1 0.5
-                        alpha2: L -1.9749 -3.5 -1.0
-                        frac: L 0.84873 0.1 1.0
+                        n1: 5.6689 2 9
+                        n2: 1.6 0.2 2
+                        alpha1: 0.25923 0.1 0.5
+                        alpha2: -1.9749 -3.5 -1.0
+                        frac: 0.84873 0.1 1.0
                 q2:
                     pdf: flat
                     parameters:
@@ -419,7 +419,7 @@ pdf:
                 mass:
                     pdf: exp
                     parameters:
-                        tau: C -0.003
+                        tau: CONST -0.003
                 q2:
                     pdf: flat
                     parameters:
@@ -431,14 +431,14 @@ pdf:
                 mass:
                     pdf: cb
                     parameters:
-                        mu: L 5246.7 5200 5300
+                        mu: 5246.7 5200 5300
                         sigma1: '@sigma'
                         sigma2: '@sigma'
-                        n1: L 5.6689 2 9
-                        n2: L 1.6 0.2 2
-                        alpha1: L 0.25923 0.1 0.5
-                        alpha2: L -1.9749 -3.5 -1.0
-                        frac: L 0.84873 0.1 1.0
+                        n1: 5.6689 2 9
+                        n2: 1.6 0.2 2
+                        alpha1: 0.25923 0.1 0.5
+                        alpha2: -1.9749 -3.5 -1.0
+                        frac: 0.84873 0.1 1.0
 """)
 
 
