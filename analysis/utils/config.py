@@ -273,9 +273,9 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         except KeyError, error:
             raise ValueError("Missing parameter definition -> %s" % error)
         if action == 'SHIFT':
-            parameter = ROOT.RooAddition(name, title, ref_var, second_var)
+            parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))
         elif action == 'SCALE':
-            parameter = ROOT.RooProduct(name, title, ref_var, second_var)
+            parameter = ROOT.RooProduct(name, title, ROOT.RooArgList(ref_var, second_var))
     else:
         raise KeyError('Unknown action -> %s' % action)
     return parameter, constraint
@@ -312,26 +312,37 @@ def get_shared_vars(config, external_vars=None):
                          if isinstance(config_value, str) and '@' in config_value}
     # First build the shared var
     refs = {} if not external_vars else external_vars
+    # Build shared parameters
     for config_element, config_value in parameter_configs.items():
-        config_val = config_value[1:] if config_value.startswith('@') else config_value
-        split_element = config_val.split('/')
+        if not config_value.startswith('@'):
+            continue
+        split_element = config_value[1:].split('/')
         if len(split_element) == 4:
             ref_name, var_name, var_title, var_config = split_element
             if ref_name in refs:
                 raise ValueError("Shared parameter defined twice -> %s" % ref_name)
             var, constraint = configure_parameter(var_name, var_title, var_config, refs)
-            if config_value.startswith('@'):  # Only save truly shared
-                var.setStringAttribute('shared', 'true')
-                refs[ref_name] = (var, constraint)
+            var.setStringAttribute('shared', 'true')
+            refs[ref_name] = (var, constraint)
         elif len(split_element) == 1:
             pass
         else:
             raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
     # Now replace the refs by the shared variables in a recursive defaultdict
     recurse_dict = lambda: defaultdict(recurse_dict)
-    return fold_config({config_element: refs[ref_val.split('/')[0][1:]]
-                        for config_element, ref_val in parameter_configs.items()}.viewitems(),
-                       recurse_dict)
+    new_config = []
+    for config_element, ref_val in parameter_configs.items():
+        if ref_val.startswith('@'):
+            new_config.append((config_element,
+                               refs[ref_val.split('/')[0][1:]]))
+        else:  # Composite parameter definition, such as SHIFT
+            try:
+                var_name, var_title, var_config = ref_val.split('/')
+            except ValueError:
+                raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
+            var, constraint = configure_parameter(var_name, var_title, var_config, refs)
+            new_config.append((config_element, (var, constraint)))
+    return fold_config(new_config, recurse_dict)
 
 
 # Exceptions

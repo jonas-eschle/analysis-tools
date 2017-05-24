@@ -248,7 +248,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         try:
             shared_vars = get_shared_vars(config, external_vars)
         except (ValueError, KeyError) as error:
-            raise ConfigError("%s" % error)
+            raise ConfigError(error)
     # Let's find out what is this
     if 'categories' in config:
         return configure_simul_factory(config, shared_vars)
