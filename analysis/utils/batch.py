@@ -255,7 +255,7 @@ class ToySubmitter(object):
                                                  None)  # No linking is done for logs
         # Calculate number of jobs and submit
         ntoys = config[self.NTOYS_KEY]
-        ntoys_per_job = config[self.NTOYS_PER_JOB_KEY] if self.NTOYS_PER_JOB_KEY else ntoys
+        ntoys_per_job = config.get(self.NTOYS_PER_JOB_KEY, ntoys)
         n_jobs = int(1.0*ntoys/ntoys_per_job)
         if ntoys % ntoys_per_job:
             n_jobs += 1
