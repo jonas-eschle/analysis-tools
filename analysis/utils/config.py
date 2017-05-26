@@ -70,7 +70,8 @@ def load_config(*file_names, **options):
             if key not in data_keys:
                 missing_keys.append(key)
         if missing_keys:
-            raise ConfigError("Failed validation: %s are missing" % ','.join(missing_keys))
+            raise ConfigError("Failed validation: %s are missing" % ','.join(missing_keys),
+                              missing_keys)
     return data
 
 
@@ -348,5 +349,8 @@ def get_shared_vars(config, external_vars=None):
 # Exceptions
 class ConfigError(Exception):
     """Error in loading configuration file."""
+    def __init__(self, message, missing_keys=None):
+        self.missing_keys = missing_keys if missing_keys else []
+        super(ConfigError, self).__init__(message)
 
 # EOF
