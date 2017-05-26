@@ -221,8 +221,8 @@ class ToySubmitter(object):
                 raise AttributeError()
         # Now check output
         _, expected_src, expected_dest = _paths.prepare_path(config['name'],
-                                                             config['link-from'],
-                                                             self.TOY_PATH_GETTER)
+                                                             self.TOY_PATH_GETTER,
+                                                             config['link-from'])
         # Check file existence
         if os.path.exists(expected_src):
             logger.warning("Output data file exists! %s", expected_src)
@@ -251,8 +251,8 @@ class ToySubmitter(object):
         # Prepare paths
         # pylint: disable=E1101
         _, log_file_fmt, _ = _paths.prepare_path(config['name'],
-                                                 None,  # No linking is done for logs
-                                                 _paths.get_log_path)
+                                                 _paths.get_log_path,
+                                                 None,  # No linking is done for logs)
         # Calculate number of jobs and submit
         ntoys = config[self.NTOYS_KEY]
         ntoys_per_job = config[self.NTOYS_PER_JOB_KEY] if self.NTOYS_PER_JOB_KEY else ntoys
