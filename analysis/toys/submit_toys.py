@@ -48,7 +48,7 @@ class FitSubmitter(ToySubmitter):
 
     VALIDATION = {'name': "No name was specified in the config file!",
                   'fit/nfits': "Number of fits not specified!",
-                  'fit/nfits-per-job': "Number of fits per job not specified!",
+                  # 'fit/nfits-per-job': "Number of fits per job not specified!",
                   'fit-model': "No pdfs were specified in the config file!",
                   'data': "No input data was specified in the config file!"}
     # pylint: disable=E1101
@@ -67,7 +67,7 @@ class GenerationSubmitter(ToySubmitter):
 
     VALIDATION = {'name': "No name was specified in the config file!",
                   'gen/nevents': "Number of events not specified!",
-                  'gen/nevents-per-job': "Number of events per job not specified!",
+                  # 'gen/nevents-per-job': "Number of events per job not specified!",
                   'gen-model': "No pdfs were specified in the config file!"}
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
