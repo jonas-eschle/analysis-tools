@@ -268,7 +268,7 @@ class ToySubmitter(object):
                                 script_args,
                                 log_file_fmt,
                                 config.get('batch/runtime', '08:00:00'))
-            logger.debug('Submitted JobID: %s', job_id)
+            logger.info('Submitted JobID: %s', job_id)
 
 
 # EOF
