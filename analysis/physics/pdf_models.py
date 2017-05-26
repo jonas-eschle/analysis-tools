@@ -219,14 +219,16 @@ class ArgusConvGaussPdfMixin(object):
         params = self.get_fit_parameters()
         return execute_and_return_self(ROOT.RooFFTConvPdf(name, title,
                                                           obs,
-                                                          ROOT.RooArgusBG(name+'Argus',
-                                                                          title+'Argus',
-                                                                          obs,
-                                                                          *(params[:3] +
-                                                                            ROOT.RooGaussian(name+'Resol',
-                                                                                             title+'Resol',
-                                                                                             obs,
-                                                                                             *params[4:])))),
+                                                          self.set(name+'Argus',
+                                                                   ROOT.RooArgusBG(name+'Argus',
+                                                                                   title+'Argus',
+                                                                                   obs,
+                                                                                   *params[:3])),
+                                                          self.set(name+'Resol',
+                                                                   ROOT.RooGaussian(name+'Resol',
+                                                                                    title+'Resol',
+                                                                                    obs,
+                                                                                    *params[3:]))),
                                        'setBufferFraction',
                                        self._buffer_fraction)
 
