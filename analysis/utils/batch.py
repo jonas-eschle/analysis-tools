@@ -94,12 +94,12 @@ def submit_job(job_name, cmd_script, script_args, log_file, runtime):
     # Check if qsub exists
     assert which('qsub')
     # Check if a similar job had already been produced
-    if os.path.exists(log_file):
-        with open(log_file) as log_file_obj:
-            for line in log_file_obj:
-                if 'Job ended on' in line:
-                    logger.warning('Job %s already finished', job_name)
-                    return
+    # if os.path.exists(log_file):
+    #     with open(log_file) as log_file_obj:
+    #         for line in log_file_obj:
+    #             if 'Job ended on' in line:
+    #                 logger.warning('Job %s already finished', job_name)
+    #                 return
     cmd = 'python %s' % cmd_script
     cmd += ' %s' % (' '.join(script_args))
     script = TEMPLATE_SERIAL.format(job_name=job_name,
