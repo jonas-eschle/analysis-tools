@@ -146,7 +146,7 @@ def run(config_files, link_from, verbose):
         logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()
     # Some info
-    logger.info("Doing %s sample/fit sequences", config['fit']['nfits'])
+    logger.info("Doing %s sample/fit sequences", config['fit'].get('nfits-per-job', 'nfits'))
     logger.info("Fit job name: %s", config['name'])
     if link_from:
         config['link-from'] = link_from
