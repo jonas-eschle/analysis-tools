@@ -123,7 +123,7 @@ register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
               lambda name, args, kwargs: 'matplotlib_' + name)
 
 
-def prepare_path(name, path_func, link_from):
+def prepare_path(name, path_func, link_from, **kwargs):
     """Build the folder structure for any output.
 
     The output file name is obtained from `path_func` and the possibility of
@@ -138,6 +138,7 @@ def prepare_path(name, path_func, link_from):
         path_func (Callable): Function to execute to get the path.
         link_from (str): Base directory for symlinking. If `None`, no symlinking
             is done.
+        **kwargs (dict): Extra arguments for the `path_func`.
 
     Returns:
         tuple (bool, str, str): Need to do soft-linking, path of true output file,
@@ -151,7 +152,7 @@ def prepare_path(name, path_func, link_from):
         do_link = True
         if not os.path.exists(src_base_dir):
             raise OSError("Cannot find storage folder -> %s" % src_base_dir)
-    dest_file_name = path_func(name)
+    dest_file_name = path_func(name, **kwargs)
     rel_file_name = os.path.relpath(dest_file_name,
                                     dest_base_dir)
     src_file_name = os.path.join(src_base_dir, rel_file_name)

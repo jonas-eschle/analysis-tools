@@ -252,7 +252,8 @@ class ToySubmitter(object):
         # pylint: disable=E1101
         _, log_file_fmt, _ = _paths.prepare_path(config['name'],
                                                  _paths.get_log_path,
-                                                 None)  # No linking is done for logs
+                                                 None,  # No linking is done for logs
+                                                 isBatch=True)
         # Calculate number of jobs and submit
         ntoys = config[self.NTOYS_KEY]
         ntoys_per_job = config.get(self.NTOYS_PER_JOB_KEY, ntoys)
