@@ -79,7 +79,7 @@ class GenerationSubmitter(ToySubmitter):
     NTOYS_PER_JOB_KEY = 'gen/nevents-per-job'
 
 
-TOY_TYPES = {'gen': (GenerationSubmitter, 'submit_toys.py'),
+TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
              'fit': (FitSubmitter, 'fit_toys.py')}
 
 
