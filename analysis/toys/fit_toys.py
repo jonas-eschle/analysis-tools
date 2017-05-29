@@ -85,11 +85,12 @@ def get_datasets(data_frames, acceptance, fit_models):
         dataset[weight_var] = acceptance.get_fit_weights(dataset)
     # Convert dataset to RooDataset
     try:
+        # TODO: Check the categories
         return ({ds_name: dataset_from_pandas(model.transform_dataset(dataset),
                                               "data_%s" % ds_name,
                                               "data_%s" % ds_name,
                                               weight_var=weight_var,
-                                              category=model.get_category_var())
+                                              categories=model.get_category_vars())
                  for ds_name, model in fit_models.items()},
                 sample_sizes)
     except KeyError:
