@@ -844,7 +844,7 @@ class SumPhysicsFactory(BaseFactory):
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
-        return self._children.values()[0](dataset)
+        return self._children.values()[0].transform_dataset(dataset)
 
 
 # Sum physics factory
