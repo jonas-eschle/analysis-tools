@@ -272,9 +272,9 @@ def run(config_files, link_from, verbose):
                                      model_name,
                                      fit_strategy,
                                      dataset,
-                                     config['fit'].get('extended', True),
-                                     config['fit'].get('minos', True),
-                                     verbose)
+                                     verbose,
+                                     Extended=config['fit'].get('extended', True),
+                                     Minos=config['fit'].get('minos', True))
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
