@@ -411,6 +411,8 @@ class BaseFactory(object):
         return self._category
 
     def get_category_vars(self):
+        if not self._category:
+            return None
         if isinstance(self._category, ROOT.RooSuperCategory):
             cats = []
             cat_iter = self._category.serverIterator()
