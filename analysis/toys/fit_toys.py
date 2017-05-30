@@ -147,7 +147,8 @@ def run(config_files, link_from, verbose):
         logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()
     # Some info
-    logger.info("Doing %s sample/fit sequences", config['fit'].get('nfits-per-job', 'nfits'))
+    nfits = config['fit'].get('nfits-per-job', 'nfits')
+    logger.info("Doing %s sample/fit sequences", nfits)
     logger.info("Fit job name: %s", config['name'])
     if link_from:
         config['link-from'] = link_from
@@ -244,10 +245,10 @@ def run(config_files, link_from, verbose):
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
-    for fit_num in range(config['fit']['nfits']):
+    for fit_num in range(nfits):
         # Logging
         if (fit_num+1) % 20 == 0:
-            logger.info("  Fitting event %s/%s", fit_num+1, config['fit']['nfits'])
+            logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Get a compound dataset
         try:
             logger.debug("Sampling input data")
@@ -285,8 +286,8 @@ def run(config_files, link_from, verbose):
             _root.destruct_object(dataset)
         logger.debug("Cleaning up")
     logger.info("Fitting loop over")
-    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/config['fit']['nfits'])
-    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/(config['fit']['nfits']))
+    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/nfits)
+    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/nfits)
     logger.info("Saving to disk")
     data_res = []
     # Get gen values for this model
