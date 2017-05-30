@@ -353,32 +353,42 @@ class BaseFactory(object):
                      for obs_id, (obs_name, obs_title, obs_min, obs_max, unit)
                      in self.OBSERVABLES.items())
 
-    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+    def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
+        """
+
+        Note:
+            If `obs` is given, the other parameters are ignored.
+
+        """
         if obs_id not in self.OBSERVABLES:
             raise KeyError("Unknown observable -> %s" % obs_id)
         new_config = list(self.OBSERVABLES[obs_id])
-        if name:
-            new_config[0] = name
-            if obs_id in self:
-                self._objects[obs_id].SetName(name)
-        if title:
-            new_config[1] = title
-            if obs_id in self:
-                self._objects[obs_id].SetTitle(title)
-        if limits:
-            if len(limits) == 2:
-                min_, max_ = limits
-                range_name = ""
-            elif len(limits) == 3:
-                range_name, min_, max_ = limits
-            new_config[2] = min_
-            new_config[3] = max_
-            if obs_id in self:
-                self._objects[obs_id].setRange(range_name, min_, max_)
-        if units:
-            new_config[4] = units
-            if obs_id in self:
-                self._objects[obs_id].setUnit(units)
+        if obs:
+            self._objects[obs_id] = obs
+            new_config = [obs.GetName(), obs.GetTitle(), obs.getMin(), obs.getMax(), obs.getUnit()]
+        else:
+            if name:
+                new_config[0] = name
+                if obs_id in self:
+                    self._objects[obs_id].SetName(name)
+            if title:
+                new_config[1] = title
+                if obs_id in self:
+                    self._objects[obs_id].SetTitle(title)
+            if limits:
+                if len(limits) == 2:
+                    min_, max_ = limits
+                    range_name = ""
+                elif len(limits) == 3:
+                    range_name, min_, max_ = limits
+                new_config[2] = min_
+                new_config[3] = max_
+                if obs_id in self:
+                    self._objects[obs_id].setRange(range_name, min_, max_)
+            if units:
+                new_config[4] = units
+                if obs_id in self:
+                    self._objects[obs_id].setUnit(units)
         self.OBSERVABLES[obs_id] = tuple(new_config)
 
     def get_fit_parameters(self, extended=False):
@@ -687,6 +697,11 @@ class SumPhysicsFactory(BaseFactory):
         super(SumPhysicsFactory, self).__init__({}, parameters)
         # Set children
         self._children = factories
+        # Set observables
+        obs_list = self._children.values()[0].get_observables()
+        for obs_num, obs in enumerate(obs_list):
+            for child in self._children.values()[1:]:
+                child.set_observable(self._children.values()[0].OBSERVABLES.keys()[obs_num], obs=obs)
         # Set yields
         yield_ = None
         if parameters and 'yield' in parameters:
