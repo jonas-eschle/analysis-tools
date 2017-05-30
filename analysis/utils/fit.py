@@ -37,7 +37,8 @@ def fit_parameters_to_dict(parameters):
             for method, suffix in (('getValV', ''),
                                    ('getError', '_err_hesse'),
                                    ('getErrorHi', '_err_plus'),
-                                   ('getErrorLo', '_err_minus'))}
+                                   ('getErrorLo', '_err_minus'))
+            if hasattr(param, method)}
 
 
 def calculate_pulls(fit_results, gen_values):
