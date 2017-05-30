@@ -184,7 +184,7 @@ def run(config_files, link_from, verbose):
         for var_name in toy_info.columns:
             if var_name in ('seed', 'jobid', 'nevents'):
                 continue
-            gen_values[data_id][var_name] = toy_info[var_name][0]
+            gen_values[data_id][var_name] = toy_info[var_name].iloc[0]
     try:
         fit_models = {}
         for model_name in models:
