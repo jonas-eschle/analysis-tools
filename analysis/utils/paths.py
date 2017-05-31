@@ -114,9 +114,7 @@ register_path('toy', ['data_files', 'toys', 'gen'], 'hdf')
 register_path('toy_config', ['data_files', 'toys', 'gen'], 'yaml')
 register_path('toy_fit', ['data_files', 'toys', 'fit'], 'hdf')
 register_path('toy_fit_config', ['data_files', 'toys', 'fit'], 'yaml')
-register_path('log', ['data_files', 'logs'], 'log',
-              lambda name, args, kwargs: name + '_${PBS_JOBID}'
-              if kwargs.get('isBatch', False) else name)
+register_path('log', ['data_files', 'logs'], 'log')
 register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
 register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
 register_path('plot_style', ['data_files', 'styles'], 'mplstyle',

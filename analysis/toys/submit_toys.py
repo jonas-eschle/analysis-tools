@@ -35,7 +35,7 @@ from analysis import get_global_var
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 from analysis.utils.logging_color import get_logger
-from analysis.utils.batch import ToySubmitter
+from analysis.toys.submitter import ToySubmitter
 
 
 logger = get_logger('analysis.toys.submit')

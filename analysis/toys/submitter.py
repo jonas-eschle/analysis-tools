@@ -1,119 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file   batch.py
+# @file   submitter.py
 # @author Albert Puig (albert.puig@cern.ch)
-# @date   14.02.2017
+# @date   31.05.2017
 # =============================================================================
-"""Batch submission utils."""
+"""Toy submitter base class."""
 
 import os
-import subprocess
 
-import tempfile
-
+from analysis.batch import get_batch_system
 import analysis.utils.config as _config
 import analysis.utils.paths as _paths
 from analysis.utils.logging_color import get_logger
 
 
-TEMPLATE_SERIAL = """
-#####################################
-#PBS -S /bin/bash
-#PBS -N {job_name}
-#PBS -o {logfile}
-#PBS -e {errfile}
-#PBS -j oe
-#PBS -l cput={runtime}
-#####################################
-echo "------------------------------------------------------------------------"
-echo "Job started on" `date`
-echo "------------------------------------------------------------------------"
-if [ -f $HOME/.localrc ]; then
-  source $HOME/.localrc
-fi
-cd {workdir}
-echo $PWD
-{script}
-echo "------------------------------------------------------------------------"
-echo "Job ended on" `date`
-echo "------------------------------------------------------------------------"
-"""
-
-
-logger = get_logger('analysis.utils.batch')
-
-
-def which(program):
-    """Check the location of the given command.
-
-    Arguments:
-        program (str): Command to check.
-
-    Returns:
-        str: Path of the program. Returns None if it cannot be found.
-
-    """
-    def is_exe(fpath):
-        """Check if path is executable."""
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    if os.path.split(program)[0]:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-    return None
-
-
-# pylint: disable=too-many-locals
-def submit_job(job_name, cmd_script, script_args, log_file, runtime):
-    """Submit jobs as stdin in TORQUE.
-
-    If the job had been previously completed successfully, that is, the
-    log file exists and contains "Job ended on", the submission is skipped.
-
-    Arguments:
-        job_name (str): Job name.
-        cmd_script (str): Script to run.
-        script_args (list): List of arguments passed to the script.
-        log_file (str): Logfile location.
-        runtime (str): Allocated time for the batch job.
-
-    Returns:
-        str: JobID.
-
-    Raises:
-        AssertionError: If the qsub command cannot be found.
-
-    """
-    # Check if qsub exists
-    assert which('qsub')
-    # Check if a similar job had already been produced
-    # if os.path.exists(log_file):
-    #     with open(log_file) as log_file_obj:
-    #         for line in log_file_obj:
-    #             if 'Job ended on' in line:
-    #                 logger.warning('Job %s already finished', job_name)
-    #                 return
-    cmd = 'python %s' % cmd_script
-    cmd += ' %s' % (' '.join(script_args))
-    script = TEMPLATE_SERIAL.format(job_name=job_name,
-                                    errfile=log_file,
-                                    logfile=log_file,
-                                    runtime=runtime,
-                                    workdir=os.getcwd(),
-                                    script=cmd)
-    with tempfile.NamedTemporaryFile(delete=True) as temp:
-        temp.write(script)
-        temp.flush()
-        logger.debug('Submitting -> %s', cmd)
-        output = subprocess.check_output(['qsub', temp.name])
-    return output.rstrip('\n')
+logger = get_logger('analysis.toys.submitter')
 
 
 # pylint: disable=too-few-public-methods
@@ -193,6 +95,8 @@ class ToySubmitter(object):
         self.link_from = link_from
         self.extend = extend
         self.overwrite = overwrite
+        # Get the batch system
+        self.batch_system = get_batch_system()
 
     def run(self, script_to_run):
         """Run the script.
@@ -252,8 +156,7 @@ class ToySubmitter(object):
         # pylint: disable=E1101
         _, log_file_fmt, _ = _paths.prepare_path(config['name'],
                                                  _paths.get_log_path,
-                                                 None,  # No linking is done for logs
-                                                 isBatch=True)
+                                                 None)  # No linking is done for logs
         # Calculate number of jobs and submit
         ntoys = config[self.NTOYS_KEY]
         ntoys_per_job = config.get(self.NTOYS_PER_JOB_KEY, ntoys)
@@ -264,11 +167,11 @@ class ToySubmitter(object):
         _config.write_config(self.config, config_file_dest)
         for _ in range(n_jobs):
             # Write the config file
-            job_id = submit_job(config['name'],
-                                script_to_run,
-                                script_args,
-                                log_file_fmt,
-                                config.get('batch/runtime', '08:00:00'))
+            job_id = self.batch_system.submit_job(config['name'],
+                                                  script_to_run,
+                                                  script_args,
+                                                  log_file_fmt,
+                                                  config.get('batch', {}))
             logger.info('Submitted JobID: %s', job_id)
 
 
