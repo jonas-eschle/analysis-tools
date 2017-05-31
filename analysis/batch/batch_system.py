@@ -115,7 +115,11 @@ echo "------------------------------------------------------------------------"
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
-            header.append(self.DIRECTIVES[batch_option] % batch_value)
+            directive = self.DIRECTIVES.get(batch_option, None)
+            if directive is None:
+                logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
+                continue
+            header.append(directive % batch_value)
         script = self.SCRIPT.format(workdir=os.getcwd(),
                                     script=cmd,
                                     header='\n'.join(header))
@@ -127,6 +131,9 @@ echo "------------------------------------------------------------------------"
         output = proc.communicate(input=script)[0]
         return output.rstrip('\n')
 
+    def get_job_id(self):
+        return os.environ.get(self.JOBID_VARIABLE, None)
+
 
 class Torque(BatchSystem):
     """Implement the Torque/PBS batch system."""
@@ -137,8 +144,10 @@ class Torque(BatchSystem):
                   'logfile': '#PBS -o %s',
                   'errfile': '#PBS -e %s',
                   'mergelogs': '#PBS -j oe',
-                  'runtime': '#PBS -l cput=%s'}
+                  'runtime': '#PBS -l cput=%s',
+                  'memory': '#PBS -l mem=%s'}
     JOBID_FORMAT = '_${PBS_JOBID}'
+    JOBID_VARIABLE = 'PBS_JOBID'
 
 
 class Slurm(BatchSystem):
@@ -150,8 +159,12 @@ class Slurm(BatchSystem):
                   'logfile': '#SBATCH -o %s',
                   'errfile': '#SBATCH -e %s',
                   'mergelogs': '#SBATCH -j oe',
-                  'runtime': '#SBATCH -l walltime=%s'}
+                  'runtime': '#SBATCH -l walltime=%s',
+                  'memory': '#SBATCH --mem=%s',
+                  'memory-per-cpu': '#SBATCH --mem-per-cpu=%s',
+                  'queue': '#SBATCH --partition=%s'}
     JOBID_FORMAT = '_%j'
+    JOBID_VARIABLE = 'SLURM_JOB_ID'
 
 
 BATCH_SYSTEMS = OrderedDict(('slurm', Slurm()),

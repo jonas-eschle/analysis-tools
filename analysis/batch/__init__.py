@@ -27,4 +27,20 @@ def get_batch_system():
             return batch_system
     raise ValueError()
 
+
+def get_job_id():
+    """Get job ID from the environment.
+
+    Returns:
+        str: JobID, empty if it's a local job.
+
+    """
+    from analysis.batch.batch_system import BATCH_SYSTEMS
+    for batch_system in BATCH_SYSTEMS.values():
+        job_id = batch_system.get_job_id()
+        if job_id:
+            return job_id
+    return ''
+
+
 # EOF

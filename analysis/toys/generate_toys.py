@@ -8,9 +8,7 @@
 """Toy generation."""
 
 import argparse
-import os
 
-import numpy as np
 import pandas as pd
 import ROOT
 
@@ -23,6 +21,7 @@ from analysis.utils.logging_color import get_logger
 from analysis.utils.paths import get_toy_path, work_on_file
 from analysis.data.converters import pandas_from_dataset
 from analysis.data.hdf import modify_hdf
+from analysis.batch import get_job_id
 
 
 logger = get_logger('analysis.toys.generate')
@@ -139,10 +138,10 @@ def run(config_files, link_from):
     else:
         logger.debug("No linking specified")
     # Set seed
-    try:
-        job_id = os.environ['PBS_JOBID']
+    job_id = get_job_id()
+    if job_id:
         seed = int(job_id.split('.')[0])
-    except KeyError:
+    else:
         import random
         job_id = 'local'
         seed = random.randint(0, 100000)
