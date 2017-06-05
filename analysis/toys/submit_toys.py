@@ -84,25 +84,37 @@ TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
 
 
 # Scan function
-def process_scan_val(value):
+def process_scan_val(value, other_values=None):
     """Process the string of a scan specification.
 
     Several structures are allowed:
-        - `V X ...`: Explicitly give values. Every value that follows the `V` is
+        - `VALUES X ...`: Explicitly give values. Every value that follows the `V` is
         taken.
-        - `R Min Max Step`: Range. Values can be floats, unlike python's `range`.
+        - `RANGE Min Max Step`: Range. Values can be floats, unlike python's `range`.
+        - `INTERPOLATE value`: Use the value of other variables to interpolate the list.
+        For example:
+            ```
+            sigma: VALUES 1 2 3
+            sigmafile: INTERPOLATE file_{sigma}
+            ```
+
+        would generate the list `[file_1, file_2 file_3]` for `sigmafile`. The only limitation
+        of this interpolatio is that the interpolating variable needs to be defined before the
+        interpolation.
+
+    Arguments:
+        value (str): String specification of the value to scan.
+        other_values (dict, optional): Values to use for interpolation.
 
     Raises:
         ValueError: When the scan specification is not properly formed.
 
     """
     split_value = value.split()
-    action = split_value[0]
-    if len(action) != 1:
-        raise ValueError('Wrong scan command length')
-    if action == 'V':  # Values
+    action = split_value[0].lower()
+    if action == 'values':  # Values
         values = split_value[1:]
-    elif action == 'R':  # Range
+    elif action == 'range':  # Range
         try:
             min_, max_, step = split_value[1:]
         except ValueError:
@@ -121,6 +133,20 @@ def process_scan_val(value):
                 break
             values.append(curr_val)
             curr_val += step
+    elif action == 'interpolate':
+        if not other_values:
+            raise ValueError('No values to interpolate')
+        val_to_format = ' '.join(split_value[1:])
+        values = [val_to_format.format(**{key: vals[val_num]
+                                          for key, vals in other_values.items()})
+                  for val_num in range(len(other_values.values()[0]))]
+        try:
+            values = [int(val) for val in values]
+        except ValueError:
+            try:
+                values = [float(val) for val in values]
+            except ValueError:
+                pass
     else:
         raise ValueError('Unknown scan command -> %s' % action)
     return values
@@ -177,9 +203,12 @@ def main():
         if scan_config:
             config_files = []
             base_config = _config.unfold_config(config)
-            scan_groups = [{key: process_scan_val(val_str)
-                            for key, val_str in scan_group.items()}
-                           for scan_group in config['scan']]
+            scan_groups = []
+            for scan_group in config['scan']:
+                scan_group_dict = {}
+                for key, val_str in scan_group.items():
+                    scan_group_dict[key] = process_scan_val(val_str, scan_group_dict)
+                scan_groups.append(scan_group_dict)
             # Check lengths
             if not all(len({len(val) for val in scan_group.values()}) == 1
                        for scan_group in scan_groups):
