@@ -90,8 +90,10 @@ class BaseFactory(object):
             raise KeyError("Missing parameters -> %s" % ','.join(missing_parameter
                                                                  for missing_parameter in missing_parameters))
         if param_dict:
-            logger.debug("Trying to set unsupported params in config. I skipped them -> %s",
+            logger.debug("Trying to set unsupported params in config. I stored them but they can cause problems -> %s",
                          ','.join(param_dict.keys()))
+            for param_name, param_val in param_dict.items():
+                self._create_parameter(param_name, param_val)
 
     def get_config(self):
         return self._config
