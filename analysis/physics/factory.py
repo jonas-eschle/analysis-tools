@@ -945,11 +945,11 @@ class SimultaneousPhysicsFactory(BaseFactory):
                     obs_list[child_obs.GetName()] = self.get(child_obs.GetName())
         return tuple(obs_list.values())
 
-    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+    def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         has_changed = False
         for child in self._children.values():
             try:
-                child.set_observable(obs_id, name, title, limits, units)
+                child.set_observable(obs_id, obs, name, title, limits, units)
                 has_changed = True
             except KeyError:
                 pass
