@@ -348,8 +348,12 @@ class BaseFactory(object):
         """
         return tuple((self.get(obs_id)
                       if obs_id in self
-                      else self.set(obs_id, ROOT.RooRealVar(obs_name, obs_title,
-                                                            obs_min, obs_max, unit)))
+                      else self.set(obs_id, execute_and_return_self(ROOT.RooRealVar(obs_name, obs_title,
+                                                                                    obs_min, obs_max,
+                                                                                    unit),
+                                                                    'setStringAttribute',
+                                                                    'originalName',
+                                                                    obs_id)))
                      for obs_id, (obs_name, obs_title, obs_min, obs_max, unit)
                      in self.OBSERVABLES.items())
 
@@ -599,11 +603,11 @@ class ProductPhysicsFactory(BaseFactory):
                      for factory in self._children.values()
                      for obs in factory.get_observables())
 
-    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+    def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         has_changed = False
         for child in self._children.values():
             try:
-                child.set_observable(obs_id, name, title, limits, units)
+                child.set_observable(obs_id, obs, name, title, limits, units)
                 has_changed = True
             except KeyError:
                 pass
@@ -698,10 +702,11 @@ class SumPhysicsFactory(BaseFactory):
         # Set children
         self._children = factories
         # Set observables
-        obs_list = self._children.values()[0].get_observables()
-        for obs_num, obs in enumerate(obs_list):
+        observables = {obs.getStringAttribute('originalName'): obs
+                    for obs in self._children.values()[0].get_observables()}
+        for obs_name, obs in observables.items():
             for child in self._children.values()[1:]:
-                child.set_observable(self._children.values()[0].OBSERVABLES.keys()[obs_num], obs=obs)
+                child.set_observable(obs_name, obs=obs)
         # Set yields
         yield_ = None
         if parameters and 'yield' in parameters:
@@ -793,9 +798,9 @@ class SumPhysicsFactory(BaseFactory):
         """
         return self._children.values()[0].get_observables()
 
-    def set_observable(self, obs_id, name=None, title=None, limits=None, units=None):
+    def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         for child in self._children.values():
-            child.set_observable(obs_id, name, title, limits, units)
+            child.set_observable(obs_id, obs, name, title, limits, units)
 
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
