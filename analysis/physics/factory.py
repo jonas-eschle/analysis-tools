@@ -705,7 +705,7 @@ class SumPhysicsFactory(BaseFactory):
         self._children = factories
         # Set observables
         observables = {obs.getStringAttribute('originalName'): obs
-                    for obs in self._children.values()[0].get_observables()}
+                       for obs in self._children.values()[0].get_observables()}
         for obs_name, obs in observables.items():
             for child in self._children.values()[1:]:
                 child.set_observable(obs_name, obs=obs)

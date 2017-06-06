@@ -78,21 +78,11 @@ class FlatQ2(phys_factory.PhysicsFactory):
 
     """
 
+    OBSERVABLES = (('q2', 'q2', 1, 19, "GeV^{2}/c^{4}"),)
+
     PARAMETERS = ('const', )
 
     PARAMETER_DEFAULTS = {'const': 1.0}
-
-    def get_observables(self):
-        """Get the observables for the q2 PDF.
-
-        Returns:
-            tuple[`ROOT.RooRealVar`]: q2 variable.
-
-        """
-        return (self.get("q2")
-                if "q2" in self
-                else self.set("q2", ROOT.RooRealVar("q2", "q2",
-                                                    0.0, 19.0, "GeV^{2}/c^{4}")),)
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
