@@ -99,8 +99,19 @@ def process_scan_val(value, other_values=None):
             ```
 
         would generate the list `[file_1, file_2 file_3]` for `sigmafile`. The only limitation
-        of this interpolatio is that the interpolating variable needs to be defined before the
+        of this interpolation is that the interpolating variable needs to be defined before the
         interpolation.
+
+        - `SCALE var value` can be used to perform an interpolation with a product. For example:
+            ```
+            sigma: VALUES 1 2 3
+            sigma_bkg: SCALE sigma 2
+            ```
+
+        would generate the values `[2, 4, 6]` for `sigma_bkg`. The only limitation of this
+        interpolation is that the interpolating variable needs to be defined before the
+        interpolation.
+
 
     Arguments:
         value (str): String specification of the value to scan.
@@ -147,6 +158,17 @@ def process_scan_val(value, other_values=None):
                 values = [float(val) for val in values]
             except ValueError:
                 pass
+    elif action == 'scale':
+        if not other_values:
+            raise ValueError('No values to interpolate')
+        try:
+            var_name, scale_factor = split_value[1:]
+        except ValueError:
+            raise ValueError("Badly specified scale")
+        if var_name not in other_values:
+            raise ValueError("Unknown variable -> %s" % var_name)
+        values = [var_val * float(scale_factor)
+                  for var_val in other_values[var_name]]
     else:
         raise ValueError('Unknown scan command -> %s' % action)
     return values
