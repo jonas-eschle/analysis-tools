@@ -66,11 +66,14 @@ echo "------------------------------------------------------------------------"
 """
     DIRECTIVES = {}
     JOBID_FORMAT = ''
+    JOBID_VARIABLE = ''
 
     def __init__(self):
         """Check that it has been properly subclassed."""
         assert self.SUBMIT_COMMAND
         assert self.DIRECTIVES
+        assert self.JOBID_FORMAT
+        assert self.JOBID_VARIABLE
 
     def is_available(self):
         """Check if the bacth system is available.
@@ -107,7 +110,7 @@ echo "------------------------------------------------------------------------"
         err_file, ext = os.path.splitext(err_file)
         err_file = '%s%s.%s' % (err_file, self.JOBID_FORMAT, ext)
         # Build header
-        header = [self.DIRECTIVES['shell'] % batch_config.pop('shell', '/bin/bash'),
+        header = [batch_config.pop('shell', '/bin/bash'),
                   self.DIRECTIVES['job-name'] % job_name,
                   self.DIRECTIVES['logfile'] % log_file,
                   self.DIRECTIVES['errfile'] % err_file,
@@ -139,8 +142,7 @@ class Torque(BatchSystem):
     """Implement the Torque/PBS batch system."""
 
     SUBMIT_COMMAND = 'qsub'
-    DIRECTIVES = {'shell': '#PBS -S %s',
-                  'job-name': '#PBS -N %s',
+    DIRECTIVES = {'job-name': '#PBS -N %s',
                   'logfile': '#PBS -o %s',
                   'errfile': '#PBS -e %s',
                   'mergelogs': '#PBS -j oe',
@@ -154,8 +156,7 @@ class Slurm(BatchSystem):
     """Implement the Slurm batch system."""
 
     SUBMIT_COMMAND = 'sbatch'
-    DIRECTIVES = {'shell': '#SBATCH -S %s',
-                  'job-name': '#SBATCH -N %s',
+    DIRECTIVES = {'job-name': '#SBATCH -N %s',
                   'logfile': '#SBATCH -o %s',
                   'errfile': '#SBATCH -e %s',
                   'mergelogs': '#SBATCH -j oe',
