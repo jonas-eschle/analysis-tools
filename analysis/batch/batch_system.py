@@ -47,7 +47,7 @@ class BatchSystem(object):
     """Batch System base class."""
 
     SUBMIT_COMMAND = None
-    SCRIPT = """
+    SCRIPT = """#!{shell}
 #####################################
 {header}
 #####################################
@@ -110,8 +110,7 @@ echo "------------------------------------------------------------------------"
         err_file, ext = os.path.splitext(err_file)
         err_file = '%s%s.%s' % (err_file, self.JOBID_FORMAT, ext)
         # Build header
-        header = [batch_config.pop('shell', '/bin/bash'),
-                  self.DIRECTIVES['job-name'] % job_name,
+        header = [self.DIRECTIVES['job-name'] % job_name,
                   self.DIRECTIVES['logfile'] % log_file,
                   self.DIRECTIVES['errfile'] % err_file,
                   self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '02:00:00')]
@@ -125,7 +124,8 @@ echo "------------------------------------------------------------------------"
             header.append(directive % batch_value)
         script = self.SCRIPT.format(workdir=os.getcwd(),
                                     script=cmd,
-                                    header='\n'.join(header))
+                                    header='\n'.join(header),
+                                    shell=batch_config.pop('shell', '/bin/bash'))
         # Submit using stdin
         logger.debug('Submitting -> %s', cmd)
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
@@ -156,11 +156,11 @@ class Slurm(BatchSystem):
     """Implement the Slurm batch system."""
 
     SUBMIT_COMMAND = 'sbatch'
-    DIRECTIVES = {'job-name': '#SBATCH -N %s',
+    DIRECTIVES = {'job-name': '#SBATCH -J %s',
                   'logfile': '#SBATCH -o %s',
                   'errfile': '#SBATCH -e %s',
-                  'mergelogs': '#SBATCH -j oe',
-                  'runtime': '#SBATCH -l walltime=%s',
+                  'mergelogs': '',
+                  'runtime': '#SBATCH -t %s',
                   'memory': '#SBATCH --mem=%s',
                   'memory-per-cpu': '#SBATCH --mem-per-cpu=%s',
                   'queue': '#SBATCH --partition=%s'}
