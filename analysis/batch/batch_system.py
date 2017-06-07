@@ -167,7 +167,7 @@ class Slurm(BatchSystem):
     JOBID_VARIABLE = 'SLURM_JOB_ID'
 
 
-BATCH_SYSTEMS = OrderedDict(('slurm', Slurm()),
-                            ('torque', Torque()))
+BATCH_SYSTEMS = OrderedDict((('slurm', Slurm()),
+                             ('torque', Torque())))
 
 # EOF
