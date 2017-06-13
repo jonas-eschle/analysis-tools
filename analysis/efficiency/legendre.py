@@ -143,6 +143,9 @@ class LegendreEfficiency(Efficiency):
         Arguments:
             data (`pandas.DataFrame`): Data to apply the efficiency to.
 
+        Returns:
+            pandas.Series: Efficiency for each entry of the input.
+
         """
         for range_var, (min_, max_) in self._ranges.items():
             data[range_var] = scale_dataset(data[range_var], min_, max_, -1, 1)
