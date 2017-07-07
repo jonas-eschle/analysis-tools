@@ -744,7 +744,7 @@ class SumPhysicsFactory(BaseFactory):
                     # Need no rename because RooFracRemainder needs a RooArgSet and there will be clashes
                     # between vars named 'Fraction'. It's stupid, since the name is not used after.
                     for yield_num, yield_val in enumerate(yield_values):
-                        yield_val.SetName('%s_%s' % (yield_val, yield_num))
+                        yield_val.SetName('%s_%s' % (yield_val.GetName(), yield_num))
                     child['Fraction'] = ROOT.RooFracRemainder("Fraction", "Fraction", list_to_rooargset(yield_values))
                     child._constraints.update({constraint
                                                for _, constraint in children_yields.values()
