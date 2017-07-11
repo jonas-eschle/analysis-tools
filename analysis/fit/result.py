@@ -274,6 +274,29 @@ class FitResult(object):
         return not any(status for status in self._result['status'].values()) and \
             self._result['covariance-matrix']['quality'] == 3
 
+    @ensure_initialized
+    def generate_random_pars(self, include_const=False):
+        """Generate random variation of the fit parameters.
+
+        Use a multivariate Gaussian according to the covariance matrix.
+
+        Arguments:
+            include_const (bool, optional): Return constant parameters? Defaults to False.
+
+        Returns:
+            OrderedDict
+
+        """
+        # pylint: disable=E1101
+        output = OrderedDict(zip(self._result['fit-parameters'].keys(),
+                                 np.random.multivariate_normal([param[0]
+                                                                for param in self._result['fit-parameters'].values()],
+                                                               self._result['covariance-matrix']['matrix'])))
+        if include_const:
+            for name, param in self._result['const-parameters'].items():
+                output[name] = param
+        return output
+
 
 class AlreadyInitializedError(Exception):
     """Used when the internal fit result has already been initialized."""
