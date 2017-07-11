@@ -76,17 +76,17 @@ class FitResult(object):
         """
         result = {}
         # Fit parameters
-        fit_params = {}
-        for const_par in iterate_roocollection(roofit_result.constPars()):
-            fit_params[const_par.GetName()] = (const_par.getVal(), 0, 0, 0)
-        for fit_par in iterate_roocollection(roofit_result.floatParsFinal()):
-            fit_params[fit_par.GetName()] = (fit_par.getVal(),
-                                             fit_par.getError(),
-                                             fit_par.getErrorLo(), fit_par.getErrorHi())
-        result['fit-parameters'] = fit_params
-        result['fit-parameters-initial'] = {fit_par.GetName(): fit_par.getVal()
-                                            for fit_par
-                                            in iterate_roocollection(roofit_result.floatParsInit())}
+        result['const-parameters'] = OrderedDict((fit_par.GetName(), fit_par.getVal())
+                                                 for fit_par
+                                                 in iterate_roocollection(roofit_result.constPars()))
+        result['fit-parameters'] = OrderedDict((fit_par.GetName(), (fit_par.getVal(),
+                                                                    fit_par.getError(),
+                                                                    fit_par.getErrorLo(), fit_par.getErrorHi()))
+                                               for fit_par
+                                               in iterate_roocollection(roofit_result.floatParsFinal()))
+        result['fit-parameters-initial'] = OrderedDict((fit_par.GetName(), fit_par.getVal())
+                                                       for fit_par
+                                                       in iterate_roocollection(roofit_result.floatParsInit()))
         # Covariance matrix
         covariance_matrix = roofit_result.covarianceMatrix()
         cov_matrix = {'quality': roofit_result.covQual(),
@@ -95,10 +95,9 @@ class FitResult(object):
                                            for row in range(covariance_matrix.GetNrows())])}
         result['covariance-matrix'] = cov_matrix
         # Status
-        status_hist = OrderedDict()
-        for cycle in range(roofit_result.numStatusHistory()):
-            status_hist[roofit_result.statusLabelHistory(cycle)] = roofit_result.statusCodeHistory(cycle)
-        result['status'] = status_hist
+        result['status'] = OrderedDict((roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
+                                       for cycle in range(roofit_result.numStatusHistory()))
+        result['edm'] = roofit_result.edm()
         self._result = result
         return self
 
@@ -119,18 +118,16 @@ class FitResult(object):
         """
         if not set(yaml_dict.keys()).issuperset({'fit-parameters',
                                                  'fit-parameters-initial',
+                                                 'const-parameters',
                                                  'covariance-matrix',
                                                  'status'}):
             raise KeyError("Missing keys in YAML input")
         if not set(yaml_dict['covariance-matrix'].keys()).issuperset({'quality', 'matrix'}):
             raise KeyError("Missing keys in covariance matrix in YAML input")
         # Build matrix
-        num_var_params = len([param
-                              for param, (_, hesse_error, _, _)
-                              in yaml_dict['fit-parameters'].items()
-                              if hesse_error > 0])
         yaml_dict['covariance-matrix']['matrix'] = np.asmatrix(
-            np.array(yaml_dict['covariance-matrix']['matrix']).reshape(num_var_params, num_var_params))
+            np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
+                                                                       len(yaml_dict['fit-parameters'])))
         self._result = yaml_dict
         return self
 
@@ -154,6 +151,7 @@ class FitResult(object):
             self._result = dict(load_config(file_name,
                                             validate=('fit-parameters',
                                                       'fit-parameters-initial',
+                                                      'const-parameters',
                                                       'covariance-matrix/quality',
                                                       'covariance-matrix/matrix',
                                                       'status')))
@@ -205,10 +203,12 @@ class FitResult(object):
         pandas_dict = {param_name + suffix: val
                        for param_name, param in self._result['fit-parameters'].items()
                        for val, suffix in zip(param, _SUFFIXES)}
+        pandas_dict = {param_name: val for param_name, val in self._result['const-parameters']}
         pandas_dict['status_migrad'] = self._result['status']['MINIMIZE']
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
         pandas_dict['cov_quality'] = self._result['covariance-matrix']['quality']
+        pandas_dict['edm'] = self._result['edm']
         if not skip_cov:
             pandas_dict['cov_matrix'] = self._result['covariance-matrix']['matrix'].getA1()
         return pandas_dict
@@ -252,6 +252,16 @@ class FitResult(object):
 
         """
         return self._result['covariance-matrix']['matrix']
+
+    @ensure_initialized
+    def get_edm(self):
+        """Get the fit EDM.
+
+        Returns:
+            float
+
+        """
+        return self._result['edm']
 
     @ensure_initialized
     def has_converged(self):
