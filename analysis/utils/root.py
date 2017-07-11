@@ -146,6 +146,23 @@ def list_to_rooargset(iterable):
     """
     return list_to_rooabscollection(iterable, ROOT.RooArgSet)
 
+def iterate_roocollection(collection):
+    """Iterate a RooAbsCollection object.
+
+    Arguments:
+        collection (ROOT.RooAbsCollection): Object to iterate.
+
+    Yields:
+        ROOT.TObject: Object inside the collection.
+
+    """
+    iter_ = collection.createIterator()
+    while True:
+        var = iter_.Next()
+        if not var:
+            raise StopIteration
+        yield var
+
 
 def rooargset_to_set(rooargset):
     """Convert RooArgSet to a set.
@@ -157,12 +174,19 @@ def rooargset_to_set(rooargset):
         set
 
     """
-    iter_ = rooargset.createIterator()
-    output = set()
-    while True:
-        var = iter_.Next()
-        if not var:
-            return output
-        output.add(var)
+    return {var for var in iterate_roocollection(rooargset)}
+
+
+def rooarglist_to_list(rooarglist):
+    """Convert RooArgList to a list.
+
+    Arguments:
+        rooarglist (ROOT.RooArgList): RooArgList to convert.
+
+    Returns:
+        list
+
+    """
+    return [var for var in iterate_roocollection(rooarglist)]
 
 # EOF
