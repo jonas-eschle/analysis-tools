@@ -24,6 +24,7 @@ from analysis.data.converters import dataset_from_pandas
 from analysis.physics import configure_model
 from analysis.efficiency import get_acceptance
 from analysis.fit import fit
+from analysis.fit.result import FitResult
 from analysis.batch import get_job_id
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
@@ -279,8 +280,7 @@ def run(config_files, link_from, verbose):
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
-                result = _fit.fit_parameters_to_dict(fit_model.get_fit_parameters(config['fit'].get('extended', True)))
-                result['fit_status'] = fit_result.status()
+                result = FitResult().from_roofit(fit_result).to_plain_dict()
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
             _root.destruct_object(dataset)
