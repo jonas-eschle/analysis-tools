@@ -8,6 +8,7 @@
 """Deal with HDF files."""
 
 import os
+import subprocess
 import shutil
 from contextlib import contextmanager
 
@@ -23,7 +24,8 @@ def modify_hdf(file_name, compress=True):
     """Context manager to exclusively open an HDF file and write it to disk on close.
 
     Note:
-        File is compressed on closing.
+        File is compressed on closing. If compression fails, a warning is issued but
+        no error is raised.
 
     Arguments:
         file_name (str): Final (desination) file name to write to.
@@ -39,9 +41,22 @@ def modify_hdf(file_name, compress=True):
         yield data_file
     logger.debug('Compressing...')
     if compress:
-        os.system("ptrepack --chunkshape=auto --propindexes --complevel=9 --complib=blosc "
-                  "%s %s.out" % (file_name, file_name))
-        shutil.move("%s.out" % file_name, file_name)
+        compressed_file = "%s.out" % file_name
+        try:
+            cmd = ["ptrepack",
+                   "--chunkshape=auto",
+                   "--propindexes",
+                   "--complevel=9",
+                   "--complib=blosc",
+                   file_name, compressed_file]
+            out = subprocess.check_output(cmd)
+            if not os.path.exists(compressed_file):  # Something went wrong
+                raise subprocess.CalledProcessError(0, ' '.join(cmd), output=out)
+            shutil.move(compressed_file, file_name)
+        except subprocess.CalledProcessError as error:
+            logger.warning("Error compressing -> %s", error.output)
+            if os.path.exists(compressed_file):
+                os.remove(compressed_file)
 
 
 # EOF
