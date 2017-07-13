@@ -14,7 +14,6 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
-# pylint: disable=E0611
 from analysis.utils.paths import get_fit_result_path
 
 

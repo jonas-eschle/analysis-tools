@@ -12,7 +12,6 @@ import contextlib2
 
 import pandas as pd
 
-# pylint: disable=E0611
 from analysis.utils.paths import get_toy_fit_path
 from analysis.utils.logging_color import get_logger
 
