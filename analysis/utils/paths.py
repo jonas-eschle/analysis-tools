@@ -119,6 +119,7 @@ register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
 register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
 register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
               lambda name, args, kwargs: 'matplotlib_' + name)
+register_path('fit_result', ['data_files', 'fit'], 'yaml')
 
 
 def prepare_path(name, path_func, link_from, **kwargs):

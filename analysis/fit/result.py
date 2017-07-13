@@ -14,6 +14,8 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
+# pylint: disable=E0611
+from analysis.utils.paths import get_fit_result_path
 
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
@@ -175,17 +177,24 @@ class FitResult(object):
         return result
 
     @ensure_initialized
-    def to_yaml_file(self, file_name):
+    def to_yaml_file(self, name):
         """Convert fit result to YAML format.
 
+        File name is determined by get_fit_result_path.
+
         Arguments:
-            file_name (str): Output file name.
+            name (str): Name of the fit result.
+
+        Returns:
+            str: Output file name.
 
         Raises:
             NotInitializedError: If the fit result has not been initialized.
 
         """
+        file_name = get_fit_result_path(name)
         write_config(self.to_yaml(), file_name)
+        return file_name
 
     @ensure_initialized
     def to_plain_dict(self, skip_cov=True):
