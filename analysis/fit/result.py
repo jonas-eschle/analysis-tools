@@ -133,11 +133,13 @@ class FitResult(object):
         return self
 
     @ensure_non_initialized
-    def from_yaml_file(self, file_name):
+    def from_yaml_file(self, name):
         """Initialize from a YAML file.
 
+        File name is determined by get_fit_result_path.
+
         Arguments:
-            file_name (str): Input file in YAML format.
+            name (str): Name of the fit result.
 
         Returns:
             self
@@ -149,7 +151,7 @@ class FitResult(object):
 
         """
         try:
-            self._result = dict(load_config(file_name,
+            self._result = dict(load_config(get_fit_result_path(name),
                                             validate=('fit-parameters',
                                                       'fit-parameters-initial',
                                                       'const-parameters',
@@ -230,13 +232,29 @@ class FitResult(object):
 
         Returns:
             tuple (float): Parameter value, Hesse error and upper and lower Minos errors.
-                If the two latter have not been calculated, they are `None`.
+                If the two latter have not been calculated, they are 0.
 
         Raises:
             KeyError: If the parameter is unknown.
 
         """
         return self._result['fit-parameters'][name]
+
+    @ensure_initialized
+    def get_const_parameter(self, name):
+        """Get the const parameter.
+
+        Arguments:
+            name (str): Name of the fit parameter.
+
+        Returns:
+            float: Parameter value.
+
+        Raises:
+            KeyError: If the parameter is unknown.
+
+        """
+        return self._result['const-parameters'][name]
 
     @ensure_initialized
     def get_fit_parameters(self):

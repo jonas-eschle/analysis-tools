@@ -204,8 +204,14 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         at which value to fix it.
         * 'GAUSS' is used for a Gaussian-constrained parameter. The arguments of that
         Gaussian, ie, its mean and sigma, have to be given after the letter.
-        * 'SHIFT'
-        * 'SCALE'
+        * 'SHIFT' is used to perform a constant shift to a variable. The first value must be a
+            shared variable, the second can be a number or a shared variable.
+        * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
+            shared variable, the second can be a number or a shared variable.
+
+    In addition, wherever a number is expected one can use a 'fit_name:var_name' specification to
+    load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error
+    of the fit is taken as width of the Gaussian.
 
     Arguments:
         name (str): Name of the parameter.
@@ -220,6 +226,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
     Raises:
         KeyError: If the specified action is unknown.
         ValueError: If the action is badly configured.
+
     """
     if external_vars is None:
         external_vars = {}
@@ -228,7 +235,19 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
     action_params = str(parameter_config).split()
     action = 'VAR' if not action_params[0].isalpha() else action_params.pop(0).upper()
     if action in ('VAR', 'CONST', 'GAUSS'):
-        parameter = ROOT.RooRealVar(name, title, float(action_params[0]))
+        # Take numerical value or load from file
+        value_error = None
+        if ':' in action_params[0]:  # We want to load a fit result
+            from analysis.fit.result import FitResult
+            fit_name, var_name = action_params[0].split(':')
+            result = FitResult().from_yaml_file(fit_name)
+            try:
+                value, value_error, _, _ = result.get_fit_parameter(var_name)
+            except KeyError:
+                value = result.get_const_parameter(var_name)
+        else:
+            value = float(action_params[0])
+        parameter = ROOT.RooRealVar(name, title, value)
         if action == 'VAR':  # Free parameter, we specify its initial value
             parameter.setConstant(False)
             if len(action_params) > 1:
@@ -243,14 +262,19 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             parameter.setConstant(True)
         elif action == 'GAUSS':  # Gaussian constraint
             try:
-                initial_value, sigma = action_params
+                if len(action_params) == 1 and value_error is None:
+                    raise ValueError
+                elif len(action_params) == 2:
+                    value_error = float(action_params[1])
+                else:
+                    raise ValueError
             except ValueError:
                 raise ValueError("Wrongly specified Gaussian constraint -> %s" % action_params)
             constraint = ROOT.RooGaussian(name + 'Constraint',
                                           name + 'Constraint',
                                           parameter,
-                                          ROOT.RooFit.RooConst(float(initial_value)),
-                                          ROOT.RooFit.RooConst(float(sigma)))
+                                          ROOT.RooFit.RooConst(value),
+                                          ROOT.RooFit.RooConst(value_error))
             parameter.setConstant(False)
     elif action in ('SHIFT', 'SCALE'):
         # SHIFT @var val
@@ -271,6 +295,15 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                     constraint = const
                 else:
                     raise NotImplementedError("Two constrained variables in SHIFT or SCALED are not allowed")
+            elif ':' in second_var:
+                from analysis.fit.result import FitResult
+                fit_name, var_name = second_var.split(':')
+                result = FitResult().from_yaml_file(fit_name)
+                try:
+                    value = result.get_fit_parameter(var_name)[0]
+                except KeyError:
+                    value = result.get_const_parameter(var_name)
+                second_var = ROOT.RooFit.RooConst(value)
             else:
                 second_var = ROOT.RooFit.RooConst(float(second_var))
         except KeyError, error:
