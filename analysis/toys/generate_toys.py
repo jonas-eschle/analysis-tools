@@ -17,7 +17,6 @@ from analysis.physics.factory import SumPhysicsFactory, SimultaneousPhysicsFacto
 from analysis.utils.root import destruct_object, list_to_rooargset
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
-# pylint: disable=E0611
 from analysis.utils.paths import get_toy_path, work_on_file
 from analysis.data.converters import pandas_from_dataset
 from analysis.data.hdf import modify_hdf

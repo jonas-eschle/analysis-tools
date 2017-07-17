@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-# pylint: disable=E0611
 from analysis.utils.paths import get_efficiency_path, work_on_file
 from analysis.utils.config import write_config
 

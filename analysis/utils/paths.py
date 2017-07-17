@@ -110,15 +110,16 @@ def register_path(path_type,
 
 
 # Register path functions
-register_path('toy', ['data_files', 'toys', 'gen'], 'hdf')
-register_path('toy_config', ['data_files', 'toys', 'gen'], 'yaml')
-register_path('toy_fit', ['data_files', 'toys', 'fit'], 'hdf')
-register_path('toy_fit_config', ['data_files', 'toys', 'fit'], 'yaml')
-register_path('log', ['data_files', 'logs'], 'log')
-register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
-register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
-register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
-              lambda name, args, kwargs: 'matplotlib_' + name)
+get_toy_path = register_path('toy', ['data_files', 'toys', 'gen'], 'hdf')
+get_toy_config_path = register_path('toy_config', ['data_files', 'toys', 'gen'], 'yaml')
+get_toy_fit_path = register_path('toy_fit', ['data_files', 'toys', 'fit'], 'hdf')
+get_toy_fit_config_path = register_path('toy_fit_config', ['data_files', 'toys', 'fit'], 'yaml')
+get_log_path = register_path('log', ['data_files', 'logs'], 'log')
+get_efficiency_path = register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
+get_acceptance_path = register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
+get_plot_style_path = register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
+                                    lambda name, args, kwargs: 'matplotlib_' + name)
+get_fit_result_path = register_path('fit_result', ['data_files', 'fit'], 'yaml')
 
 
 def prepare_path(name, path_func, link_from, **kwargs):

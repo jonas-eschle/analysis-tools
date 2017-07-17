@@ -14,6 +14,7 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
+from analysis.utils.paths import get_fit_result_path
 
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
@@ -132,11 +133,13 @@ class FitResult(object):
         return self
 
     @ensure_non_initialized
-    def from_yaml_file(self, file_name):
+    def from_yaml_file(self, name):
         """Initialize from a YAML file.
 
+        File name is determined by get_fit_result_path.
+
         Arguments:
-            file_name (str): Input file in YAML format.
+            name (str): Name of the fit result.
 
         Returns:
             self
@@ -148,7 +151,7 @@ class FitResult(object):
 
         """
         try:
-            self._result = dict(load_config(file_name,
+            self._result = dict(load_config(get_fit_result_path(name),
                                             validate=('fit-parameters',
                                                       'fit-parameters-initial',
                                                       'const-parameters',
@@ -175,17 +178,24 @@ class FitResult(object):
         return result
 
     @ensure_initialized
-    def to_yaml_file(self, file_name):
+    def to_yaml_file(self, name):
         """Convert fit result to YAML format.
 
+        File name is determined by get_fit_result_path.
+
         Arguments:
-            file_name (str): Output file name.
+            name (str): Name of the fit result.
+
+        Returns:
+            str: Output file name.
 
         Raises:
             NotInitializedError: If the fit result has not been initialized.
 
         """
+        file_name = get_fit_result_path(name)
         write_config(self.to_yaml(), file_name)
+        return file_name
 
     @ensure_initialized
     def to_plain_dict(self, skip_cov=True):
@@ -222,13 +232,29 @@ class FitResult(object):
 
         Returns:
             tuple (float): Parameter value, Hesse error and upper and lower Minos errors.
-                If the two latter have not been calculated, they are `None`.
+                If the two latter have not been calculated, they are 0.
 
         Raises:
             KeyError: If the parameter is unknown.
 
         """
         return self._result['fit-parameters'][name]
+
+    @ensure_initialized
+    def get_const_parameter(self, name):
+        """Get the const parameter.
+
+        Arguments:
+            name (str): Name of the fit parameter.
+
+        Returns:
+            float: Parameter value.
+
+        Raises:
+            KeyError: If the parameter is unknown.
+
+        """
+        return self._result['const-parameters'][name]
 
     @ensure_initialized
     def get_fit_parameters(self):

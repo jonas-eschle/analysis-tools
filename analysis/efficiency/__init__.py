@@ -16,7 +16,6 @@ import os
 
 from analysis import get_global_var
 from analysis.utils.config import load_config, ConfigError
-# pylint: disable=E0611
 from analysis.utils.paths import get_efficiency_path, get_acceptance_path
 from analysis.utils.logging_color import get_logger
 
