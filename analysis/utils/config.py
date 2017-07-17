@@ -209,7 +209,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
 
-    In addition, wherever a number is expected one can use a 'fit_name:var_name' specification to
+    In addition, wherever a variable value is expected one can use a 'fit_name:var_name' specification to
     load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error
     of the fit is taken as width of the Gaussian.
 
