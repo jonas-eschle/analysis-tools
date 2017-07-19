@@ -23,7 +23,9 @@ def load_library(name, lib_dirs=None, debug=False, force=False, use_mathmore=Fal
         lib_dirs (list, optional): Folders storing the library sources.
         debug (bool, optional): Compile the library en debug mode? Defaults
             to `False`.
-            force (bool, optional): Force recompilation? Defaults to `False`.
+        force (bool, optional): Force recompilation? Defaults to `False`.
+        use_mathmore (bool, optional): Load libMathMore before compiling. Defaults
+            to False.
 
     Returns:
         bool: Was the operation successful?

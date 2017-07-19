@@ -49,13 +49,15 @@ def add_pdf_paths(*paths):
 add_pdf_paths('pdfs')
 
 
-def load_pdf_by_name(name):
+def load_pdf_by_name(name, use_mathmore=False):
     """Load the given PDF using its name.
 
     It's compiled if needed.
 
     Arguments:
         name (str): Name of the PDF to load.
+        use_mathmore (bool, optional): Load libMathMore before compiling.
+            Defaults to False.
 
     Returns:
         `ROOT.RooAbsPdf`: RooFit PDF object.
@@ -65,7 +67,9 @@ def load_pdf_by_name(name):
 
     """
     try:
-        _load_library(name, get_global_var('PDF_PATHS'))
+        _load_library(name,
+                      lib_dirs=get_global_var('PDF_PATHS'),
+                      use_mathmore=use_mathmore)
     except OSError:
         raise OSError("Don't know this PDF! -> %s" % name)
     return getattr(ROOT, os.path.splitext(os.path.split(name)[1])[0])
