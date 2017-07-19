@@ -8,12 +8,11 @@
 """Utilities for interacting with ROOT."""
 
 import os
-import subprocess
 
 import ROOT
 
 
-def load_library(name, lib_dirs=None, debug=False, force=False):
+def load_library(name, lib_dirs=None, debug=False, force=False, use_mathmore=False):
     """Load C++ ROOT libraries, compiling if necessary.
 
     Libraries are looked for first in the current folder or `lib_dir`.
@@ -56,16 +55,12 @@ def load_library(name, lib_dirs=None, debug=False, force=False):
         options += "f"
     if debug:
         options += "g"
-    try:
-        # ROOT.gSystem.CompileMacro(name, options)
-        command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"%s\")' % (name, options)
-        subprocess.check_output(command.split())
-        # If it returns 0 means the compilation failed (thanks ROOT)
+    if use_mathmore:
+        ROOT.gSystem.Load('libMathMore')
+    if not ROOT.gSystem.CompileMacro(name, options):
         return False
-    except subprocess.CalledProcessError:  # This is what we expect
-        ROOT.gSystem.Load(name.replace('.c', '_c'))
-        return True
-    #  ROOT.gInterpreter.ProcessLine(".L %s" % name)
+    ROOT.gSystem.Load(name.replace('.c', '_c'))
+    return True
 
 
 def destruct_object(object_):
