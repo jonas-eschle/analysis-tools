@@ -50,16 +50,6 @@ class DoubleCBFactory(pdfs.DoubleCBPdfMixin, MassFactory):
 
     """
 
-    MANDATORY_PARAMETERS = ('mu',
-                            'sigma1',
-                            'alpha1',
-                            'n1',
-                            'sigma2',
-                            'alpha2',
-                            'n2',
-                            'frac')
-
-
 class ExponentialFactory(pdfs.ExponentialPdfMixin, MassFactory):
     """Exponential mass PDF.
 
@@ -67,8 +57,6 @@ class ExponentialFactory(pdfs.ExponentialPdfMixin, MassFactory):
         - 'tau'
 
     """
-
-    MANDATORY_PARAMETERS = ('tau', )
 
 
 class FlatQ2(phys_factory.PhysicsFactory):
