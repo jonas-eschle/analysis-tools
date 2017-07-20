@@ -233,6 +233,80 @@ class ArgusConvGaussPdfMixin(object):
                                        self._buffer_fraction)
 
 
+# pylint: disable=R0903
+class IpatiaPdfMixin(object):
+    """Mixin defining an Ipatia function.
+
+    Parameter names, and their defaults (when applicable):
+        - 'l'
+        - 'zeta'
+        - 'fb'
+        - 'sigma'
+        - 'mu'
+        - 'a'
+        - 'n'
+
+    """
+
+    MANDATORY_PARAMETERS = ('l',
+                            'zeta',
+                            'fb',
+                            'sigma',
+                            'mu',
+                            'a',
+                            'n')
+
+    def get_unbound_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Returns:
+            ROOT.RooIpatia.
+
+        """
+        return load_pdf_by_name('RooIpatia', True)(name,
+                                                   title,
+                                                   *(self.get_observables()+self.get_fit_parameters()))
+
+
+# pylint: disable=R0903
+class Ipatia2PdfMixin(object):
+    """Mixin defining an Ipatia2 function.
+
+    Parameter names, and their defaults (when applicable):
+        - 'l'
+        - 'zeta'
+        - 'fb'
+        - 'sigma'
+        - 'mu'
+        - 'a'
+        - 'n'
+        - 'a2'
+        - 'n2'
+
+    """
+
+    MANDATORY_PARAMETERS = ('l',
+                            'zeta',
+                            'fb',
+                            'sigma',
+                            'mu',
+                            'a',
+                            'n',
+                            'a2',
+                            'n2')
+
+    def get_unbound_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Returns:
+            ROOT.RooIpatia2.
+
+        """
+        return load_pdf_by_name('RooIpatia2', True)(name,
+                                                    title,
+                                                    *(self.get_observables()+self.get_fit_parameters()))
+
+
 class RooWorkspaceMixin(object):
     """Load a PDF from a RooWorkspace."""
 
