@@ -61,6 +61,7 @@ def get_pandas_from_pandas_file(file_name, tree_name, kwargs):
 
     Optional keys in `kwargs` are:
         + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
 
     Arguments:
         file_name (str): File to load.
@@ -84,6 +85,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
 
     Optional keys are:
         + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
         + `weights`: Variables defining the weight.
         + `weight-var`: Name of the weight variable. If there is only one weight,
             it is not needed. Otherwise it has to be specified.
@@ -168,7 +170,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
 ###############################################################################
 # Load ROOT files
 ###############################################################################
-def get_root_from_root_file(file_name, tree_name, kwargs):
+def get_root_from_root_file(file_name, tree_name, **kwargs):
     """Load a ROOT tree into a `ROOT.RooDataSet`.
 
     Needed keys in `kwargs` are:
@@ -177,6 +179,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
 
     Optional keys are:
         + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
 
     Arguments:
         file_name (str): File to load.
@@ -299,6 +302,7 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
 
     Optional keys in `kwargs` are:
         + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
 
     Arguments:
         file_name (str): File to load.
