@@ -90,6 +90,8 @@ def scale_dataset(data, input_min, input_max, output_min, output_max):
         pandas.Series, numpy.array: Rescaled dataset.
 
     """
+    if any(data > input_max) or any(data < input_min):
+        logger.warning("Scaling a dataset with values outside the range")
     return (output_max-output_min)*(data-input_min)/(input_max-input_min) + output_min
 
 
