@@ -94,7 +94,7 @@ def run(config_files, link_from):
         config['data']['variables'] = list(config['variables'])
         if weight_var:
             config['data']['variables'].append(weight_var)
-        input_data = get_data(config['data'])
+        input_data = get_data(config['data'], **{'output-format': 'pandas'})
         if weight_var:
             logger.info("Data loaded, using %s as weight", weight_var)
         else:

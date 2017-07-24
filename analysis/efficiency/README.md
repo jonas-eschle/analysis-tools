@@ -104,7 +104,7 @@ With it, one could perform the same job as in the previous code with the followi
 name: Test
 model: legendre
 data: 
-    file: B02Kst0Jpsi2ee-Gen.h5
+    source: B02Kst0Jpsi2ee-Gen.h5
     tree: B02Kst0Jpsi2ee-Gen
 variables:
   - acc_q2
