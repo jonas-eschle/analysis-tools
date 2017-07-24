@@ -31,7 +31,8 @@ def load_config(*file_names, **options):
     in the function call. Therefore, the latter will override the former
     if key overlap exists.
     Currently supported options are:
-        - validate, which gets a list of keys to check. If one of these
+        - `root` (str), which determines the node that is considered as root.
+        - `validate` (list), which gets a list of keys to check. If one of these
             keys is not present, `config.ConfigError` is raised.
 
     Arguments:
@@ -44,7 +45,7 @@ def load_config(*file_names, **options):
 
     Raises:
         OSError: If some file does not exist.
-        ConfigError: If validation fails.
+        ConfigError: If key loading or validation fail.
 
     """
     unfolded_data = []
@@ -59,6 +60,11 @@ def load_config(*file_names, **options):
             raise KeyError(str(error))
     data = fold_config(unfolded_data, OrderedDict)
     logger.debug('Loaded configuration -> %s', data)
+    if 'root' in options:
+        data_root = options['root']
+        if data_root not in data:
+            raise ConfigError("Root node not found in dataset -> %s" % data_root)
+        data = data_root[key]
     if 'validate' in options:
         missing_keys = []
         data_keys = ['/'.join(key.split('/')[:entry_num+1])

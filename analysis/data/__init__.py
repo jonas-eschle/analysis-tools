@@ -43,16 +43,27 @@ register_file_type('root', 'root')
 def load_data(config_file, key=None, **kwargs):
     """Load from file.
 
+    Arguments:
+        config_file (str): Name of the configuration file.
+        key (str, optional): Key to load in the configuration file. If none is
+            given, the root of the YAML file will be used as configuration.
+        **kwargs (dict): Dictionary to override keys from the dictionary.
+
     Returns:
         object: Data object.
 
+    Raises:
+        OSError: If the config file cannot be loaded.
+        ConfigError: If the validation of the ConfigFile fails.
 
     """
     config_file = os.path.abspath(config_file)
     if not os.path.exists(config_file):
         raise OSError("Cannot find config file -> %s" % config_file)
-    config = load_config(config_file)[key] if key else load_config(config_file)
-    return get_data(config, **kwargs)
+    return get_data(load_config(config_file,
+                                root=key,
+                                validate=['source', 'tree', 'output-format']),
+                    **kwargs)
 
 
 def get_data(data_config, **kwargs):
@@ -65,10 +76,10 @@ def get_data(data_config, **kwargs):
             be obtained executing `get_{source-type}_path`, otherwise `source` is
             treated as a file name.
         + `tree`: Tree within the file.
-        + 'output-format': Type of data we want. Currently `root` or `pandas`.
+        + `output-format`: Type of data we want. Currently `root` or `pandas`.
 
     Optional config keys:
-        + 'input-type'
+        + `input-type`: type of input, in case the extension has not been registered.
 
     Raises:
         AttributeError: If the specified source type is unknown.
