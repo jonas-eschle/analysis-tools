@@ -109,8 +109,9 @@ class LegendreEfficiency(Efficiency):
                 {var_name1: n1,
                  var_name2: n2},
              'coefficients': [coeff1, coeff2, ..., coefn1xn2],
-             'ranges': {var_name1: [min_var1, max_var1},
-                        var_name2: [min_var2, max_var2]}
+             'ranges': {var_name1: [min_var1, max_var1],
+                        var_name2: [min_var2, max_var2]},
+             'symmetric-variables': [var_1]}
 
         The range is used to rescale the data in the `fit` method. If it's not
         given, it's assumed it is [-1, 1].
@@ -121,7 +122,7 @@ class LegendreEfficiency(Efficiency):
 
         Raises:
             KeyError: On missing coefficients.
-            ValueError: On bad range definition.
+            ValueError: On bad range or bad symmetric variable defintion.
 
         """
         super(LegendreEfficiency, self).__init__(var_list, config)
@@ -129,6 +130,15 @@ class LegendreEfficiency(Efficiency):
                         for var_name, (low, high) in config.get('ranges', {}).items()}
         self._coefficients = np.reshape(config['coefficients'],
                                         tuple(config['pol-orders'][var] for var in var_list))
+        for var_name in config.get('symmetric-variables', []):
+            logger.debug("Symmetrizing legendre polynomial for variable %s", var_name)
+            try:
+                index = var_list.index(var_name)
+            except ValueError:
+                raise ValueError("Symmetrized variable %s is not in the list of variables" % var_name)
+            slices = [slice(0, self._coefficients.shape[ind]) for ind in range(index)]
+            slices.append(slice(0, self._coefficients[index], 2))
+            self._coefficients[tuple(slices)] = 0
 
     def get_coefficients(self):
         """Get the coefficients in matrix form."""
@@ -279,8 +289,9 @@ class LegendreEfficiency1D(Efficiency):
                 {var_name1: n1,
                  var_name2: n2},
              'coefficients': [coeff1, coeff2, ..., coefn1xn2],
-             'ranges': {var_name1: [min_var1, max_var1},
-                        var_name2: [min_var2, max_var2]}
+             'ranges': {var_name1: [min_var1, max_var1],
+                        var_name2: [min_var2, max_var2]},
+             'symmetric-variables': [var_1]}
 
         The range is used to rescale the data in the `fit` method. If it's not
         given, it's assumed it is [-1, 1].
@@ -303,6 +314,15 @@ class LegendreEfficiency1D(Efficiency):
         self._coefficients = np.array(np.split(config['coefficients'],
                                                np.cumsum([config['pol-orders'][var_name]
                                                           for var_name in self._var_list])[:-1]))
+        for var_name in config.get('symmetric-variables', []):
+            logger.debug("Symmetrizing legendre polynomial for variable %s", var_name)
+            try:
+                index = var_list.index(var_name)
+            except ValueError:
+                raise ValueError("Symmetrized variable %s is not in the list of variables" % var_name)
+            slices = [slice(0, self._coefficients.shape[ind]) for ind in range(index)]
+            slices.append(slice(0, self._coefficients[index], 2))
+            self._coefficients[tuple(slices)] = 0
 
     def get_coefficients(self):
         """Get the coefficients in list of lists form."""
