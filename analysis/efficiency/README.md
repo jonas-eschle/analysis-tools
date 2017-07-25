@@ -115,14 +115,17 @@ parameters:
     legendre-orders:
         acc_q2: 1
         acc_cosThetaL: 5
-        acc_cosThetaK': 10
+        acc_cosThetaK: 10
         acc_phi: 10
     ranges:
         acc_phi: -pi pi
         acc_q2: 8 11
 plot: y
 plot-labels:
-    acc_phi: '$\phi$'
+    acc_q2: '$q^2$ (GeV$^2/c^4$)'
+    acc_cosThetaL: '$cos\theta_K$'
+    acc_cosThetaK: '$cos\theta_\ell$'
+    acc_phi: '$\phi$ (rad)'
 ```
 
 A weight variable can be specified in `data/weight`.
