@@ -153,7 +153,7 @@ class Efficiency(object):
         if labels is None:
             labels = {}
         figures = {}
-        for var_name in self._var_list:
+        for var_name in self.get_variables():
             x, y = self.project_efficiency(var_name, n_points=1000)
             fig = plt.figure()
             data_to_plot = data[var_name]*data[weight_var] if weight_var else data[var_name]
