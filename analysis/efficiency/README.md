@@ -39,6 +39,7 @@ Legendre
 
 Model the efficiencies using Legendre polynomials:
 the `LegendreEfficiency` class implements a fully correlated n-D model, while `LegendreEfficiency1D` implements independent 1D modelling.
+When loading a Legendre efficiency, the `symmetric-variables` list can be used to set the odd coefficients to zero.
 
 A full example on how to model a 4D acceptance using Legendre polynomials and then doing a plot is the following:
 

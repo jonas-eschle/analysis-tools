@@ -26,12 +26,17 @@ class Efficiency(object):
     def __init__(self, var_list, config):
         """Initialize the internal configuration.
 
+        A `rename-vars` dictionary the `config` dictionary can be used to specify the
+        expected name (in the data, in the ranges) of some of the variables in `var_list`.
+
         Arguments:
             var_list (list): List of observables to apply the efficiency to.
             config (dict): Efficiency model configuration.
 
         """
         self._var_names = OrderedDict((var, var) for var in var_list)
+        if 'rename-vars' in config:
+            self.rename_variables(config.pop('rename-vars'))
         self._config = config
 
     def get_variables(self):

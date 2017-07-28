@@ -63,7 +63,7 @@ def get_efficiency_model_class(model_name):
     return get_global_var('EFFICIENCY_MODELS').get(model_name.lower(), None)
 
 
-def load_efficiency_model(model_name):
+def load_efficiency_model(model_name, **extra_parameters):
     """Load efficiency from file.
 
     The file path is determined from the `name` using the `paths.get_efficiency_path`
@@ -71,6 +71,8 @@ def load_efficiency_model(model_name):
 
     Arguments:
         model_name (str): Name of the efficiency model.
+        **extra_parameters (dict): Extra configuration parameters to override the entries
+            in the `parameters` node loaded from the efficiency file.
 
     Raises:
         OSError: If the efficiency file does not exist.
@@ -80,8 +82,9 @@ def load_efficiency_model(model_name):
     path = get_efficiency_path(model_name)
     if not os.path.exists(path):
         raise OSError("Cannot find efficiency file -> %s" % path)
-    return get_efficiency_model(load_config(path,
-                                            validate=('model', 'variables', 'parameters')))
+    config = load_config(path, validate=('model', 'variables', 'parameters'))
+    config['parameters'].update(extra_parameters)
+    return get_efficiency_model(config)
 
 
 def get_efficiency_model(efficiency_config):
@@ -89,9 +92,6 @@ def get_efficiency_model(efficiency_config):
 
     User-defined models, stored in the `EFFICIENCY_MODELS` global variable,
     take precedence.
-
-    If `rename-vars` is given, the `rename_variables` method of the efficiency
-    model is executed before returning it.
 
     Arguments:
         efficiency_config (dict): Efficiency configuration.
@@ -111,20 +111,28 @@ def get_efficiency_model(efficiency_config):
     model = get_efficiency_model_class(efficiency_config['model'])
     if not model:
         raise KeyError("Unknown efficiency model -> '%s'" % efficiency_config['model'])
-    eff_model = model(efficiency_config['variables'], efficiency_config['parameters'])
-    if 'rename-vars' in efficiency_config:
-        eff_model.rename_variables(efficiency_config['rename-vars'])
-    return eff_model
+    return model(efficiency_config['variables'], efficiency_config['parameters'])
 
 
-def load_acceptance(name):
+def load_acceptance(name, **extra_parameters):
     """Load an acceptance configuration file.
 
     The file path is determined from the `name` using the `paths.get_acceptance_path`
     function.
 
+    Note:
+        For the exact configuration, see `get_acceptance`.
+
     Arguments:
         name (str): Name of the acceptance.
+        **extra_parameters (dict): Extra configuration parameters to override the entries
+            in the `parameters` nodes from the `generation` and `reconstruction` efficiencies.
+            As such, the extra parameters need to be placed under the `generation` or
+            `reconstruction` keys. For example:
+
+                >>> load_acceptance('Test',
+                                    reconstruction={'rename-vars':{'acc_q2':'q2',
+                                                                   'acc_cosThetaL':'ctl'}})
 
     Returns:
         `analysis.efficiency.Acceptance`: Acceptance object.
@@ -138,8 +146,10 @@ def load_acceptance(name):
     path = get_acceptance_path(name)
     if not os.path.exists(path):
         raise OSError("Cannot find efficiency file -> %s" % path)
-    return get_acceptance(load_config(path,
-                                      validate=('variables', 'generation', 'reconstruction')))
+    config = load_config(path, validate=('variables', 'generation', 'reconstruction'))
+    config['generation'].update(extra_parameters.get('generation', {}))
+    config['reconstruction'].update(extra_parameters.get('reconstruction', {}))
+    return get_acceptance(config)
 
 
 def get_acceptance(config):
@@ -148,14 +158,12 @@ def get_acceptance(config):
     Arguments:
         config (dict): Acceptance to load. Its keys are:
             + `variables` (list[str]): List of variable names.
-            + `generation` (dict): Generation configuration. Its keys are:
-                - `name` (str): Name of the generator shape fit.
-                - `rename-vars` (dict, optional): Rename variables from the original efficiency
-                    to adapt them to different datasets.
-            + `reconstruction` (dict): Reconstruction efficiency configuration. Its keys are:
-                - `name` (str): Name of the reconstruction shape fit.
-                - `rename-vars` (dict, optional): Rename variables from the original efficiency
-                    to adapt them to different datasets.
+            + `generation` (dict): Generation configuration. It needs to have a `name` entry, which corresponds
+                to the name of the generator efficiency. Any other key will be passed to `get_efficiency` as
+                `extra_parameters`
+            + `reconstruction` (dict): Reconstruction configuration. It needs to have a `name` entry, which corresponds
+                to the name of the reconstruction efficiency. Any other key will be passed to `get_efficiency` as
+                `extra_parameters`
 
     Returns:
         `analysis.efficiency.acceptance.Acceptance`: Acceptance object.
@@ -165,21 +173,17 @@ def get_acceptance(config):
         See `analysis.utils.config.load_config`.
 
     """
-    if any(key not in config for key in ('variables', 'generation', 'reconstruction')):
+    if any(key not in config for key in ('variables',
+                                         'generation/name',
+                                         'reconstruction/name')):
         raise ConfigError("Missing configuration key!")
-    # pylint: disable=E1101
-    generation_config = load_config(get_efficiency_path(config['generation']['name']),
-                                    validate=('model', 'variables', 'parameters'))
-    if 'rename-vars' in config['generation']:
-        generation_config.update({'rename-vars': config['generation']['rename-vars']})
-    # pylint: disable=E1101
-    reconstruction_config = load_config(get_efficiency_path(config['reconstruction']['name']),
-                                        validate=('model', 'variables', 'parameters'))
-    if 'rename-vars' in config['reconstruction']:
-        reconstruction_config.update({'rename-vars': config['reconstruction']['rename-vars']})
     # Load the efficiencies
-    gen_efficiency = get_efficiency_model(generation_config)
-    reco_efficiency = get_efficiency_model(reconstruction_config)
+    gen_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['generation'].pop('name')),
+                                                      validate=('model', 'variables', 'parameters')),
+                                          **config['generation'])
+    reco_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['reconstruction'].pop('name')),
+                                                       validate=('model', 'variables', 'parameters')),
+                                           **config['reconstruction'])
     # Check the variables
     if set(config['variables']) != set(gen_efficiency.get_variables()):
         raise ConfigError("Mismatch in variables between acceptance and generation")
