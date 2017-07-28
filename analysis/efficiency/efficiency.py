@@ -91,7 +91,7 @@ class Efficiency(object):
             data = pd.DataFrame(data, columns=var_list)
         if not set(var_list).issubset(set(data.columns)):
             raise ValueError("Missing variables in the input data")
-        return self._get_efficiency(data[var_list].copy())
+        return self._get_efficiency(data[var_list].copy()).clip(lower=0.0)
 
     def _get_efficiency(self, data):
         """Calculate the efficiency.
