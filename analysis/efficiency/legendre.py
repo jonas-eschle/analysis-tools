@@ -219,7 +219,7 @@ class LegendreEfficiency(Efficiency):
         while not it_coeffs.finished:
             current_orders = it_coeffs.multi_index
             # Calculate the corresponding legendre for each variable
-            legendres = [legval(data[var_name],
+            legendres = [legval(data[var_name].values,
                                 np.array(np.append(np.zeros(current_orders[var_number]), [1])))
                          for var_number, var_name in enumerate(var_list)]
             it_coeffs[0] = functools.reduce(operator.mul,
@@ -350,7 +350,7 @@ class LegendreEfficiency1D(Efficiency):
         # Apply polynomials
         effs = np.ones(data.shape[0])
         for var_number, var_name in enumerate(self.get_variables()):
-            effs *= np.polynomial.legendre.legval(data[var_name], self._coefficients[var_number])
+            effs *= np.polynomial.legendre.legval(data[var_name].values, self._coefficients[var_number])
         return pd.Series(effs, name="efficiency")
 
     # pylint: disable=R0914,W0221
@@ -400,7 +400,7 @@ class LegendreEfficiency1D(Efficiency):
             for current_order in range(legendre_orders[var_name]):
                 coefficients[current_order] = (2.*current_order+1.)/2 * inv_sum_weights * \
                     np.sum(weights *
-                           legval(data[var_name],
+                           legval(data[var_name].values,
                                   np.array(np.append(np.zeros(current_order), [1]))))
             coeff_list.append(coefficients.tolist())
         return LegendreEfficiency1D(var_list, {'pol-orders': legendre_orders,
