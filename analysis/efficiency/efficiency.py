@@ -8,6 +8,7 @@
 """Efficiency class."""
 
 import re
+from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -30,8 +31,26 @@ class Efficiency(object):
             config (dict): Efficiency model configuration.
 
         """
-        self._var_list = var_list
+        self._var_names = OrderedDict((var, var) for var in var_list)
         self._config = config
+
+    def get_variables(self):
+        """Get list of variables.
+
+        Returns:
+            list: Variables in the correct order.
+
+        """
+        return self._var_names.values()
+
+    def get_variable_names(self):
+        """Get variable names.
+
+        Returns:
+            OrderedDict: Map efficiency var -> var name
+
+        """
+        return self._var_names
 
     def rename_variables(self, name_map):
         """Rename the variables.
@@ -48,18 +67,9 @@ class Efficiency(object):
         """
         for old_name, new_name in name_map.items():
             try:
-                self._var_list[self._var_list.index(old_name)] = new_name
+                self._var_names[old_name] = new_name
             except ValueError:
                 raise KeyError("Cannot find variable name -> %s" % old_name)
-
-    def get_variables(self):
-        """Get the variable list.
-
-        Returns:
-            list: Efficiency variables.
-
-        """
-        return self._var_list
 
     def get_efficiency(self, data):
         """Get the efficiency for the given event or dataset.
@@ -74,13 +84,14 @@ class Efficiency(object):
             ValueError: If the data format is not correct, eg, there is a variable mismatch.
 
         """
+        var_list = self.get_variables()
         if not isinstance(data, pd.DataFrame):
-            if len(self._var_list) != len(data):
+            if len(var_list) != len(data):
                 raise ValueError("Input data length does not match with the efficiency variables")
-            data = pd.DataFrame(data, columns=self._var_list)
-        if not set(self._var_list).issubset(set(data.columns)):
+            data = pd.DataFrame(data, columns=var_list)
+        if not set(var_list).issubset(set(data.columns)):
             raise ValueError("Missing variables in the input data")
-        return self._get_efficiency(data[self._var_list].copy())
+        return self._get_efficiency(data[var_list].copy())
 
     def _get_efficiency(self, data):
         """Calculate the efficiency.

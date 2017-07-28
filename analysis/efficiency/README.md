@@ -32,6 +32,7 @@ To implement an efficiency model, one needs to subclass `Efficiency` and impleme
 
 Some models are already implemented by default, and are discussed in the following subsections.
 
+**Note**: To implement your own efficiency model, look at `legendre.py` as an example. It's important to remember to use `get_variables` and `get_variable_names` to get the variable names to ensure that they can be renamed and everything still works.
 
 Legendre
 --------

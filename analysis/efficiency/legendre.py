@@ -160,12 +160,13 @@ class LegendreEfficiency(Efficiency):
 
         """
         for range_var, (min_, max_) in self._ranges.items():
-            data[range_var] = scale_dataset(data[range_var], min_, max_, -1, 1)
+            range_var_name = self.get_variable_names()[range_var]
+            data[range_var_name] = scale_dataset(data[range_var_name], min_, max_, -1, 1)
         # Apply polynomial
         coeffs = np.array(self._coefficients, copy=True)
         first = True
-        for var_name in self._var_list:
-            coeffs = np.polynomial.legendre.legval(data[var_name], coeffs, tensor=first)
+        for var_name in self.get_variables():
+            coeffs = np.polynomial.legendre.legval(data[var_name].values, coeffs, tensor=first)
             first = False
         return pd.Series(coeffs, name="efficiency")
 
@@ -247,7 +248,7 @@ class LegendreEfficiency(Efficiency):
             ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
-        var_pos = self._var_list.index(var_name)
+        var_pos = self.get_variables().index(var_name)
         x = np.linspace(-1, 1, n_points)
         y = np.zeros(1000)
         coeff_iter = [range(order) for order in self._coefficients.shape]
@@ -315,7 +316,7 @@ class LegendreEfficiency1D(Efficiency):
             raise KeyError("Wrong number of coefficients")
         self._coefficients = np.array(np.split(config['coefficients'],
                                                np.cumsum([config['pol-orders'][var_name]
-                                                          for var_name in self._var_list])[:-1]))
+                                                          for var_name in self.get_variables()])[:-1]))
         for var_name in config.get('symmetric-variables', []):
             logger.debug("Symmetrizing legendre polynomial for variable %s", var_name)
             try:
@@ -344,10 +345,11 @@ class LegendreEfficiency1D(Efficiency):
 
         """
         for range_var, (min_, max_) in self._ranges.items():
-            data[range_var] = scale_dataset(data[range_var], min_, max_, -1, 1)
+            range_var_name = self.get_variable_names()[range_var]
+            data[range_var_name] = scale_dataset(data[range_var_name], min_, max_, -1, 1)
         # Apply polynomials
         effs = np.ones(data.shape[0])
-        for var_number, var_name in enumerate(self._var_list):
+        for var_number, var_name in enumerate(self.get_variables()):
             effs *= np.polynomial.legendre.legval(data[var_name], self._coefficients[var_number])
         return pd.Series(effs, name="efficiency")
 
@@ -419,14 +421,15 @@ class LegendreEfficiency1D(Efficiency):
             ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
-        var_pos = self._var_list.index(var_name)
+        var_pos = self.get_variables().index(var_name)
         x = np.linspace(-1, 1, 1000)
         y = legval(x, self._coefficients[var_pos])
         if var_name in self._ranges:
+            name = self.get_variable_names()[var_name]
             x = scale_dataset(x,
                               -1, 1,
-                              self._ranges[var_name][0], self._ranges[var_name][1])
-            y = y * 2.0 / (self._ranges[var_name][1] - self._ranges[var_name][0])
+                              self._ranges[name][0], self._ranges[name][1])
+            y = y * 2.0 / (self._ranges[name][1] - self._ranges[name][0])
         return x, y
 
 
