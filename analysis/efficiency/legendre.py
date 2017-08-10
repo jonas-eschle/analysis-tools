@@ -139,7 +139,7 @@ class LegendreEfficiency(Efficiency):
             except ValueError:
                 raise ValueError("Symmetrized variable %s is not in the list of variables" % var_name)
             slices = [slice(0, self._coefficients.shape[ind]) for ind in range(index)]
-            slices.append(slice(0, self._coefficients[index], 2))
+            slices.append(slice(1, self._coefficients.shape[index], 2))
             self._coefficients[tuple(slices)] = 0
 
     def get_coefficients(self):

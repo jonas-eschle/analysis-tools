@@ -91,7 +91,7 @@ class Acceptance(object):
         """
         gen_eff = self._generation.get_efficiency(data[self._var_list])
         reco_eff = self._reconstruction.get_efficiency(data[self._var_list])
-        weights = gen_eff/reco_eff
+        weights = (gen_eff/reco_eff).replace([-np.inf, np.inf, np.nan], 0.0)
         return weights * data.shape[0] / weights.sum()
 
 
