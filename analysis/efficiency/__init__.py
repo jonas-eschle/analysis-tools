@@ -15,7 +15,7 @@ until this module is imported.
 import os
 
 from analysis import get_global_var
-from analysis.utils.config import load_config, ConfigError
+from analysis.utils.config import load_config, ConfigError, unfold_config
 from analysis.utils.paths import get_efficiency_path, get_acceptance_path
 from analysis.utils.logging_color import get_logger
 
@@ -173,10 +173,11 @@ def get_acceptance(config):
         See `analysis.utils.config.load_config`.
 
     """
-    if any(key not in config for key in ('variables',
-                                         'generation/name',
-                                         'reconstruction/name')):
-        raise ConfigError("Missing configuration key!")
+    config_keys = [key for key, _ in unfold_config(config)]
+    if any(key not in config_keys for key in ('variables',
+                                              'generation/name',
+                                              'reconstruction/name')):
+        raise ConfigError("Missing configuration key! -> %s" % key)
     # Load the efficiencies
     gen_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['generation'].pop('name')),
                                                       validate=('model', 'variables', 'parameters')),
