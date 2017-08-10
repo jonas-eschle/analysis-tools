@@ -83,11 +83,10 @@ def load_efficiency_model(model_name, **extra_parameters):
     if not os.path.exists(path):
         raise OSError("Cannot find efficiency file -> %s" % path)
     config = load_config(path, validate=('model', 'variables', 'parameters'))
-    config['parameters'].update(extra_parameters)
-    return get_efficiency_model(config)
+    return get_efficiency_model(config, **extra_parameters)
 
 
-def get_efficiency_model(efficiency_config):
+def get_efficiency_model(efficiency_config, **extra_parameters):
     """Get efficiency model class.
 
     User-defined models, stored in the `EFFICIENCY_MODELS` global variable,
@@ -95,6 +94,8 @@ def get_efficiency_model(efficiency_config):
 
     Arguments:
         efficiency_config (dict): Efficiency configuration.
+        **extra_parameters (dict): Extra configuration parameters to override the entries
+            in the `parameters` node in `efficiency_config`.
 
     Returns:
         `analysis.efficiency.efficiency.Efficiency`: Efficiency object.
@@ -103,6 +104,7 @@ def get_efficiency_model(efficiency_config):
         KeyError: If there is a configuration error
 
     """
+    efficiency_config['parameters'].update(extra_parameters)
     # Check the configuration
     for key in ('model', 'variables', 'parameters'):
         if key not in efficiency_config:
