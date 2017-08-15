@@ -6,6 +6,7 @@
 # @date   06.04.2017
 # =============================================================================
 """Handle fitting procedures."""
+from __future__ import print_function, division, absolute_import
 
 import inspect
 

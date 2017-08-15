@@ -5,6 +5,7 @@
 # @date   09.07.2013
 # =============================================================================
 """Various iterators for python sequences."""
+from __future__ import print_function, division, absolute_import
 
 
 def pairwise(iterable):

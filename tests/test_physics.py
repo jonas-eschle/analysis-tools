@@ -6,6 +6,7 @@
 # @date   19.04.2017
 # =============================================================================
 """Test imports."""
+from __future__ import print_function, division, absolute_import
 
 import yaml
 import yamlordereddictloader

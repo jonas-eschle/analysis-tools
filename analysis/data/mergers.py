@@ -6,6 +6,7 @@
 # @date   26.04.2017
 # =============================================================================
 """Merge datasets."""
+from __future__ import print_function, division, absolute_import
 
 import pandas as pd
 import ROOT

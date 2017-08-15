@@ -6,6 +6,7 @@
 # @date   11.01.2017
 # =============================================================================
 """Toy generation."""
+from __future__ import print_function, division, absolute_import
 
 import argparse
 

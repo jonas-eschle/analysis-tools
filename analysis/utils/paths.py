@@ -16,6 +16,7 @@ The structure is fixed:
 These may just be soft links, depending on how they have been run.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import os
 import inspect

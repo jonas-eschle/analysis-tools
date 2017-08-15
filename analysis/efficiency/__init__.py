@@ -11,6 +11,7 @@ Note that the default efficiency models are not loaded into the global variables
 until this module is imported.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import os
 

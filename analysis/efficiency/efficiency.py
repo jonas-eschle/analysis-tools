@@ -6,6 +6,7 @@
 # @date   21.03.2017
 # =============================================================================
 """Efficiency class."""
+from __future__ import print_function, division, absolute_import
 
 import re
 from collections import OrderedDict

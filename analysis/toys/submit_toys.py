@@ -25,6 +25,7 @@ Optional configuration keys:
     - batch/runtime: In the HH:MM:SS format. Defaults to 08:00:00.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import argparse
 import os
@@ -37,7 +38,6 @@ import analysis.utils.config as _config
 from analysis.utils.logging_color import get_logger
 from analysis.toys.submitter import ToySubmitter
 
-
 logger = get_logger('analysis.toys.submit')
 
 
@@ -46,11 +46,13 @@ logger = get_logger('analysis.toys.submit')
 class FitSubmitter(ToySubmitter):
     """Specialization of ToySubmitter to submit the fitting of toys."""
 
-    VALIDATION = {'name': "No name was specified in the config file!",
-                  'fit/nfits': "Number of fits not specified!",
-                  # 'fit/nfits-per-job': "Number of fits per job not specified!",
-                  # 'fit-model': "No pdfs were specified in the config file!",
-                  'data': "No input data was specified in the config file!"}
+    VALIDATION = {
+        'name': "No name was specified in the config file!",
+        'fit/nfits': "Number of fits not specified!",
+        # 'fit/nfits-per-job': "Number of fits per job not specified!",
+        # 'fit-model': "No pdfs were specified in the config file!",
+        'data': "No input data was specified in the config file!"
+    }
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_fit_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_fit_config_path)
@@ -65,10 +67,12 @@ class FitSubmitter(ToySubmitter):
 class GenerationSubmitter(ToySubmitter):
     """Specialization of ToySubmitter to submit generation of toys."""
 
-    VALIDATION = {'name': "No name was specified in the config file!",
-                  'gen/nevents': "Number of events not specified!",
-                  # 'gen/nevents-per-job': "Number of events per job not specified!",
-                  'gen-model': "No pdfs were specified in the config file!"}
+    VALIDATION = {
+        'name': "No name was specified in the config file!",
+        'gen/nevents': "Number of events not specified!",
+        # 'gen/nevents-per-job': "Number of events per job not specified!",
+        'gen-model': "No pdfs were specified in the config file!"
+    }
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_config_path)
@@ -79,8 +83,10 @@ class GenerationSubmitter(ToySubmitter):
     NTOYS_PER_JOB_KEY = 'gen/nevents-per-job'
 
 
-TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
-             'fit': (FitSubmitter, 'fit_toys.py')}
+TOY_TYPES = {
+    'gen': (GenerationSubmitter, 'generate_toys.py'),
+    'fit': (FitSubmitter, 'fit_toys.py')
+}
 
 
 # Scan function
@@ -191,6 +197,7 @@ def main():
         128: Uncaught error. An exception is logged.
 
     """
+
     def flatten(list_, typ_):
         """Flatten a list."""
         return list(sum(list_, typ_))
