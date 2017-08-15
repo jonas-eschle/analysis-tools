@@ -15,7 +15,6 @@ import ROOT
 from analysis.utils.root import list_to_rooargset
 from analysis.utils.logging_color import get_logger
 
-
 logger = get_logger('analysis.data.converters')
 
 

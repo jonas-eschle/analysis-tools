@@ -12,7 +12,6 @@ import inspect
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 
-
 logger = get_logger('analysis.fit')
 
 
@@ -25,8 +24,8 @@ def register_fit_strategy(name, fit_function):
         - The fit configuration list
 
     Arguments:
-        namefit_function: Name of the strategy.
-        function (Callable): Fit function.
+        name (str): Name of the strategy.
+        fit_function (Callable): Fit function.
 
     Returns:
         int: Number of registered fit strategies.
@@ -105,6 +104,5 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
                        kwargs.get('Extended', False),
                        'an ' if factory.is_extended() else 'a non-')
     return fit_func(model, dataset, fit_config)
-
 
 # EOF

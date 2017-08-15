@@ -170,7 +170,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
 ###############################################################################
 # Load ROOT files
 ###############################################################################
-def get_root_from_root_file(file_name, tree_name, **kwargs):
+def get_root_from_root_file(file_name, tree_name, kwargs):
     """Load a ROOT tree into a `ROOT.RooDataSet`.
 
     Needed keys in `kwargs` are:
@@ -226,7 +226,7 @@ def get_root_from_root_file(file_name, tree_name, **kwargs):
     # Check weights
     weights = kwargs.get('weights', None)
     weight_var = kwargs.get('weight_var', None)
-    if not isinstance(weights, (list, tuple, None)):
+    if not (isinstance(weights, (list, tuple)) or weights is None):
         weights = [weights]
     if weights:
         if not weight_var:

@@ -14,7 +14,6 @@ from analysis.utils.config import load_config
 from analysis.utils.logging_color import get_logger
 import analysis.utils.paths as paths
 
-
 logger = get_logger('analysis.data')
 
 
@@ -127,6 +126,5 @@ def get_data(data_config, **kwargs):
                          "with extension %s -> %s" % (input_ext, output_format))
     logger.debug("Loading data file -> %s:%s", file_name, tree_name)
     return get_data_func(file_name, tree_name, data_config)
-
 
 # EOF
