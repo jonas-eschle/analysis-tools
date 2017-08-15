@@ -88,7 +88,7 @@ def run(config_files, link_from):
                for file_name in plot_files.values()) or \
             not os.path.exists(_paths.get_efficiency_path(config['name'])):  # If plots don't exist, we load data
         logger.info("Loading data, this may take a while...")
-        weight_var = config['data'].get('weight-var', None)
+        weight_var = config['data'].get('weight_var', None)
         # Prepare data
         config['data']['output-format'] = 'pandas'
         config['data']['variables'] = list(config['variables'])

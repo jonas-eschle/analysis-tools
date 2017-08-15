@@ -87,7 +87,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         + `variables`: List of variables to load.
         + `selection`: Selection to apply.
         + `weights`: Variables defining the weight.
-        + `weight-var`: Name of the weight variable. If there is only one weight,
+        + `weight_var`: Name of the weight variable. If there is only one weight,
             it is not needed. Otherwise it has to be specified.
         + `categories`: RooCategory variables to use.
 
