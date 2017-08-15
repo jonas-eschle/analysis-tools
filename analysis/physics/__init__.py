@@ -95,7 +95,7 @@ def rename_on_recursion_end(func):
             raise RuntimeError("rename_on_recursion_end used on a non-compliant function.")
         if len([frame[2]
                 for frame in traceback.extract_stack()
-                if frame[2] == func.func_name]) == 0:
+                if frame[2] == func.__name__]) == 0:
             res_factory.rename_children_parameters()
         return res_factory
     return wrapped
