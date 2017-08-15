@@ -6,6 +6,7 @@
 # @date   11.01.2017
 # =============================================================================
 """Toy generation."""
+from __future__ import print_function, division, absolute_import
 
 import argparse
 
@@ -183,7 +184,7 @@ def run(config_files, link_from):
         logger.info("Written output to %s", toy_file)
         if 'link-from' in config:
             logger.info("Linked to %s", config['link-from'])
-    except OSError, excp:
+    except OSError as excp:
         logger.error(str(excp))
         raise
     except ValueError as error:
@@ -220,7 +221,7 @@ def main():
     except KeyError:
         exit_status = 1
         logger.exception("Bad configuration given")
-    except OSError, error:
+    except OSError as error:
         exit_status = 2
         logger.error(str(error))
     except ValueError:

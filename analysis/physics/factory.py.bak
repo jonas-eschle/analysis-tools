@@ -8,6 +8,7 @@
 """Physics factory classes."""
 from __future__ import print_function, division, absolute_import
 
+from builtins import object
 import re
 from collections import OrderedDict
 
@@ -64,7 +65,7 @@ class BaseFactory(object):
         self._parameter_names = {param: param for param in self.PARAMETERS}
         self._parameter_names.update(self._config.get('parameter-names', {}))
         # Update observable names
-        for obs_name, new_obs_name in self._config.get('observable-names', {}).items():
+        for obs_name, new_obs_name in list(self._config.get('observable-names', {}).items()):
             self.set_observable(obs_name, name=new_obs_name)
         # Set the parameter dictionary
         param_dict = self.PARAMETER_DEFAULTS.copy()
@@ -74,7 +75,7 @@ class BaseFactory(object):
             params = parameters.pop('parameters', {})
             for parameter_name in set(param_dict.keys()) & set(params.keys()):
                 logger.debug("Skipping parameter %s because it was specified in the constructor", parameter_name)
-            for param_name, (param, constraint) in params.items():
+            for param_name, (param, constraint) in list(params.items()):
                 param_dict[param_name] = param  # Constructor parameters have priority
                 if constraint:
                     self._constraints.add(constraint)
@@ -86,14 +87,14 @@ class BaseFactory(object):
                 continue
             self._create_parameter(parameter_name,
                                    param_dict.pop(parameter_name),
-                                   {key.split('/')[-1]: val for key, val in param_dict.items()})
+                                   {key.split('/')[-1]: val for key, val in list(param_dict.items())})
         if missing_parameters:
             raise KeyError("Missing parameters -> %s" % ','.join(missing_parameter
                                                                  for missing_parameter in missing_parameters))
         if param_dict:
             logger.debug("Trying to set unsupported params in config. I stored them but they can cause problems -> %s",
-                         ','.join(param_dict.keys()))
-            for param_name, param_val in param_dict.items():
+                         ','.join(list(param_dict.keys())))
+            for param_name, param_val in list(param_dict.items()):
                 self._create_parameter(param_name, param_val)
 
     def get_config(self):
@@ -104,7 +105,7 @@ class BaseFactory(object):
 
     def get_constraints(self):
         child_constraints = list_to_rooargset(self._constraints)
-        for child in self.get_children().values():
+        for child in list(self.get_children().values()):
             tmp_constraints = child.get_constraints()
             if tmp_constraints:
                 child_constraints = ROOT.RooArgSet(child_constraints, child.get_constraints())
@@ -114,7 +115,7 @@ class BaseFactory(object):
         """Find object here or in children. Priority is here."""
         if name in self._objects:
             return self._objects[name]
-        for child in self._children.values():
+        for child in list(self._children.values()):
             if name in child:
                 return child[name]
         return None
@@ -252,7 +253,7 @@ class BaseFactory(object):
             raise KeyError("Bad renaming scheme!")
         all_good = True
         logger.debug("Requesting a parameter name change -> %s", name_dict)
-        for base_name, new_name in name_dict.items():
+        for base_name, new_name in list(name_dict.items()):
             if base_name in self._objects:
                 if self._objects[base_name].getStringAttribute('shared') == 'true':
                     all_good = False
@@ -277,13 +278,11 @@ class BaseFactory(object):
 
     def rename_children_parameters(self, naming_scheme=None):
         if not naming_scheme:
-            naming_scheme = list(self._children.items())
-            # TODO py23: reasonable performance loss from items?
-            # naming_scheme = self._children.viewitems()
+            naming_scheme = self._children.items()
         for label, factory in list(naming_scheme):
             # Recursively rename children
             factory.rename_children_parameters(('%s,%s' % (label, child_name), child)
-                                               for child_name, child in factory.get_children().items())
+                                               for child_name, child in list(factory.get_children().items()))
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
                 parameters_to_set[param_id] = self._add_superscript(factory.get_parameter_name(param_id),
@@ -360,7 +359,7 @@ class BaseFactory(object):
                                                                     'originalName',
                                                                     obs_id)))
                      for obs_id, (obs_name, obs_title, obs_min, obs_max, unit)
-                     in self.OBSERVABLES.items())
+                     in list(self.OBSERVABLES.items()))
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         """
@@ -570,7 +569,7 @@ class ProductPhysicsFactory(BaseFactory):
     def get_unbound_pdf(self, name, title):
         """Get unbound PDF."""
         pdfs = ROOT.RooArgList()
-        for observable, factory in self._children.items():
+        for observable, factory in list(self._children.items()):
             new_name = self._add_superscript(name, observable)
             pdfs.add(factory.get_pdf(new_name, new_name))
         return ROOT.RooProdPdf(name, title, pdfs)
@@ -605,12 +604,12 @@ class ProductPhysicsFactory(BaseFactory):
 
         """
         return tuple(obs
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for obs in factory.get_observables())
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         has_changed = False
-        for child in self._children.values():
+        for child in list(self._children.values()):
             try:
                 child.set_observable(obs_id, obs, name, title, limits, units)
                 has_changed = True
@@ -630,7 +629,7 @@ class ProductPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for param in factory.get_gen_parameters())
 
     def get_fit_parameters(self, extended=False):
@@ -644,7 +643,7 @@ class ProductPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for param in factory.get_fit_parameters(extended))
 
     def set_yield_var(self, yield_):
@@ -675,7 +674,7 @@ class ProductPhysicsFactory(BaseFactory):
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
-        for factory in self._children.values():
+        for factory in list(self._children.values()):
             dataset = factory.transform_dataset(dataset)
         return dataset
 
@@ -698,7 +697,7 @@ class SumPhysicsFactory(BaseFactory):
         """
         # Check observable compatibility
         if len({tuple([obs.GetName() for obs in factory.get_observables()])
-                for factory in factories.values()}) != 1:
+                for factory in list(factories.values())}) != 1:
             raise ValueError("Incompatible observables")
         # Check children yields type
         if not isinstance(children_yields, OrderedDict):
@@ -709,24 +708,24 @@ class SumPhysicsFactory(BaseFactory):
         # Set observables
         observables = {obs.getStringAttribute('originalName'): obs
                        for obs in list(self._children.values())[0].get_observables()}
-        for obs_name, obs in observables.items():
+        for obs_name, obs in list(observables.items()):
             for child in list(self._children.values())[1:]:
                 child.set_observable(obs_name, obs=obs)
         # Set yields
         yield_ = None
         if parameters and 'yield' in parameters:
             yield_, constraint = parameters.pop('yield')
-        yield_values = [child_yield for child_yield, _ in children_yields.values()]
+        yield_values = [child_yield for child_yield, _ in list(children_yields.values())]
         if len(factories) == len(children_yields):  # Extended
             if yield_ is not None:
                 raise KeyError("Specified yield on a sum of RooExtendPdf")
             self._objects['Yield'] = ROOT.RooAddition("Yield", "Yield", list_to_rooarglist(yield_values))
-            self._constraints.update({constraint for _, constraint in children_yields.values()})
-            for child_name, child in self._children.items():
+            self._constraints.update({constraint for _, constraint in list(children_yields.values())})
+            for child_name, child in list(self._children.items()):
                 child.set_yield_var(children_yields[child_name])
         elif (len(factories) - len(children_yields)) == 1:
             # Check order is correct
-            if self._children.keys()[-1] in children_yields.keys():
+            if list(self._children.keys())[-1] in list(children_yields.keys()):
                 logger.error("The last child should not be in `children_keys` to ensure consistency.")
                 raise ValueError("Wrong PDF ordering")
             # Store the fractions and propagate
@@ -738,8 +737,8 @@ class SumPhysicsFactory(BaseFactory):
                     yield_val.SetName(yield_val.GetName().replace('Yield', 'Fraction'))
                     yield_val.SetTitle(yield_val.GetTitle().replace('Yield', 'Fraction'))
             self._objects['Fractions'] = yield_values
-            for child_name, child in self._children.items():
-                if child_name in children_yields:
+            for child_name, child in list(self._children.items()):
+                if child_name in list(children_yields.keys()):
                     child_yield, child_constraint = children_yields[child_name]
                     child['Fraction'] = child_yield
                     child._constraints.add(child_constraint)
@@ -750,7 +749,7 @@ class SumPhysicsFactory(BaseFactory):
                         yield_val.SetName('%s_%s' % (yield_val.GetName(), yield_num))
                     child['Fraction'] = ROOT.RooFracRemainder("Fraction", "Fraction", list_to_rooargset(yield_values))
                     child._constraints.update({constraint
-                                               for _, constraint in children_yields.values()
+                                               for _, constraint in list(children_yields.values())
                                                if constraint})
                     # Put names back where they belong
                     for yield_num, yield_val in enumerate(yield_values):
@@ -767,7 +766,7 @@ class SumPhysicsFactory(BaseFactory):
                            "Returning an extended PDF")
             return self.get_extended_pdf(name, title)
         pdfs = ROOT.RooArgList()
-        for child_name, child in self._children.items():
+        for child_name, child in list(self._children.items()):
             new_name = self._add_superscript(name, child_name)
             pdfs.add(child.get_pdf(new_name, new_name))
         return ROOT.RooAddPdf(name, title,
@@ -783,7 +782,7 @@ class SumPhysicsFactory(BaseFactory):
                                      self._objects['Yield'])
         else:
             pdfs = ROOT.RooArgList()
-            for child_name, child in self._children.items():
+            for child_name, child in list(self._children.items()):
                 new_name = self._add_superscript(name, child_name)
                 pdfs.add(child.get_extended_pdf(new_name, new_name))
             return ROOT.RooAddPdf(name, title, pdfs)
@@ -804,7 +803,7 @@ class SumPhysicsFactory(BaseFactory):
         return list(self._children.values())[0].get_observables()
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
-        for child in self._children.values():
+        for child in list(self._children.values()):
             child.set_observable(obs_id, obs, name, title, limits, units)
 
     def get_gen_parameters(self):
@@ -818,7 +817,7 @@ class SumPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for param in factory.get_gen_parameters())
 
     def get_fit_parameters(self, extended=False):
@@ -832,7 +831,7 @@ class SumPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for param in factory.get_fit_parameters(extended))
 
     def set_yield_var(self, yield_):
@@ -840,7 +839,7 @@ class SumPhysicsFactory(BaseFactory):
             logger.warning("Trying to set the yield of an Extended RooAddPdf. Ignoring.")
         elif 'Yield' not in self._objects:
             yield_ = self._create_parameter('Yield', yield_)
-            for child in self._children.values():
+            for child in list(self._children.values()):
                 if 'Yield' in child:
                     raise ValueError("Inconsistent state: trying to set the yield of an already configured Factory.")
                 # Again, not very good heuristics

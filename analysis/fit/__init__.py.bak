@@ -80,7 +80,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
     if 'Range' not in kwargs:
         kwargs['Range'] = 'Full'
-    for command, val in list(kwargs.items()):
+    for command, val in kwargs.items():
         roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:
             logger.warning("Specified unknown RooArgCmd %s", command)

@@ -25,7 +25,11 @@ Optional configuration keys:
     - batch/runtime: In the HH:MM:SS format. Defaults to 08:00:00.
 
 """
+from __future__ import print_function, division, absolute_import
 
+from builtins import str
+from builtins import zip
+from builtins import range
 import argparse
 import os
 import itertools
@@ -37,7 +41,6 @@ import analysis.utils.config as _config
 from analysis.utils.logging_color import get_logger
 from analysis.toys.submitter import ToySubmitter
 
-
 logger = get_logger('analysis.toys.submit')
 
 
@@ -46,11 +49,13 @@ logger = get_logger('analysis.toys.submit')
 class FitSubmitter(ToySubmitter):
     """Specialization of ToySubmitter to submit the fitting of toys."""
 
-    VALIDATION = {'name': "No name was specified in the config file!",
-                  'fit/nfits': "Number of fits not specified!",
-                  # 'fit/nfits-per-job': "Number of fits per job not specified!",
-                  # 'fit-model': "No pdfs were specified in the config file!",
-                  'data': "No input data was specified in the config file!"}
+    VALIDATION = {
+        'name': "No name was specified in the config file!",
+        'fit/nfits': "Number of fits not specified!",
+        # 'fit/nfits-per-job': "Number of fits per job not specified!",
+        # 'fit-model': "No pdfs were specified in the config file!",
+        'data': "No input data was specified in the config file!"
+    }
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_fit_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_fit_config_path)
@@ -65,10 +70,12 @@ class FitSubmitter(ToySubmitter):
 class GenerationSubmitter(ToySubmitter):
     """Specialization of ToySubmitter to submit generation of toys."""
 
-    VALIDATION = {'name': "No name was specified in the config file!",
-                  'gen/nevents': "Number of events not specified!",
-                  # 'gen/nevents-per-job': "Number of events per job not specified!",
-                  'gen-model': "No pdfs were specified in the config file!"}
+    VALIDATION = {
+        'name': "No name was specified in the config file!",
+        'gen/nevents': "Number of events not specified!",
+        # 'gen/nevents-per-job': "Number of events per job not specified!",
+        'gen-model': "No pdfs were specified in the config file!"
+    }
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_config_path)
@@ -79,8 +86,10 @@ class GenerationSubmitter(ToySubmitter):
     NTOYS_PER_JOB_KEY = 'gen/nevents-per-job'
 
 
-TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
-             'fit': (FitSubmitter, 'fit_toys.py')}
+TOY_TYPES = {
+    'gen': (GenerationSubmitter, 'generate_toys.py'),
+    'fit': (FitSubmitter, 'fit_toys.py')
+}
 
 
 # Scan function
@@ -149,8 +158,8 @@ def process_scan_val(value, other_values=None):
             raise ValueError('No values to interpolate')
         val_to_format = ' '.join(split_value[1:])
         values = [val_to_format.format(**{key: vals[val_num]
-                                          for key, vals in other_values.items()})
-                  for val_num in range(len(other_values.values()[0]))]
+                                          for key, vals in list(other_values.items())})
+                  for val_num in range(len(list(other_values.values())[0]))]
         try:
             values = [int(val) for val in values]
         except ValueError:
@@ -191,6 +200,7 @@ def main():
         128: Uncaught error. An exception is logged.
 
     """
+
     def flatten(list_, typ_):
         """Flatten a list."""
         return list(sum(list_, typ_))
@@ -214,7 +224,7 @@ def main():
         # Which type of toy are we running?
         script_to_run = None
         submitter = None
-        for toy_type, (toy_class, script_name) in TOY_TYPES.items():
+        for toy_type, (toy_class, script_name) in list(TOY_TYPES.items()):
             if toy_type in config:
                 script_to_run = script_name
                 submitter = toy_class
@@ -228,32 +238,32 @@ def main():
             scan_groups = []
             for scan_group in config['scan']:
                 scan_group_dict = {}
-                for key, val_str in scan_group.items():
+                for key, val_str in list(scan_group.items()):
                     scan_group_dict[key] = process_scan_val(val_str, scan_group_dict)
                 scan_groups.append(scan_group_dict)
             # Check lengths
-            if not all(len({len(val) for val in scan_group.values()}) == 1
+            if not all(len({len(val) for val in list(scan_group.values())}) == 1
                        for scan_group in scan_groups):
                 raise ValueError("Unmatched length in scan parameters")
             # Build values to scan
-            keys, values = zip(*[zip(*scan_group.viewitems()) for scan_group in scan_groups])
+            keys, values = list(zip(*[list(zip(*scan_group.items())) for scan_group in scan_groups]))
             keys = flatten(keys, tuple())
-            for value_tuple in itertools.product(*[list(itertools.izip(*val))
+            for value_tuple in itertools.product(*[list(zip(*val))
                                                    for val in values]):
-                values = dict(itertools.izip(keys, flatten(value_tuple, tuple())))
+                values = dict(zip(keys, flatten(value_tuple, tuple())))
                 temp_config = dict(base_config)
                 del temp_config['scan']
                 temp_config['name'] = temp_config['name'].format(**values)
-                for key, value in values.items():
+                for key, value in list(values.items()):
                     temp_config[key] = value
                 logger.debug("Creating configuration %s for scan values -> %s",
                              temp_config['name'],
-                             ", ".join('%s: %s' % val for val in values.items()))
+                             ", ".join('%s: %s' % val for val in list(values.items())))
                 # Write temp_file
                 file_ = tempfile.NamedTemporaryFile(delete=False)
                 file_name = file_.name
                 file_.close()
-                _config.write_config(_config.fold_config(temp_config.viewitems()),
+                _config.write_config(_config.fold_config(temp_config.items()),
                                      file_name)
                 config_files.append(file_name)
         else:
@@ -277,7 +287,7 @@ def main():
     except KeyError:
         logger.error("Bad configuration given")
         exit_status = 1
-    except OSError, error:
+    except OSError as error:
         logger.error(str(error))
         exit_status = 2
     except ValueError:

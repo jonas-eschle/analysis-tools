@@ -155,8 +155,8 @@ def process_scan_val(value, other_values=None):
             raise ValueError('No values to interpolate')
         val_to_format = ' '.join(split_value[1:])
         values = [val_to_format.format(**{key: vals[val_num]
-                                          for key, vals in other_values.items()})
-                  for val_num in range(len(other_values.values()[0]))]
+                                          for key, vals in list(other_values.items())})
+                  for val_num in range(len(list(other_values.values())[0]))]
         try:
             values = [int(val) for val in values]
         except ValueError:
@@ -243,11 +243,12 @@ def main():
                        for scan_group in scan_groups):
                 raise ValueError("Unmatched length in scan parameters")
             # Build values to scan
-            keys, values = zip(*[zip(*scan_group.viewitems()) for scan_group in scan_groups])
+            keys, values = list(zip(*[list(zip(*list(scan_group.items()))) for scan_group in scan_groups]))
             keys = flatten(keys, tuple())
-            for value_tuple in itertools.product(*[list(itertools.izip(*val))
+            # TODO py23: zip vs itertools.izip performance?
+            for value_tuple in itertools.product(*[list(zip(*val))
                                                    for val in values]):
-                values = dict(itertools.izip(keys, flatten(value_tuple, tuple())))
+                values = dict(list(zip(keys, flatten(value_tuple, tuple()))))
                 temp_config = dict(base_config)
                 del temp_config['scan']
                 temp_config['name'] = temp_config['name'].format(**values)
@@ -260,8 +261,10 @@ def main():
                 file_ = tempfile.NamedTemporaryFile(delete=False)
                 file_name = file_.name
                 file_.close()
-                _config.write_config(_config.fold_config(temp_config.viewitems()),
-                                     file_name)
+                _config.write_config(_config.fold_config(list(temp_config.items())),
+                # TODO py23: viewitems vs iter + list performance?
+                # _config.write_config(_config.fold_config(temp_config.viewitems()),
+                                                          file_name)
                 config_files.append(file_name)
         else:
             config_files = args.config

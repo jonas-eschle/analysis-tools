@@ -6,6 +6,7 @@
 # @date   07.04.2017
 # =============================================================================
 """Script to model the efficiency from an input dataset."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import argparse
@@ -163,7 +164,7 @@ def main():
     except KeyError:
         exit_status = 1
         logger.exception("Bad configuration given")
-    except OSError, error:
+    except OSError as error:
         exit_status = 2
         logger.error(str(error))
     except ValueError:

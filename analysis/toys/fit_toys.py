@@ -62,8 +62,8 @@ def get_datasets(data_frames, acceptance, fit_models):
     dataset = None
     sample_sizes = {}
     weight_var = None
-    logger.debug("Sampling datasets -> %s", data_frames.keys())
-    for data_name, (data, n_events, category) in data_frames.items():
+    logger.debug("Sampling datasets -> %s", list(data_frames.keys()))
+    for data_name, (data, n_events, category) in list(data_frames.items()):
         if acceptance:
             data = acceptance.apply_accept_reject(data)
         # Do poisson if it is extended

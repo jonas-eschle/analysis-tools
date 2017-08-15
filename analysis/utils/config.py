@@ -102,7 +102,7 @@ def write_config(config, file_name):
         if self.alias_key is not None:
             self.represented_objects[self.alias_key] = node
         best_style = True
-        mapping = mapping.items()
+        mapping = list(mapping.items())
         for item_key, item_value in mapping:
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
@@ -161,7 +161,9 @@ def unfold_config(dictionary):
 
     """
     output_list = []
-    for key, val in dictionary.viewitems():
+    for key, val in dictionary.items():
+    # TODO py23: viewitems vs items py2, performance?
+    # for key, val in dictionary.viewitems():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
                 output_list.append(('%s/%s' % (key, sub_key), sub_val))

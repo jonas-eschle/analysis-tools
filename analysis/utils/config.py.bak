@@ -6,7 +6,10 @@
 # @date   13.01.2017
 # =============================================================================
 """Configuration files."""
+from __future__ import print_function, division, absolute_import
 
+from builtins import str
+from builtins import range
 import os
 import random
 import string
@@ -101,7 +104,7 @@ def write_config(config, file_name):
         if self.alias_key is not None:
             self.represented_objects[self.alias_key] = node
         best_style = True
-        mapping = mapping.items()
+        mapping = list(mapping.items())
         for item_key, item_value in mapping:
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
@@ -160,7 +163,7 @@ def unfold_config(dictionary):
 
     """
     output_list = []
-    for key, val in dictionary.viewitems():
+    for key, val in dictionary.items():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
                 output_list.append(('%s/%s' % (key, sub_key), sub_val))
@@ -312,7 +315,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 second_var = ROOT.RooFit.RooConst(value)
             else:
                 second_var = ROOT.RooFit.RooConst(float(second_var))
-        except KeyError, error:
+        except KeyError as error:
             raise ValueError("Missing parameter definition -> %s" % error)
         if action == 'SHIFT':
             parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))
@@ -355,7 +358,7 @@ def get_shared_vars(config, external_vars=None):
     # First build the shared var
     refs = {} if not external_vars else external_vars
     # Build shared parameters
-    for config_element, config_value in parameter_configs.items():
+    for config_element, config_value in list(parameter_configs.items()):
         if not config_value.startswith('@'):
             continue
         split_element = config_value[1:].split('/')
@@ -373,7 +376,7 @@ def get_shared_vars(config, external_vars=None):
     # Now replace the refs by the shared variables in a recursive defaultdict
     recurse_dict = lambda: defaultdict(recurse_dict)
     new_config = []
-    for config_element, ref_val in parameter_configs.items():
+    for config_element, ref_val in list(parameter_configs.items()):
         if ref_val.startswith('@'):
             new_config.append((config_element,
                                refs[ref_val.split('/')[0][1:]]))
