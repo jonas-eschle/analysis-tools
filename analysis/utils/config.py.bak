@@ -312,7 +312,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 second_var = ROOT.RooFit.RooConst(value)
             else:
                 second_var = ROOT.RooFit.RooConst(float(second_var))
-        except KeyError as error:
+        except KeyError, error:
             raise ValueError("Missing parameter definition -> %s" % error)
         if action == 'SHIFT':
             parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))

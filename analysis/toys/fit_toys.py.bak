@@ -220,7 +220,7 @@ def run(config_files, link_from, verbose):
                         gen_values_frame['gen_%s' % source_id] = pd.DataFrame([gen_data])
                 else:
                     raise AttributeError("Inconsistent number of data sources")
-    except OSError as excp:
+    except OSError, excp:
         logger.error(str(excp))
         raise
     # Now load the acceptance
@@ -318,7 +318,7 @@ def run(config_files, link_from, verbose):
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
-    except OSError as excp:
+    except OSError, excp:
         logger.error(str(excp))
         raise
     except ValueError as error:
@@ -364,7 +364,7 @@ def main():
     except KeyError:
         exit_status = 1
         logger.exception("Bad configuration given")
-    except OSError as error:
+    except OSError, error:
         exit_status = 2
         logger.error(str(error))
     except ValueError:

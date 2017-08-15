@@ -73,15 +73,15 @@ class ToySubmitter(object):
         try:
             config = _config.load_config(*config_files,
                                          validate=self.VALIDATION.keys())
-        except _config.ConfigError as error:
+        except _config.ConfigError, error:
             for key, error_message in self.VALIDATION.items():
                 if key in error.missing_keys:
                     logger.error(error_message)
             raise KeyError()
-        except OSError as error:
+        except OSError, error:
             raise OSError("Cannot load configuration file: %s",
                           config_files)
-        except KeyError as error:
+        except KeyError, error:
             # logger.error(str(error))
             raise
         # Check conflicting arguments

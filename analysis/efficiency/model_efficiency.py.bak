@@ -163,7 +163,7 @@ def main():
     except KeyError:
         exit_status = 1
         logger.exception("Bad configuration given")
-    except OSError as error:
+    except OSError, error:
         exit_status = 2
         logger.error(str(error))
     except ValueError:
