@@ -32,7 +32,7 @@ def temp_file(frame):
     """Store the given frame in a temp file."""
     _, file_name = tempfile.mkstemp()
     with pd.HDFStore(file_name) as store:
-        store.append('ds', frame)
+        store.put('ds', frame)
     yield file_name
     os.remove(file_name)
 

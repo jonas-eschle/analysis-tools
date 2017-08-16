@@ -726,7 +726,7 @@ class SumPhysicsFactory(BaseFactory):
                 child.set_yield_var(children_yields[child_name])
         elif (len(factories) - len(children_yields)) == 1:
             # Check order is correct
-            if self._children.keys()[-1] in children_yields.keys():
+            if list(self._children.keys())[-1] in children_yields.keys():
                 logger.error("The last child should not be in `children_keys` to ensure consistency.")
                 raise ValueError("Wrong PDF ordering")
             # Store the fractions and propagate
