@@ -25,8 +25,7 @@ setup(name='analysis',
                         'PyYAML',
                         'contextlib2',
                         'yamlordereddictloader',
-                        'root_pandas'],
-                        # 'git+git://github.com/ibab/root_pandas.git'],
+                        'git+git://github.com/ibab/root_pandas.git'],
       packages=['analysis'],
       zip_safe=False)
 
