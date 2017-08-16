@@ -46,13 +46,11 @@ logger = get_logger('analysis.toys.submit')
 class FitSubmitter(ToySubmitter):
     """Specialization of ToySubmitter to submit the fitting of toys."""
 
-    VALIDATION = {
-        'name': "No name was specified in the config file!",
-        'fit/nfits': "Number of fits not specified!",
-        # 'fit/nfits-per-job': "Number of fits per job not specified!",
-        # 'fit-model': "No pdfs were specified in the config file!",
-        'data': "No input data was specified in the config file!"
-    }
+    VALIDATION = {'name': "No name was specified in the config file!",
+                  'fit/nfits': "Number of fits not specified!",
+                  # 'fit/nfits-per-job': "Number of fits per job not specified!",
+                  # 'fit-model': "No pdfs were specified in the config file!",
+                  'data': "No input data was specified in the config file!"}
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_fit_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_fit_config_path)
@@ -243,12 +241,11 @@ def main():
                        for scan_group in scan_groups):
                 raise ValueError("Unmatched length in scan parameters")
             # Build values to scan
-            keys, values = list(zip(*[list(zip(*list(scan_group.items()))) for scan_group in scan_groups]))
+            keys, values = list(zip(*[zip(*scan_group.items()) for scan_group in scan_groups]))
             keys = flatten(keys, tuple())
             # TODO py23: zip vs itertools.izip performance?
-            for value_tuple in itertools.product(*[list(zip(*val))
-                                                   for val in values]):
-                values = dict(list(zip(keys, flatten(value_tuple, tuple()))))
+            for value_tuple in itertools.product(*[zip(*val) for val in values]):
+                values = dict(zip(keys, flatten(value_tuple, tuple())))
                 temp_config = dict(base_config)
                 del temp_config['scan']
                 temp_config['name'] = temp_config['name'].format(**values)
@@ -262,9 +259,9 @@ def main():
                 file_name = file_.name
                 file_.close()
                 _config.write_config(_config.fold_config(list(temp_config.items())),
-                # TODO py23: viewitems vs iter + list performance?
-                # _config.write_config(_config.fold_config(temp_config.viewitems()),
-                                                          file_name)
+                                     # TODO py23: viewitems vs iter + list performance?
+                                     # _config.write_config(_config.fold_config(temp_config.viewitems()),
+                                     file_name)
                 config_files.append(file_name)
         else:
             config_files = args.config

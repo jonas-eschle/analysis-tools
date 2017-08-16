@@ -33,7 +33,7 @@ def load_config(*file_names, **options):
     if key overlap exists.
     Currently supported options are:
         - `root` (str), which determines the node that is considered as root.
-        - `validate` (list), which gets a list of keys to check. If one of these
+        - `validate` (iterable), which holds keys to check. If one of these
             keys is not present, `config.ConfigError` is raised.
 
     Arguments:

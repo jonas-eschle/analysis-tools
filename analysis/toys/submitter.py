@@ -73,7 +73,7 @@ class ToySubmitter(object):
             raise NotImplementedError("Getters not implemented")
         try:
             config = _config.load_config(*config_files,
-                                         validate=list(self.VALIDATION.keys()))
+                                         validate=self.VALIDATION.keys())
         except _config.ConfigError as error:
             for key, error_message in self.VALIDATION.items():
                 if key in error.missing_keys:
