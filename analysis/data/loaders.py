@@ -97,7 +97,8 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         **kwargs (dict): Extra configuration.
 
     Raises:
-        KeyError: If there are missing variables in `kwargs`.
+        KeyError: If `kwargs` are wrongly specified, eg, if there are missing variables
+            or misconfigured ones.
         ValueError: If there is an error in loading the acceptance.
 
     """
@@ -121,8 +122,8 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
             else:
                 raise KeyError("Missing name of the weight variable")
     elif weight_var:
-        if not weights:
-            weights = [weight_var]
+        logger.warning("'weights' not specified, but 'weight-var' is. Using it")
+        weights = [weight_var]
     # Variables
     var_list = kwargs.get('variables', None)
     acc_var = None
