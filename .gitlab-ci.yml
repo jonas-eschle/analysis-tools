@@ -1,0 +1,61 @@
+image: continuumio/anaconda
+
+before_script:
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update conda
+    - conda info -a
+    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
+    #- conda config --add channels https://conda.anaconda.org/nlesc/label/dev
+
+stages:
+  - test
+
+test27:
+  stage: test
+  script:
+#   setup env
+    - conda create --name=test27 python=2.7 root=6
+    - source activate test27
+
+#   install test util
+    - conda install pytest coverage
+
+#   install package
+    - pip install git+https://github.com/ibab/root_pandas.git
+    - pip install -e .
+
+    # run tests
+    - coverage run -m pytest .
+    - coverage report --omit=/*/anaconda*/*
+
+
+test36:
+  stage: test
+  script:
+#   setup env
+    - conda create --name=test36 python=3.6 root=6
+    - source activate test36
+
+#   install test util
+    - conda install pytest coverage
+
+#   install package
+    - pip install git+https://github.com/ibab/root_pandas.git
+    - pip install -e .
+
+    # run tests
+    - coverage run -m pytest .
+    - coverage report --omit=/*/anaconda*/*
+
+# Pylint does not yet work, throws error for a file in analysis/data
+#
+# Job: run PyLint
+#
+#run_pylint:
+#    type: test
+#    script:
+#        - pip install pylint
+#
+#        - pip install -U pip
+#        - pylint analysis/*/*.py
+
