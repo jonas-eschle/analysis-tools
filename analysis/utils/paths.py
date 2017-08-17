@@ -206,7 +206,7 @@ def work_on_file(name, path_func, link_from=None):
                 os.symlink(src_file, dest_file)
 
     try:
-        do_link, src_file, dest_file = prepare_path(name, link_from, path_func)
+        do_link, src_file, dest_file = prepare_path(name, path_func, link_from)
     except OSError as error:
         raise OSError("Error preparing path -> %s" % str(error))
     lock_file = os.path.join(os.path.dirname(src_file),

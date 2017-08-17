@@ -12,9 +12,9 @@ import copy
 
 import numpy as np
 
-from analysis.utils.config import load_config, write_config, ConfigError
+from analysis.utils.config import load_config, write_config, ConfigError, dump_config
 from analysis.utils.root import iterate_roocollection
-from analysis.utils.paths import get_fit_result_path
+from analysis.utils.paths import get_fit_result_path, work_on_file
 
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
@@ -125,6 +125,9 @@ class FitResult(object):
             raise KeyError("Missing keys in YAML input")
         if not set(yaml_dict['covariance-matrix'].keys()).issuperset({'quality', 'matrix'}):
             raise KeyError("Missing keys in covariance matrix in YAML input")
+        # Rebuild parameters
+        for param_name, param_str in yaml_dict['fit-parameters'].items():
+            yaml_dict['fit-parameters'][param_name] = tuple(float(value) for value in param_str.split())
         # Build matrix
         yaml_dict['covariance-matrix']['matrix'] = np.asmatrix(
             np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
@@ -151,16 +154,25 @@ class FitResult(object):
 
         """
         try:
-            self._result = dict(load_config(get_fit_result_path(name),
-                                            validate=('fit-parameters',
-                                                      'fit-parameters-initial',
-                                                      'const-parameters',
-                                                      'covariance-matrix/quality',
-                                                      'covariance-matrix/matrix',
-                                                      'status')))
-        except ConfigError as error:
-            raise KeyError("Missing keys in input file -> %s" % ','.join(error.missing_keys))
+            self.from_yaml(load_config(get_fit_result_path(name)))
+        except KeyError as error:
+            raise error
         return self
+
+    def _preprocess_output(self):
+        """Prepare the result for output.
+
+        The covariance matrix is converted to a list, the fit parameters to a string.
+
+        Returns:
+            dict
+
+        """
+        result = copy.deepcopy(self._result)
+        for param_name, param_data in result['fit-parameters'].items():
+            result['fit-parameters'][param_name] = ' '.join(str(param_val) for param_val in param_data)
+        result['covariance-matrix']['matrix'] = self._result['covariance-matrix']['matrix'].getA1().tolist()
+        return result
 
     @ensure_initialized
     def to_yaml(self):
@@ -173,18 +185,18 @@ class FitResult(object):
             NotInitializedError: If the fit result has not been initialized.
 
         """
-        result = copy.deepcopy(self._result)
-        result['covariance-matrix']['matrix'] = self._result['covariance-matrix']['matrix'].getA1()
-        return result
+        return dump_config(self._preprocess_output())
 
     @ensure_initialized
-    def to_yaml_file(self, name):
+    def to_yaml_file(self, name, link_from=None):
         """Convert fit result to YAML format.
 
         File name is determined by get_fit_result_path.
 
         Arguments:
             name (str): Name of the fit result.
+            link_from (str, optional): Base directory for symlinking. If `None` (default),
+                no symlinking is done.
 
         Returns:
             str: Output file name.
@@ -193,8 +205,8 @@ class FitResult(object):
             NotInitializedError: If the fit result has not been initialized.
 
         """
-        file_name = get_fit_result_path(name)
-        write_config(self.to_yaml(), file_name)
+        with work_on_file(name, get_fit_result_path, link_from) as file_name:
+            write_config(self._preprocess_output(), file_name)
         return file_name
 
     @ensure_initialized

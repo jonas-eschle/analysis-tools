@@ -24,6 +24,19 @@ from analysis.utils.logging_color import get_logger
 logger = get_logger('analysis.utils.config')
 
 
+def read_config_from_str(str_config):
+    """Read configuration as YAML.
+
+    Arguments:
+        str_config (str): String representation of a YAML configuration.
+
+    Returns:
+        dict
+
+    """
+    return yaml.load(str_config, Loader=yamlordereddictloader.Loader)
+
+
 def load_config(*file_names, **options):
     """Load configuration from YAML files.
 
@@ -54,8 +67,7 @@ def load_config(*file_names, **options):
             raise OSError("Cannot find config file -> %s" % file_name)
         try:
             with open(file_name) as input_obj:
-                unfolded_data.extend(unfold_config(yaml.load(input_obj,
-                                                             Loader=yamlordereddictloader.Loader)))
+                unfolded_data.extend(unfold_config(read_config_from_str(input_obj)))
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
     data = fold_config(unfolded_data, OrderedDict)
@@ -81,12 +93,14 @@ def load_config(*file_names, **options):
     return data
 
 
-def write_config(config, file_name):
-    """Write configuration to file.
+def dump_config(config):
+    """Get a string representation of the configuration.
 
     Arguments:
         config (dict): Configuration file.
-        file_name (str): Output file.
+
+    Returns:
+        str
 
     """
     def represent_ordereddict(self, mapping, flow_style=None):
@@ -119,13 +133,23 @@ def write_config(config, file_name):
 
     # Configure Dumper
     yaml.add_representer(OrderedDict, represent_ordereddict)
+    return yaml.dump(config,
+                     default_flow_style=False,
+                     allow_unicode=True,
+                     indent=4)
+
+
+def write_config(config, file_name):
+    """Write configuration to file.
+
+    Arguments:
+        config (dict): Configuration file.
+        file_name (str): Output file.
+
+    """
     # Dump
     with open(file_name, 'w') as output_file:
-        yaml.dump(config,
-                  output_file,
-                  default_flow_style=False,
-                  allow_unicode=True,
-                  indent=4)
+        output_file.write(dump_config(config))
 
 
 def compare_configs(config1, config2):
