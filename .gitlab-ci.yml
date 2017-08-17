@@ -1,49 +1,45 @@
-image: continuumio/anaconda
-
-before_script:
-    - conda config --set always_yes yes --set changeps1 no
-    - conda update conda
-    - conda info -a
-    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-    #- conda config --add channels https://conda.anaconda.org/nlesc/label/dev
 
 stages:
   - test
 
 test27:
+  image: continuumio/anaconda
   stage: test
   script:
 #   setup env
-    - conda create --name=test27 python=2.7 root=6
-    - source activate test27
-
-#   install test util
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update conda
+    - conda info -a
+    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
+#    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
+    - conda install python=2.7 root=6
+#   install test utilities
     - conda install pytest coverage
-
 #   install package
     - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
-
-    # run tests
+#     run tests
     - coverage run -m pytest .
     - coverage report --omit=/*/anaconda*/*
 
 
 test36:
+  image: continuumio/anaconda3
   stage: test
   script:
 #   setup env
-    - conda create --name=test36 python=3.6 root=6
-    - source activate test36
-
-#   install test util
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update conda
+    - conda info -a
+    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
+#    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
+    - conda install python=3.6 root=6
+#   install test utilities
     - conda install pytest coverage
-
 #   install package
     - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
-
-    # run tests
+#    run tests
     - coverage run -m pytest .
     - coverage report --omit=/*/anaconda*/*
 
