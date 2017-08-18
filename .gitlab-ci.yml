@@ -12,7 +12,7 @@ test27:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda install python=2.7 root=6
+    - conda install python=2.7 root=6 root_numpy
 #   install test utilities
     - conda install pytest coverage
 #   install package
@@ -33,7 +33,7 @@ test36:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda install python=3.6 root=6
+    - conda install python=3.6 root=6 root_numpy
 #   install test utilities
     - conda install pytest coverage
 #   install package
