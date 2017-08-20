@@ -895,7 +895,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
     def get_unbound_pdf(self, name, title):
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
-        for category, child in list(self._children.items()):
+        for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
             sim_pdf.addPdf(child.get_pdf(new_name, new_name),
                            '{%s}' % category
@@ -906,7 +906,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_unbound_extended_pdf(self, name, title):
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
         yields = ROOT.RooArgList()
-        for category, child in list(self._children.items()):
+        for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
             sim_pdf.addPdf(child.get_extended_pdf(new_name, new_name),
                            '{%s}' % category
@@ -918,7 +918,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
     def is_extended(self):
         children_are_extended = (child.is_extended()
-                                 for child in list(self.get_children().values()))
+                                 for child in self.get_children().values())
         if all(children_are_extended):
             return True
         elif any(children_are_extended):
@@ -929,7 +929,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
     def has_to_be_extended(self):
         return any(child.has_to_be_extended()
-                   for child in list(self.get_children().values()))
+                   for child in self.get_children().values())
 
     def get_observables(self):
         """Get the physics observables.
@@ -952,7 +952,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         has_changed = False
-        for child in list(self._children.values()):
+        for child in self._children.values():
             try:
                 child.set_observable(obs_id, obs, name, title, limits, units)
                 has_changed = True
@@ -972,7 +972,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in list(self._children.values())
+                     for factory in self._children.values()
                      for param in factory.get_gen_parameters())
 
     def get_fit_parameters(self, extended=False):
