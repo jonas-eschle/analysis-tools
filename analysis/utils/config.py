@@ -64,6 +64,7 @@ def load_config(*file_names, **options):
         data_root = options['root']
         if data_root not in data:
             raise ConfigError("Root node not found in dataset -> %s" % data_root)
+        # TODO: fix error below, 'key' not defined
         data = data_root[key]
     if 'validate' in options:
         missing_keys = []
