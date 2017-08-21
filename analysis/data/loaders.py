@@ -291,7 +291,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         for leave in leave_list:
             destruct_object(leave)
     for var in variables:
-        destruct_object(var_list)
+        destruct_object(var)
     # Let's return
     dataset.SetName(name)
     dataset.SetTitle(title)
