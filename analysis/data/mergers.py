@@ -35,7 +35,7 @@ def merge(data_list, **kwargs):
     if isinstance(data_list[0], ROOT.TObject):
         if 'name' not in kwargs:
             raise KeyError("No name specified for dataset merging.")
-        return merge_root(data_list, kwargs['name'], kwargs.get('title', kwargs['name']), kwargs.get('weight', None))
+        return merge_root(data_list, kwargs['name'], kwargs.get('title', kwargs['name']))
     elif isinstance(data_list[0], (pd.DataFrame, pd.Series)):
         raise NotImplementedError()
         # return merge_pandas(data_list)
