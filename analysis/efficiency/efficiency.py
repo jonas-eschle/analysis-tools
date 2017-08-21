@@ -158,7 +158,7 @@ class Efficiency(object):
                     escape_chars.append(unicode(key))
                 else:
                     escape_chars.append(str(key))
-            regex = re.compile('|'.join())
+            regex = re.compile('|'.join(escape_chars))
             return regex.sub(lambda match: conv[match.group()], text)
 
         if weight_var and weight_var not in data.columns:

@@ -162,8 +162,8 @@ def unfold_config(dictionary):
     """
     output_list = []
     for key, val in dictionary.items():
-    # TODO py23: viewitems vs items py2, performance?
-    # for key, val in dictionary.viewitems():
+        # TODO py23: viewitems vs items py2, performance?
+        # for key, val in dictionary.viewitems():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
                 output_list.append(('%s/%s' % (key, sub_key), sub_val))

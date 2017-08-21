@@ -51,6 +51,7 @@ class DoubleCBFactory(pdfs.DoubleCBPdfMixin, MassFactory):
 
     """
 
+
 class ExponentialFactory(pdfs.ExponentialPdfMixin, MassFactory):
     """Exponential mass PDF.
 
