@@ -150,7 +150,7 @@ class LegendreEfficiency(Efficiency):
         """Get the coefficients in matrix form."""
         return self._coefficients
 
-    def _get_efficiency(self, data):
+    def _get_efficiency(self, data, randomize=False):
         """Calculate the efficiency.
 
         Note:
@@ -158,6 +158,8 @@ class LegendreEfficiency(Efficiency):
 
         Arguments:
             data (`pandas.DataFrame`): Data to apply the efficiency to.
+            randomize (bool, optional): Apply Gaussian randomization to the efficiencies?
+                Defaults to False.
 
         Returns:
             pandas.Series: Efficiency for each entry of the input.
@@ -167,7 +169,14 @@ class LegendreEfficiency(Efficiency):
             range_var_name = self.get_variable_names()[range_var]
             data[range_var_name] = scale_dataset(data[range_var_name], min_, max_, -1, 1)
         # Apply polynomial
-        coeffs = np.array(self._coefficients, copy=True)
+        if randomize:
+            if not np.any(self._covariance):
+                raise ValueError("No covariance matrix has been calculated")
+            # pylint: disable=E1101
+            coeffs = np.random.multivariate_normal(self._coefficients.flatten(),
+                                                   self._covariance).reshape(self._coefficients.shape)
+        else:
+            coeffs = np.array(self._coefficients, copy=True)
         first = True
         for var_name in self.get_variables():
             coeffs = np.polynomial.legendre.legval(data[var_name].values, coeffs, tensor=first)
