@@ -41,6 +41,10 @@ Model the efficiencies using Legendre polynomials:
 the `LegendreEfficiency` class implements a fully correlated n-D model, while `LegendreEfficiency1D` implements independent 1D modelling.
 When loading a Legendre efficiency, the `symmetric-variables` list can be used to set the odd coefficients to zero.
 
+Additionally, the covariance matrix can be calculated by specifying `calculate_cov` to be `True` (default is to skip this calculation, since it's quite expensive).
+Since covariance matrices can get quite large and it is necessary to perform a summation over all the data, the calculation needs to be broken down in smaller chunks;
+the `chunk_size` parameter can be used to control their size (default is 1000).
+
 A full example on how to model a 4D acceptance using Legendre polynomials and then doing a plot is the following:
 
 ```python
@@ -80,7 +84,9 @@ with pd.HDFStore('B02Kst0Jpsi2ee-Gen.h5') as store:
                                var_list,
                                legendre_orders=orders,
                                ranges={'acc_phi': ['-pi', 'pi'],
-                                       'acc_q2': [8, 11]})
+                                       'acc_q2': [8, 11]},
+                               calculate_cov=True,
+                               chunk_size=2000)
             logger.info("Took %s ms / %s coefficients",
                         timer.elapsed, eff.get_coefficients().size)
         out_file = eff.write_to_disk(EFF_NAME)
@@ -114,7 +120,7 @@ variables:
   - acc_cosThetaK
   - acc_phi
 parameters:
-    legendre-orders:
+    legendre_orders:
         acc_q2: 1
         acc_cosThetaL: 5
         acc_cosThetaK: 10
@@ -122,6 +128,8 @@ parameters:
     ranges:
         acc_phi: -pi pi
         acc_q2: 8 11
+    calculate_cov: y
+    chunk_size: 2000
 plot: y
 plot-labels:
     acc_q2: '$q^2$ (GeV$^2/c^4$)'

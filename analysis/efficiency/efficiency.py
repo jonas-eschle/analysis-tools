@@ -125,7 +125,7 @@ class Efficiency(object):
         try:
             return self._get_efficiency(data[var_list].copy(), randomize=True).clip(lower=0.0)
         except ValueError as error:
-            logger.error("Cannot randomize efficiency: %s" % error)
+            logger.error("Cannot randomize efficiency: %s", error)
             raise KeyError
 
     def _get_efficiency(self, data, randomize=False):
