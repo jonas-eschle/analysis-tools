@@ -111,6 +111,7 @@ class LegendreEfficiency(Efficiency):
                 {var_name1: n1,
                  var_name2: n2},
              'coefficients': [coeff1, coeff2, ..., coefn1xn2],
+             'covariance': [cov1, cov2, ...]
              'ranges': {var_name1: [min_var1, max_var1],
                         var_name2: [min_var2, max_var2]},
              'symmetric-variables': [var_1]}
@@ -130,8 +131,11 @@ class LegendreEfficiency(Efficiency):
         super(LegendreEfficiency, self).__init__(var_list, config)
         self._ranges = {var_name: process_range((low, high))
                         for var_name, (low, high) in config.get('ranges', {}).items()}
-        self._coefficients = np.reshape(config['coefficients'],
-                                        tuple(config['pol-orders'][var] for var in var_list))
+        orders = tuple(config['pol-orders'][var] for var in var_list)
+        self._coefficients = np.reshape(config['coefficients'], orders)
+        self._covariance = np.reshape(config['covariance'],
+                                      (functools.reduce(operator.mul, orders),
+                                       functools.reduce(operator.mul, orders)))
         for var_name in config.get('symmetric-variables', []):
             logger.debug("Symmetrizing legendre polynomial for variable %s", var_name)
             try:
@@ -172,7 +176,7 @@ class LegendreEfficiency(Efficiency):
 
     # pylint: disable=R0914,W0221
     @staticmethod
-    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None):
+    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None, calculate_cov=False, chunk_size=1000):
         """Calculate Legendre coefficients using the method of moments.
 
         Arguments:
@@ -182,6 +186,10 @@ class LegendreEfficiency(Efficiency):
                 is given, unity weights are used.
             legendre_orders (dict): Variable name/max Legendre order.
             ranges (dict, optional)
+            calculate_cov (bool, optional): Calculate the covariance matrix.
+                Defaults to `False`.
+            chunk_size (int, optional): Size of the chunks to calculate the
+                covariance matrix with. Defaults to 1000.
 
         Returns:
             `LegendreEfficiency`: Multidimensional efficiency.
@@ -196,7 +204,7 @@ class LegendreEfficiency(Efficiency):
             raise ValueError("Missing parameter -> legendre_orders")
         if ranges is None:
             ranges = {}
-        orders = [legendre_orders[var] for var in var_list]
+        orders = tuple(legendre_orders[var] for var in var_list)
         # Checks
         if not set(var_list).issubset(set(dataset.columns)):
             raise KeyError("Missing variables in the dataset")
@@ -216,19 +224,35 @@ class LegendreEfficiency(Efficiency):
                               op_flags=['readwrite'])
         weights = np.array(dataset[weight_var]) if weight_var else np.ones(dataset.shape[0])
         inv_sum_weights = 1.0/np.sum(weights)
+        # Array to store the calculation of the legendres event by event
+        events = np.zeros((dataset.shape[0],) + orders)
         while not it_coeffs.finished:
             current_orders = it_coeffs.multi_index
             # Calculate the corresponding legendre for each variable
             legendres = [legval(data[var_name].values,
                                 np.array(np.append(np.zeros(current_orders[var_number]), [1])))
                          for var_number, var_name in enumerate(var_list)]
-            it_coeffs[0] = functools.reduce(operator.mul,
-                                            ((2.*current_order+1.)/2.
-                                             for current_order in current_orders)) * inv_sum_weights * \
-                np.sum(functools.reduce(np.multiply, [weights] + legendres))
+            event = functools.reduce(operator.mul,
+                                     ((2.*current_order+1.)/2.
+                                      for current_order in current_orders)) * \
+                functools.reduce(np.multiply, [weights] + legendres)
+            events[(Ellipsis,) + current_orders] = event
+            it_coeffs[0] = inv_sum_weights * np.sum(event)
             it_coeffs.iternext()
+        logger.debug("Calculating covariance matrix")
+        # Flatten
+        err_diff_t = (events.reshape(dataset.shape[0], -1) - (weights[np.newaxis].T * coefficients.flatten()))
+        err_diff = err_diff_t.T
+        if calculate_cov:
+            sigma = np.sum(np.dot(err_diff[:, chunk:min(chunk + chunk_size, dataset.shape[0])],
+                                  err_diff_t[chunk:min(chunk + chunk_size, dataset.shape[0]), :].conj())
+                           for chunk in range(0, dataset.shape[0], chunk_size)) * inv_sum_weights
+        else:
+            sigma = np.zeros((functools.reduce(operator.mul, orders),
+                              functools.reduce(operator.mul, orders)))
         return LegendreEfficiency(var_list, {'pol-orders': legendre_orders,
                                              'coefficients': coefficients.flatten().tolist(),
+                                             'covariance': sigma.flatten().tolist(),
                                              'ranges': ranges})
 
     # pylint: disable=R0914
