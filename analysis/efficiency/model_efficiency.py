@@ -126,7 +126,8 @@ def run(config_files, link_from):
                             var_name, plot_files[var_name])
                 plot.savefig(plot_files[var_name], bbox_inches='tight')
     else:
-        logger.info("Nothing to do!")
+        logger.info("Efficiency file exists: %s. Nothing to do!",
+                    _paths.get_efficiency_path(config['name']))
 
 
 def main():
