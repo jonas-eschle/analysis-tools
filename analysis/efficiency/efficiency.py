@@ -19,6 +19,9 @@ import sys
 
 from analysis.utils.paths import get_efficiency_path, work_on_file
 from analysis.utils.config import write_config
+from analysis.utils.logging_color import get_logger
+
+logger = get_logger('analysis.efficiency')
 
 
 class Efficiency(object):
@@ -101,7 +104,34 @@ class Efficiency(object):
             raise ValueError("Missing variables in the input data")
         return self._get_efficiency(data[var_list].copy()).clip(lower=0.0)
 
-    def _get_efficiency(self, data):
+    def get_randomized_efficiency(self, data):
+        """Get the efficiency for the given event or dataset Gaussianly randomized by its uncertainty.
+
+        Arguments:
+            data (`pandas.DataFrame` or Sequence): Data to calculate the efficiency of.
+
+        Returns:
+            pandas.Series: Per-event efficiencies.
+
+        Raises:
+            ValueError: If the data format is not correct, eg, there is a variable mismatch.
+            KeyError: If there errors are not present and randomization cannot be applied.
+
+        """
+        var_list = self.get_variables()
+        if not isinstance(data, pd.DataFrame):
+            if len(var_list) != len(data):
+                raise ValueError("Input data length does not match with the efficiency variables")
+            data = pd.DataFrame(data, columns=var_list)
+        if not set(var_list).issubset(set(data.columns)):
+            raise ValueError("Missing variables in the input data")
+        try:
+            return self._get_efficiency(data[var_list].copy(), randomize=True).clip(lower=0.0)
+        except ValueError as error:
+            logger.error("Cannot randomize efficiency: %s", error)
+            raise KeyError
+
+    def _get_efficiency(self, data, randomize=False):
         """Calculate the efficiency.
 
         Note:
@@ -109,6 +139,42 @@ class Efficiency(object):
 
         Arguments:
             data (`pandas.DataFrame`): Data to apply the efficiency to.
+            randomize (bool, optional): Apply Gaussian randomization to the efficiencies?
+                Defaults to False.
+
+        """
+        raise NotImplementedError()
+
+    def get_efficiency_errors(self, data):
+        """Get the efficiency error for the given event or dataset.
+
+        Arguments:
+            data (`pandas.DataFrame` or Sequence): Data to calculate the efficiency errors of.
+
+        Returns:
+            pandas.Series: Per-event efficiency errors.
+
+        Raises:
+            ValueError: If the data format is not correct, eg, there is a variable mismatch.
+
+        """
+        var_list = self.get_variables()
+        if not isinstance(data, pd.DataFrame):
+            if len(var_list) != len(data):
+                raise ValueError("Input data length does not match with the efficiency variables")
+            data = pd.DataFrame(data, columns=var_list)
+        if not set(var_list).issubset(set(data.columns)):
+            raise ValueError("Missing variables in the input data")
+        return self._get_efficiency_error(data[var_list].copy()).clip(lower=0.0)
+
+    def _get_efficiency_error(self, data):
+        """Calculate the efficiency error.
+
+        Note:
+            No variable checking is performed.
+
+        Arguments:
+            data (`pandas.DataFrame`): Data to calculate the efficiency errors of.
 
         """
         raise NotImplementedError()

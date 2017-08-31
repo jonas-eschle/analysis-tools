@@ -36,7 +36,7 @@ def merge(data_list, **kwargs):
     if isinstance(data_list[0], ROOT.TObject):
         if 'name' not in kwargs:
             raise KeyError("No name specified for dataset merging.")
-        return merge_root(data_list, kwargs['name'], kwargs.get('title', kwargs['name']), data_list)
+        return merge_root(data_list, kwargs['name'], kwargs.get('title', kwargs['name']))
     elif isinstance(data_list[0], (pd.DataFrame, pd.Series)):
         raise NotImplementedError()
         # return merge_pandas(data_list)
@@ -66,15 +66,14 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
             for dataset in data_list]):
         raise ValueError("Incompatible observables")
     # Check weights
-    is_weighted = False
-    # Merge
-    output_ds = ROOT.RooDataSet(name, title, data_list[0].get())
+    if len(set(data.isWeighted() for data in data_list)) > 1:
+        raise ValueError("Input dataset list contains weighted and uneweighted datasets.")
+    # Merge by append, since we don't know the original weight situation
+    output_ds = data_list[0].pop(0)
     for data in data_list:
         output_ds.append(data)
         if destruct_data:
             destruct_object(data)
-    if is_weighted:
-        pass
     return output_ds
 
 

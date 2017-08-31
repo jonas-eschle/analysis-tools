@@ -89,7 +89,7 @@ def run(config_files, link_from):
                for file_name in plot_files.values()) or \
             not os.path.exists(_paths.get_efficiency_path(config['name'])):  # If plots don't exist, we load data
         logger.info("Loading data, this may take a while...")
-        weight_var = config['data'].get('weight_var', None)
+        weight_var = config['data'].get('weight-var-name', None)
         # Prepare data
         config['data']['output-format'] = 'pandas'
         config['data']['variables'] = list(config['variables'])
@@ -127,7 +127,8 @@ def run(config_files, link_from):
                             var_name, plot_files[var_name])
                 plot.savefig(plot_files[var_name], bbox_inches='tight')
     else:
-        logger.info("Nothing to do!")
+        logger.info("Efficiency file exists: %s. Nothing to do!",
+                    _paths.get_efficiency_path(config['name']))
 
 
 def main():

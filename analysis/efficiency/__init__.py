@@ -177,10 +177,11 @@ def get_acceptance(config):
 
     """
     config_keys = [key for key, _ in unfold_config(config)]
-    if any(key not in config_keys for key in ('variables',
-                                              'generation/name',
-                                              'reconstruction/name')):
-        raise ConfigError("Missing configuration key! -> %s" % key)
+    missing_keys = set(config_keys) - set(('variables',
+                                           'generation/name',
+                                           'reconstruction/name'))
+    if missing_keys:
+        raise ConfigError("Missing configuration key! -> {}".format(missing_keys))
     # Load the efficiencies
     gen_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['generation'].pop('name')),
                                                       validate=('model', 'variables', 'parameters')),
