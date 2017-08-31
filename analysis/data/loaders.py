@@ -153,6 +153,9 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         tree_name (str): Tree to load.
         **kwargs (dict): Extra configuration.
 
+    Returns:
+        ROOT.RooDataSet: pandas.DataFrame converted to RooDataSet.
+
     Raises:
         KeyError: If there are errors in the `kwargs` variables.
         ValueError: If there is an error in loading the acceptance.
@@ -252,6 +255,9 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         file_name (str): File to load.
         tree_name (str): Tree to load.
         **kwargs (dict): Extra configuration.
+
+    Returns:
+        ROOT.RooDataSet: ROOT file converted to RooDataSet.
 
     Raises:
         KeyError: If there are missing variables in `kwargs`.
