@@ -158,7 +158,7 @@ def run(config_files, link_from):
         logger.warning("Generating a RooAddPdf or a RooSimultaneous: "
                        "yields will be generated at a fixed value")
     try:
-        dataset = generate(physics, config['gen'].get('nevents-per-job', 'nevents'))
+        dataset = generate(physics, config['gen'].get('nevents-per-job', config['gen']['nevents']))  # TODO: catch config error?
     except ValueError as error:
         logger.exception("Exception on generation")
         raise RuntimeError(str(error))
