@@ -136,7 +136,7 @@ def run(config_files, link_from, verbose):
     try:
         models = {model_name: config[model_name]
                   for model_name
-                  in config['fit'].get('models', ['model'])}
+                  in config['fit'].get('models', ['model'])}#HERE
     except KeyError as error:
         logger.error("Missing model configuration -> %s", str(error))
         raise KeyError("Missing model configuration")
@@ -148,7 +148,7 @@ def run(config_files, link_from, verbose):
         logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()
     # Some info
-    nfits = config['fit'].get('nfits-per-job', 'nfits')
+    nfits = config['fit'].get('nfits-per-job', config['fit'].get('nfits'))#Modified by Michele
     logger.info("Doing %s sample/fit sequences", nfits)
     logger.info("Fit job name: %s", config['name'])
     if link_from:
@@ -280,7 +280,7 @@ def run(config_files, link_from, verbose):
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
-                result = FitResult().from_roofit(fit_result).to_plain_dict()
+		result = FitResult().from_roofit(fit_result).to_plain_dict()
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
             _root.destruct_object(dataset)

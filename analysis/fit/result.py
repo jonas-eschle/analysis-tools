@@ -7,6 +7,8 @@
 # =============================================================================
 """Analyze and store fit results."""
 
+import itertools
+
 from collections import OrderedDict
 import copy
 
@@ -210,11 +212,14 @@ class FitResult(object):
             pandas.DataFrame
 
         """
-        pandas_dict = {param_name + suffix: val
+	pandas_dictFit = {param_name + suffix: val
                        for param_name, param in self._result['fit-parameters'].items()
                        for val, suffix in zip(param, _SUFFIXES)}
-        pandas_dict = {param_name: val for param_name, val in self._result['const-parameters']}
-        pandas_dict['status_migrad'] = self._result['status']['MINIMIZE']
+	# !!! Added .items(), check if we need to add the suffix part too as above.
+	pandas_dictConst = {param_name: val for param_name, val in self._result['const-parameters'].items()}
+        
+	pandas_dict = dict(itertools.chain(pandas_dictFit.items(), pandas_dictConst.items()))
+        pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD',-1)
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
         pandas_dict['cov_quality'] = self._result['covariance-matrix']['quality']
