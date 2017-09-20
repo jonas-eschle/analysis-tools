@@ -213,7 +213,8 @@ class FitResult(object):
         pandas_dict = {param_name + suffix: val
                        for param_name, param in self._result['fit-parameters'].items()
                        for val, suffix in zip(param, _SUFFIXES)}
-        pandas_dict = {param_name: val for param_name, val in self._result['const-parameters']}
+        pandas_dict.update({param_name: val for param_name, val
+                            in self._result['const-parameters'].items()})
         pandas_dict['status_migrad'] = self._result['status']['MINIMIZE']
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
