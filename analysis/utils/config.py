@@ -349,9 +349,9 @@ def get_shared_vars(config, external_vars=None):
 
     """
     # Create shared vars
-    parameter_configs = {config_element: config_value
-                         for config_element, config_value in unfold_config(config)
-                         if isinstance(config_value, str) and '@' in config_value}
+    parameter_configs = OrderedDict((config_element, config_value)
+                                    for config_element, config_value in unfold_config(config)
+                                    if isinstance(config_value, str) and '@' in config_value)
     # First build the shared var
     refs = {} if not external_vars else external_vars
     # Build shared parameters
