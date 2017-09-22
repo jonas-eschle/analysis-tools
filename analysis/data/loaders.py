@@ -55,11 +55,11 @@ def _analyze_weight_config(config):
     if not isinstance(weights_not_to_normalize, (list, tuple)):
         weights_not_to_normalize = [weights_not_to_normalize]
     weights = weights_to_normalize + weights_not_to_normalize
-    if bool(weights):
+    if weights :
         # If `weight-var-name` is specified, create a total weight variable with this name, otherwise create a total weight variable `wTot`
         weight_var = config.get('weight-var-name', 'wTot')
         # If `weight_var-name` corresponds to a weight, raise an error
-        if bool(set(weights_to_normalize+weights_not_to_normalize).intersection([weight_var])) :
+        if set(weights_to_normalize + weights_not_to_normalize).intersection([weight_var]) :
             logger.error("'weight-var-name' is already used as weight")
             raise ValueError
     else :
