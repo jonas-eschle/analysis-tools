@@ -56,8 +56,8 @@ def _analyze_weight_config(config):
         weights_not_to_normalize = [weights_not_to_normalize]
     weights = weights_to_normalize + weights_not_to_normalize
     if weights :
-        # If `weight-var-name` is specified, create a total weight variable with this name, otherwise create a total weight variable `wTot`
-        weight_var = config.get('weight-var-name', 'wTot')
+        # If `weight-var-name` is specified, create a total weight variable with this name, otherwise create a total weight variable `totalWeight`
+        weight_var = config.get('weight-var-name', 'totalWeight')
         # If `weight_var-name` corresponds to a weight, raise an error
         if set(weights_to_normalize + weights_not_to_normalize).intersection([weight_var]) :
             logger.error("'weight-var-name' is already used as weight")
