@@ -38,7 +38,7 @@ def _get_path(dirs, extension, name_transformation, name, *args, **kwargs):
 
     Arguments:
         dirs (list): Parent directories of the object path.
-        extension (str): Extension of the file.
+        extension (str): Extension of the file (including the dot).
         name_transformation (Callable, optional): Function to transform the name of the path.
         name (str): Name of the object.
         *args (list): Positional arguments to be passed to `name_transformation`.
@@ -48,8 +48,15 @@ def _get_path(dirs, extension, name_transformation, name, *args, **kwargs):
         str: Absolute path of the object.
 
     """
-    return os.path.join(*([get_global_var('BASE_PATH')] +
-                          dirs + [name_transformation(name, args, kwargs) + extension]))
+    assert extension.startswith('.'), "Extension is expected to start with '.'. " \
+                                      "Given extension: {}".format(extension)
+
+    path = os.path.join(*([get_global_var('BASE_PATH')] +
+                          dirs + [name_transformation(name, args, kwargs)]))
+    if not path.endswith(extension):
+        path += extension
+
+    return path
 
 
 def register_path(path_type,
