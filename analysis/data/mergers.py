@@ -68,7 +68,7 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
     if len(set(data.isWeighted() for data in data_list)) > 1:
         raise ValueError("Input dataset list contains weighted and uneweighted datasets.")
     # Merge by append, since we don't know the original weight situation
-    output_ds = data_list.pop(0)
+    output_ds = data_list[0].pop(0)
     for data in data_list:
         output_ds.append(data)
         if destruct_data:

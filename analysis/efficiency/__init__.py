@@ -176,9 +176,9 @@ def get_acceptance(config):
 
     """
     config_keys = [key for key, _ in unfold_config(config)]
-    # missing_keys should be empty if the needed keys have been provided. Otherwise complain!
-    missing_keys = set(('variables', 'generation/name', 'reconstruction/name')) - set(config_keys)
-    
+    missing_keys = set(config_keys) - set(('variables',
+                                           'generation/name',
+                                           'reconstruction/name'))
     if missing_keys:
         raise ConfigError("Missing configuration key! -> {}".format(missing_keys))
     # Load the efficiencies
