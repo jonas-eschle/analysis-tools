@@ -171,7 +171,7 @@ class ToySubmitter(object):
                                                   script_to_run,
                                                   script_args,
                                                   log_file_fmt,
-                                                  config.get('batch', {}))
+                                                  **config.get('batch', {}))
             logger.info('Submitted JobID: %s', job_id)
 
 
