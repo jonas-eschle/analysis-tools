@@ -60,7 +60,7 @@ def get_efficiency_model_class(model_name):
         `Efficiency`: Efficiency class, non-instantiated.
 
     """
-    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower(), None)
+    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower())  # DEFAULT
 
 
 def load_efficiency_model(model_name, **extra_parameters):
@@ -104,7 +104,7 @@ def get_efficiency_model(efficiency_config, **extra_parameters):
         KeyError: If there is a configuration error
 
     """
-    efficiency_config['parameters'].update(extra_parameters)
+    efficiency_config['parameters'].update(extra_parameters)  # Handling missing 'parameters' key?
     # Check the configuration
     for key in ('model', 'variables', 'parameters'):
         if key not in efficiency_config:
@@ -182,10 +182,10 @@ def get_acceptance(config):
     if missing_keys:
         raise ConfigError("Missing configuration key! -> {}".format(missing_keys))
     # Load the efficiencies
-    gen_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['generation'].pop('name')),
+    gen_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['generation'].pop('name')),  # Handle missing 'name' key?
                                                       validate=('model', 'variables', 'parameters')),
                                           **config['generation'])
-    reco_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['reconstruction'].pop('name')),
+    reco_efficiency = get_efficiency_model(load_config(get_efficiency_path(config['reconstruction'].pop('name')),  # Handle missing 'name' key?
                                                        validate=('model', 'variables', 'parameters')),
                                            **config['reconstruction'])
     # Check the variables
