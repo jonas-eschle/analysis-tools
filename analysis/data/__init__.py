@@ -99,21 +99,21 @@ def get_data(data_config, **kwargs):
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
             raise KeyError("Bad data configuration -> '%s' key is missing" % key)
-    source_name = data_config.pop('source')
+    source_name = data_config.pop('source')  # DEFAULT OK
     try:
-        source_type = data_config.pop('source-type', None)
+        source_type = data_config.pop('source-type', None)  # DEFAULT
         file_name = source_name if not source_type \
             else getattr(paths, 'get_%s_path' % source_type)(source_name)
         if not os.path.exists(file_name):
             raise OSError("Cannot find input file -> %s" % file_name)
     except AttributeError:
         raise AttributeError("Unknown source type -> %s" % source_type)
-    tree_name = data_config.pop('tree')
-    output_format = data_config.pop('output-format').lower()
+    tree_name = data_config.pop('tree')  # DEFAULT OK
+    output_format = data_config.pop('output-format').lower()  # DEFAULT OK
     # Optional: output-type, cuts, branches
     input_ext = os.path.splitext(file_name)[1]
     try:
-        input_type = data_config.get('input-type', None)
+        input_type = data_config.get('input-type')  # DEFAULT
         if not input_type:
             input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:

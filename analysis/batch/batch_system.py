@@ -104,7 +104,7 @@ echo "------------------------------------------------------------------------"
         cmd = 'python %s' % cmd_script
         cmd += ' %s' % (' '.join(script_args))
         # Format log file names
-        err_file = batch_config.pop('errfile', log_file)
+        err_file = batch_config.pop('errfile', log_file)  # DEFAULT
         log_file, ext = os.path.splitext(log_file)
         log_file = '%s%s.%s' % (log_file, self.JOBID_FORMAT, ext)
         err_file, ext = os.path.splitext(err_file)
@@ -113,11 +113,11 @@ echo "------------------------------------------------------------------------"
         header = [self.DIRECTIVES['job-name'] % job_name,
                   self.DIRECTIVES['logfile'] % log_file,
                   self.DIRECTIVES['errfile'] % err_file,
-                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '02:00:00')]
+                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '02:00:00')]  # DEFAULT
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
-            directive = self.DIRECTIVES.get(batch_option, None)
+            directive = self.DIRECTIVES.get(batch_option)
             if directive is None:
                 logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
                 continue
@@ -125,7 +125,7 @@ echo "------------------------------------------------------------------------"
         script = self.SCRIPT.format(workdir=os.getcwd(),
                                     script=cmd,
                                     header='\n'.join(header),
-                                    shell=batch_config.pop('shell', '/bin/bash'))
+                                    shell=batch_config.pop('shell', '/bin/bash'))  # DEFAULT
         # Submit using stdin
         logger.debug('Submitting -> %s', cmd)
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
@@ -135,7 +135,7 @@ echo "------------------------------------------------------------------------"
         return output.rstrip('\n')
 
     def get_job_id(self):
-        return os.environ.get(self.JOBID_VARIABLE, None)
+        return os.environ.get(self.JOBID_VARIABLE)
 
 
 class Torque(BatchSystem):

@@ -166,7 +166,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     # Checks and variable preparation
     try:
         name = kwargs['name']
-        title = kwargs.get('title', name)
+        title = kwargs.get('title', name)  # DEFAULT OK
     except KeyError as error:
         raise KeyError("Missing configuration key -> %s" % error)
     # Check weights
@@ -175,7 +175,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     except KeyError:
         raise KeyError("Badly specified weights")
     # Variables
-    var_list = kwargs.get('variables', None)
+    var_list = kwargs.get('variables')
     if var_list and weight_var:
         var_list.append(weight_var)
         var_list = list(set(var_list) | set(weights_to_normalize) | set(weights_not_normalized))
@@ -208,7 +208,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     # Load the data
     frame = _load_pandas(file_name, tree_name,
                          var_list,
-                         kwargs.get('selection', None))
+                         kwargs.get('selection'))
     if acc_var:
         from analysis.efficiency import get_acceptance
         try:
@@ -234,7 +234,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     return dataset_from_pandas(frame, name, title,
                                var_list=var_list,
                                weight_var=weight_var,
-                               categories=kwargs.get('categories', None))
+                               categories=kwargs.get('categories'))
 
 
 ###############################################################################
@@ -306,7 +306,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     # Crosscheck leaves
     if variables - leaves:
         raise ValueError("Cannot find leaves in input -> %s" % (variables - leaves))
-    selection = kwargs.get('selection', None)
+    selection = kwargs.get('selection')
     leave_set = ROOT.RooArgSet()
     leave_list = []
     if selection:
@@ -391,8 +391,8 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
                  file_name, tree_name)
     if not os.path.exists(file_name):
         raise OSError("Cannot find input file -> %s" % file_name)
-    selection = kwargs.get('selection', None)
-    variables = kwargs.get('variables', None)
+    selection = kwargs.get('selection')
+    variables = kwargs.get('variables')
     if selection:
         output_data = read_root(file_name, tree_name).query(selection)
         if variables:
