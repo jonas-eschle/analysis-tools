@@ -48,7 +48,7 @@ class BatchSystem(object):
     """Batch System base class."""
 
     SUBMIT_COMMAND = None
-    SCRIPT = """#!{shell}
+    DEFAULT_SCRIPT = """#!{shell}
 #####################################
 {header}
 #####################################
@@ -85,8 +85,55 @@ echo "------------------------------------------------------------------------"
         """
         return which(self.SUBMIT_COMMAND) is not None
 
-    # pylint: disable=too-many-locals
-    def submit_job(self, job_name, cmd_script, script_args, log_file, **batch_config):
+    def submit_job(self, job_name, script, log_file, extra_config=None, **batch_config):
+        """Submit a job to the batch system.
+
+        Arguments:
+            job_name (str): Job name.
+            script (str): Commands to run.
+            script_args (list): List of arguments passed to the script.
+            log_file (str): Logfile location.
+            extra_config (dict, optional): Extra configuration for 'script'. Defaults
+                to `None`.
+            **batch_config (dict): Configuration of the batch system.
+
+        Returns:
+            str: Job ID
+
+        """
+        err_file = batch_config.pop('errfile', log_file)
+        log_file, ext = os.path.splitext(log_file)
+        log_file = '%s%s%s' % (log_file, self.JOBID_FORMAT, ext)
+        err_file, ext = os.path.splitext(err_file)
+        err_file = '%s%s%s' % (err_file, self.JOBID_FORMAT, ext)
+        # Build header
+        header = [self.DIRECTIVES['job-name'] % job_name,
+                  self.DIRECTIVES['logfile'] % log_file,
+                  self.DIRECTIVES['errfile'] % err_file,
+                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '01:00:00')]
+        if log_file == err_file:
+            header.append(self.DIRECTIVES['mergelogs'])
+        for batch_option, batch_value in batch_config.items():
+            directive = self.DIRECTIVES.get(batch_option, None)
+            if directive is None:
+                logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
+                continue
+            header.append(directive % batch_value)
+        script_config = extra_config if extra_config is not None else {}
+        script_config['workdir'] = script_config.get('workdir', os.getcwd())
+        script_config['header'] = '\n'.join(header)
+        script_config['shell'] = batch_config.pop('shell', '/bin/bash')
+        script_config['jobid_var'] = self.JOBID_VARIABLE
+        # Submit using stdin
+        logger.debug('Submitting job')
+        proc = subprocess.Popen(self.SUBMIT_COMMAND,
+                                stdout=subprocess.PIPE,
+                                stdin=subprocess.PIPE)
+        return proc.communicate(input=script.format(**script_config))[0].rstrip('\n')
+
+    # pylint: disable=too-many-arguments
+    def submit_script(self, job_name, cmd_script, script_args,
+                      log_file, executable='python', **batch_config):
         """Submit a job to the batch system.
 
         The submission script is input as stdin.
@@ -96,46 +143,27 @@ echo "------------------------------------------------------------------------"
             cmd_script (str): Script to run.
             script_args (list): List of arguments passed to the script.
             log_file (str): Logfile location.
-            runtime (str): Allocated time for the batch job.
+            executable (str, optional): Command to execute the script. Defaults to 'python'.
+            **batch_config (dict): Configuration of the batch system.
 
         Returns:
             str: JobID.
 
         """
-        cmd = 'python %s' % cmd_script
-        cmd += ' %s' % (' '.join(script_args))
-        # Format log file names
-        err_file = batch_config.pop('errfile', log_file)
-        log_file, ext = os.path.splitext(log_file)
-        log_file = '%s%s.%s' % (log_file, self.JOBID_FORMAT, ext)
-        err_file, ext = os.path.splitext(err_file)
-        err_file = '%s%s.%s' % (err_file, self.JOBID_FORMAT, ext)
-        # Build header
-        header = [self.DIRECTIVES['job-name'] % job_name,
-                  self.DIRECTIVES['logfile'] % log_file,
-                  self.DIRECTIVES['errfile'] % err_file,
-                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '02:00:00')]
-        if log_file == err_file:
-            header.append(self.DIRECTIVES['mergelogs'])
-        for batch_option, batch_value in batch_config.items():
-            directive = self.DIRECTIVES.get(batch_option, None)
-            if directive is None:
-                logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
-                continue
-            header.append(directive % batch_value)
-        script = self.SCRIPT.format(workdir=os.getcwd(),
-                                    script=cmd,
-                                    header='\n'.join(header),
-                                    shell=batch_config.pop('shell', '/bin/bash'))
-        # Submit using stdin
-        logger.debug('Submitting -> %s', cmd)
-        proc = subprocess.Popen(self.SUBMIT_COMMAND,
-                                stdout=subprocess.PIPE,
-                                stdin=subprocess.PIPE)
-        output = proc.communicate(input=script)[0]
-        return output.rstrip('\n')
+        cmd = '%s %s %s' % (executable + ' ' if executable else './',
+                            cmd_script,
+                            ' '.join(script_args))
+        return self.submit_job(job_name, self.DEFAULT_SCRIPT, log_file, extra_config={'script': cmd}, **batch_config)
 
     def get_job_id(self):
+        """Get the Job ID.
+
+        Only works if we are in the batch system.
+
+        Returns:
+            str: Job ID.
+
+        """
         return os.environ.get(self.JOBID_VARIABLE, None)
 
 

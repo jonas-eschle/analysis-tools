@@ -74,6 +74,7 @@ def run(config_files, link_from):
         raise KeyError("ConfigError raised -> %s" % error.missing_keys)
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
+        raise
     # Do checks and load things
     plot_files = {}
     if config.get('plot', False):

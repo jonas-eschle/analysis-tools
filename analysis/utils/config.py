@@ -17,8 +17,6 @@ from collections import OrderedDict, defaultdict
 import yaml
 import yamlordereddictloader
 
-import ROOT
-
 from analysis.utils.logging_color import get_logger
 
 
@@ -237,6 +235,8 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         ValueError: If the action is badly configured.
 
     """
+    import ROOT
+
     if external_vars is None:
         external_vars = {}
     constraint = None
@@ -352,9 +352,9 @@ def get_shared_vars(config, external_vars=None):
 
     """
     # Create shared vars
-    parameter_configs = {config_element: config_value
-                         for config_element, config_value in unfold_config(config)
-                         if isinstance(config_value, str) and '@' in config_value}
+    parameter_configs = OrderedDict((config_element, config_value)
+                                    for config_element, config_value in unfold_config(config)
+                                    if isinstance(config_value, str) and '@' in config_value)
     # First build the shared var
     refs = {} if not external_vars else external_vars
     # Build shared parameters

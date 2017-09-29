@@ -129,8 +129,9 @@ class BaseFactory(object):
 
         Arguments:
             key (str): Object identifier.
-            init_val (object): Object to add to the workspace if the key is not
-                present in the workspace.
+            default (any): The value to return if *key* is not found. Default is None.
+            recursive (bool): If True, the object is searched recursively
+            including its children with a stop-if-found rule.
 
         Returns:
             object: Object in the workspace.

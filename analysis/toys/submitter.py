@@ -168,11 +168,11 @@ class ToySubmitter(object):
         _config.write_config(self.config, config_file_dest)
         for _ in range(n_jobs):
             # Write the config file
-            job_id = self.batch_system.submit_job(config['name'],
-                                                  script_to_run,
-                                                  script_args,
-                                                  log_file_fmt,
-                                                  config.get('batch', {}))
+            job_id = self.batch_system.submit_script(config['name'],
+                                                     script_to_run,
+                                                     script_args,
+                                                     log_file_fmt,
+                                                     **config.get('batch', {}))
             logger.info('Submitted JobID: %s', job_id)
 
 

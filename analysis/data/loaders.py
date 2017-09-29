@@ -36,42 +36,36 @@ def _analyze_weight_config(config):
         config (dict): `get_data` configuration.
 
     Returns:
-        tuple (str, list, list): Name of the weight variable, weight variables to
-            normalize, weight variables that are not normalized.
+        tuple (str, list, list): Name of the total weight variable, weight variables to
+            normalize, weight variables not to normalize.
 
     Raises:
         KeyError: If there is some error in the configuration.
-        ValueError: If there are common weights between normalized and non-normalized
-            or if the name of the weight variable corresponds to one of the weights
-            when more than one has been specified.
+        ValueError: If there are common weights between to-normalize and not-to-normalize
+            or if the name of the total weight variable corresponds to one of the weights.
 
     """
     # Check weights
     weights_to_normalize = config.get('weights-to-normalize', [])
-    weights_not_normalized = config.get('weights-not-normalized', [])
-    if set(weights_to_normalize) & set(weights_not_normalized):
-        logger.error("Common weights between 'weights-to-normalize' and 'weights-not-normalized'")
-        raise ValueError
-    weight_var = config.get('weights-not-normalized', None)
-    if weight_var in weights_to_normalize + weights_not_normalized:
-        logger.error("Given 'weights-not-normalized' has already been specified as a weight")
+    weights_not_to_normalize = config.get('weights-not-to-normalize', [])
+    if set(weights_to_normalize) & set(weights_not_to_normalize):
+        logger.error("Common weights between 'weights-to-normalize' and 'weights-not-to-normalize'")
         raise ValueError
     if not isinstance(weights_to_normalize, (list, tuple)):
         weights_to_normalize = [weights_to_normalize]
-    if not isinstance(weights_not_normalized, (list, tuple)):
-        weights_not_normalized = [weights_not_normalized]
-    weights = weights_to_normalize + weights_not_normalized
-    if weights:
-        if not weight_var:
-            if len(weights) == 1:
-                weight_var = weights[0]
-            else:
-                logger.error("Missing name of the weight variable")
-                raise KeyError
-    elif weight_var:
-        logger.error("'weight-var-name' is set nor 'weights-to-normalize' or 'weights-not-normalized' are. ")
-        raise KeyError
-    return weight_var, weights_to_normalize, weights_not_normalized
+    if not isinstance(weights_not_to_normalize, (list, tuple)):
+        weights_not_to_normalize = [weights_not_to_normalize]
+    weights = weights_to_normalize + weights_not_to_normalize
+    if weights :
+        # If `weight-var-name` is specified, create a total weight variable with this name, otherwise create a total weight variable `totalWeight`
+        weight_var = config.get('weight-var-name', 'totalWeight')
+        # If `weight_var-name` corresponds to a weight, raise an error
+        if set(weights_to_normalize + weights_not_to_normalize).intersection([weight_var]) :
+            logger.error("'weight-var-name' is already used as weight")
+            raise ValueError
+    else :
+        weight_var = None
+    return weight_var, weights_to_normalize, weights_not_to_normalize
 
 
 ###############################################################################
@@ -140,11 +134,11 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         + `selection`: Selection to apply.
         + `weights-to-normalize`: Variables defining the weights that are normalized
             to the total number of entries of the dataset.
-        + `weights-not-normalized`: Variables defining the weights that are not normalized.
+        + `weights-not-to-normalize`: Variables defining the weights that are not normalized.
         + `weight-var-name`: Name of the weight variable. If there is only one weight,
             it is not needed. Otherwise it has to be specified.
         + `acceptance`: Load an acceptance. This needs to be accompanied with a weight
-            specification, either in `weights-to-normalize` or `weights-not-normalized`, which
+            specification, either in `weights-to-normalize` or `weights-not-to-normalize`, which
             is either `acceptance_fit` or `acceptance_gen`. Depending on which one is
             specified, `acceptance.get_fit_weights` or `acceptance.get_gen_weights` is used.
         + `categories`: RooCategory variables to use.
@@ -172,22 +166,22 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         raise KeyError("Missing configuration key -> %s" % error)
     # Check weights
     try:
-        weight_var, weights_to_normalize, weights_not_normalized = _analyze_weight_config(kwargs)
+        weight_var, weights_to_normalize, weights_not_to_normalize = _analyze_weight_config(kwargs)
     except KeyError:
         raise KeyError("Badly specified weights")
     # Variables
     var_list = kwargs.get('variables', None)
-    if var_list and weight_var:
-        var_list.append(weight_var)
-        var_list = list(set(var_list) | set(weights_to_normalize) | set(weights_not_normalized))
+    # Raise an error if some weights are not loaded.
+    if not (set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list))) :
+        raise ValueError("Missing weights in the list of variables read from input file.")
     acc_var = ''
     # Acceptance specified
     if 'acceptance' in kwargs:
         if any('acceptance_fit' in weights
-               for weights in (weights_to_normalize, weights_not_normalized)):
+               for weights in (weights_to_normalize, weights_not_to_normalize)):
             acc_var = 'acceptance_fit'
         if any('acceptance_gen' in weights
-               for weights in (weights_to_normalize, weights_not_normalized)):
+               for weights in (weights_to_normalize, weights_not_to_normalize)):
             if acc_var:
                 raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
             acc_var = 'acceptance_gen'
@@ -197,10 +191,10 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     if weight_var:
         if 'acceptance' in kwargs:
             if any('acceptance_fit' in weights
-                   for weights in (weights_to_normalize, weights_not_normalized)):
+                   for weights in (weights_to_normalize, weights_not_to_normalize)):
                 acc_var = 'acceptance_fit'
             if any('acceptance_gen' in weights
-                   for weights in (weights_to_normalize, weights_not_normalized)):
+                   for weights in (weights_to_normalize, weights_not_to_normalize)):
                 if acc_var:
                     raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
                 acc_var = 'acceptance_gen'
@@ -227,7 +221,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         frame[weight_var] = np.prod([frame[w_var] for w_var in weights_to_normalize],
                                     axis=0)
         frame[weight_var] = frame[weight_var]/frame[weight_var].sum()*frame.shape[0]
-        frame[weight_var] = np.prod([frame[w_var] for w_var in weights_not_normalized + [weight_var]],
+        frame[weight_var] = np.prod([frame[w_var] for w_var in weights_not_to_normalize + [weight_var]],
                                     axis=0)
     if var_list is not None and weight_var:
         var_list.append(weight_var)
@@ -299,11 +293,11 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         raise NotImplementedError("Acceptance weights are not implemented for ROOT files")
     # Check weights
     try:
-        weight_var, weights_to_normalize, weights_not_normalized = _analyze_weight_config(kwargs)
+        weight_var, weights_to_normalize, weights_not_to_normalize = _analyze_weight_config(kwargs)
     except KeyError:
         raise KeyError("Badly specified weights")
     if variables and weight_var:
-        variables = set(variables) | set(weights_to_normalize) | set(weights_not_normalized)
+        variables = set(variables) | set(weights_to_normalize) | set(weights_not_to_normalize)
     # Crosscheck leaves
     if variables - leaves:
         raise ValueError("Cannot find leaves in input -> %s" % (variables - leaves))
@@ -347,8 +341,8 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         # Non-normalized weights
         weights = ROOT.RooFormulaVar(weight_var,
                                      weight_var,
-                                     "*".join(weights_not_normalized + ["%s_normalized" % weight_var]),
-                                     list_to_rooarglist([var_list[weight] for weight in weights_not_normalized] +
+                                     "*".join(weights_not_to_normalize + ["%s_normalized" % weight_var]),
+                                     list_to_rooarglist([var_list[weight] for weight in weights_not_to_normalize] +
                                                         [normalized_w]))
         var_set.append(weights)
         dataset.addColumn(weights)

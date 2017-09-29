@@ -52,8 +52,8 @@ def get_physics_factory(observable, pdf_type):
     """Get physics factory.
 
     Arguments:
-        pdf_configs (dict): PDFs to load, along with their configuration.
-            The keys define the type of observable.
+        observable (str): Observable name.
+        pdf_type (str): Type of the pdf.
 
     Returns:
         `PhysicsFactory`: Requested PhysicsFactory.

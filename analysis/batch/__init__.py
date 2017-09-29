@@ -33,7 +33,7 @@ def get_batch_system(name=None):
             return batch_system
     else:
         for batch_system in BATCH_SYSTEMS.values():
-            if batch_system.is_available:
+            if batch_system.is_available():
                 return batch_system
     raise ValueError()
 
