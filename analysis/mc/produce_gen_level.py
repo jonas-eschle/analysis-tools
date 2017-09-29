@@ -30,8 +30,8 @@ set -e
 if [ -f $HOME/.localrc ]; then
   source $HOME/.localrc
 fi
-source LbLogin.sh -c x86_64-slc5-gcc46-opt
-source SetupProject.sh Gauss v45r11
+#  source LbLogin.sh -c x86_64-slc5-gcc46-opt
+source SetupProject.sh Gauss v49r8
 seed=`echo ${jobid_var} | cut -d'.' -f1`
 echo "------------------------------------------------------------------------"
 echo "Seed is "$seed
@@ -49,7 +49,7 @@ LHCbApp().EvtMax = {n_events}
 Gauss().DatasetName = '$seed'" > $seedfile
 echo "Config file:"
 cat $seedfile
-gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile}.py $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
 mv $seed-*.xgen {output_file}
 mv $seed-*-histos.root {output_histos}
 ls -ltr
@@ -104,7 +104,7 @@ def run(config_files, link_from):
             evt_type = os.path.abspath(evt_type)
         decfile = evt_type
     else:
-        decfile = '$GAUSSOPTS/{decfile}.py'
+        decfile = '$DECFILESROOT/options/{}.py'.format(evt_type)
     # Prepare job
     _, _, log_file = _paths.prepare_path('mc/{}'.format(evt_type),
                                          _paths.get_log_path,
