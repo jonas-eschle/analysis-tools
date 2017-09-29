@@ -47,7 +47,7 @@ class BatchSystem(object):
     """Batch System base class."""
 
     SUBMIT_COMMAND = None
-    SCRIPT = """#!{shell}
+    DEFAULT_SCRIPT = """#!{shell}
 #####################################
 {header}
 #####################################
@@ -84,26 +84,22 @@ echo "------------------------------------------------------------------------"
         """
         return which(self.SUBMIT_COMMAND) is not None
 
-    # pylint: disable=too-many-locals
-    def submit_job(self, job_name, cmd_script, script_args, log_file, **batch_config):
+    def submit_job(self, job_name, script, log_file, extra_config=None, **batch_config):
         """Submit a job to the batch system.
-
-        The submission script is input as stdin.
 
         Arguments:
             job_name (str): Job name.
-            cmd_script (str): Script to run.
+            script (str): Commands to run.
             script_args (list): List of arguments passed to the script.
             log_file (str): Logfile location.
-            runtime (str): Allocated time for the batch job.
+            extra_config (dict, optional): Extra configuration for 'script'. Defaults
+                to `None`.
+            **batch_config (dict): Configuration of the batch system.
 
         Returns:
-            str: JobID.
+            str: Job ID
 
         """
-        cmd = 'python %s' % cmd_script
-        cmd += ' %s' % (' '.join(script_args))
-        # Format log file names
         err_file = batch_config.pop('errfile', log_file)
         log_file, ext = os.path.splitext(log_file)
         log_file = '%s%s.%s' % (log_file, self.JOBID_FORMAT, ext)
@@ -122,19 +118,50 @@ echo "------------------------------------------------------------------------"
                 logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
                 continue
             header.append(directive % batch_value)
-        script = self.SCRIPT.format(workdir=os.getcwd(),
-                                    script=cmd,
-                                    header='\n'.join(header),
-                                    shell=batch_config.pop('shell', '/bin/bash'))
+        script_config = extra_config if extra_config is not None else {}
+        script_config['workdir'] = os.getcwd()
+        script_config['header'] = '\n'.join(header)
+        script_config['shell'] = batch_config.pop('shell', '/bin/bash')
         # Submit using stdin
-        logger.debug('Submitting -> %s', cmd)
+        logger.debug('Submitting job')
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
-        output = proc.communicate(input=script)[0]
-        return output.rstrip('\n')
+        return proc.communicate(input=script.format(**script_config))[0].rstrip('\n')
+
+    # pylint: disable=too-many-arguments
+    def submit_script(self, job_name, cmd_script, script_args,
+                      log_file, executable='python', **batch_config):
+        """Submit a job to the batch system.
+
+        The submission script is input as stdin.
+
+        Arguments:
+            job_name (str): Job name.
+            cmd_script (str): Script to run.
+            script_args (list): List of arguments passed to the script.
+            log_file (str): Logfile location.
+            executable (str, optional): Command to execute the script. Defaults to 'python'.
+            **batch_config (dict): Configuration of the batch system.
+
+        Returns:
+            str: JobID.
+
+        """
+        cmd = '%s %s %s' % (executable + ' ' if executable else './',
+                            cmd_script,
+                            ' '.join(script_args))
+        return self.submit_job(job_name, self.DEFAULT_SCRIPT, log_file, extra_config={'script': cmd}, **batch_config)
 
     def get_job_id(self):
+        """Get the Job ID.
+
+        Only works if we are in the batch system.
+
+        Returns:
+            str: Job ID.
+
+        """
         return os.environ.get(self.JOBID_VARIABLE, None)
 
 
