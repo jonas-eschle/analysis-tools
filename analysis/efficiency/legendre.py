@@ -130,7 +130,7 @@ class LegendreEfficiency(Efficiency):
         """
         super(LegendreEfficiency, self).__init__(var_list, config)
         self._ranges = {var_name: process_range((low, high))
-                        for var_name, (low, high) in config.get('ranges', {}).items()}
+                        for var_name, (low, high) in config.get('ranges', {}).items()}  # DEFAULT? Doc says [-1, 1] assumed
         orders = tuple(config['pol-orders'][var] for var in var_list)
         self._coefficients = np.reshape(config['coefficients'], orders)
         self._covariance = np.reshape(config['covariance'],
@@ -345,14 +345,14 @@ class LegendreEfficiency1D(Efficiency):
         self._ranges = {var_name: process_range((low, high))
                         for var_name, (low, high) in config.get('ranges', {}).items()}
         # Load coefficients
-        if len(config['coefficients']) != sum(order for order in config['pol-orders'].values()):
+        if len(config['coefficients']) != sum(order for order in config['pol-orders'].values()):  # MISSING KEY
             raise KeyError("Wrong number of coefficients")
         self._coefficients = np.array(np.split(config['coefficients'],
                                                np.cumsum([config['pol-orders'][var_name]
                                                           for var_name in self.get_variables()])[:-1]))
-        self._covariance = np.reshape(config['covariance'],
-                                      (sum(config['pol-orders'].values()),
-                                       sum(config['pol-orders'].values())))
+        self._covariance = np.reshape(config['covariance'],  # MISSING KEY
+                                      (sum(config['pol-orders'].values()),  # MISSING KEY
+                                       sum(config['pol-orders'].values())))  # MISSING KEY
         for var_name in config.get('symmetric-variables', []):
             logger.debug("Symmetrizing legendre polynomial for variable %s", var_name)
             try:

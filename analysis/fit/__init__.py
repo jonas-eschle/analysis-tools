@@ -77,8 +77,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
 
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-    if 'Range' not in kwargs:
-        kwargs['Range'] = 'Full'
+    kwargs.setdefault('Range', 'Full')  # DEFAULT
     for command, val in kwargs.items():
         roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:
@@ -99,7 +98,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     except ValueError as error:
         logger.error("Problem getting the PDF -> %s", error)
         raise
-    if kwargs.get('Extended', False) != factory.is_extended():
+    if kwargs.get('Extended', False) != factory.is_extended():  # DEFAULT OK
         logger.warning("Requested fit with Extended=%s fit on %sextended PDF. Check this is what you want.",
                        kwargs.get('Extended', False),
                        'an ' if factory.is_extended() else 'a non-')

@@ -104,7 +104,7 @@ def get_efficiency_model(efficiency_config, **extra_parameters):
         KeyError: If there is a configuration error
 
     """
-    efficiency_config['parameters'].update(extra_parameters)  # Handling missing 'parameters' key?
+    efficiency_config['parameters'].update(extra_parameters)  # Handle missing 'parameters' key?
     # Check the configuration
     for key in ('model', 'variables', 'parameters'):
         if key not in efficiency_config:
@@ -178,7 +178,7 @@ def get_acceptance(config):
     config_keys = [key for key, _ in unfold_config(config)]
     # missing_keys should be empty if the needed keys have been provided. Otherwise complain!
     missing_keys = set(('variables', 'generation/name', 'reconstruction/name')) - set(config_keys)
-    
+
     if missing_keys:
         raise ConfigError("Missing configuration key! -> {}".format(missing_keys))
     # Load the efficiencies
