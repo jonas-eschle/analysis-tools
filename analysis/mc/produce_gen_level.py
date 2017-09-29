@@ -36,6 +36,7 @@ seed=`echo ${jobid_var} | cut -d'.' -f1`
 echo "------------------------------------------------------------------------"
 echo "Seed is "$seed
 echo "------------------------------------------------------------------------"
+# Prepare job
 cd {workdir}
 mkdir $seed
 cd $seed
@@ -49,10 +50,18 @@ LHCbApp().EvtMax = {n_events}
 Gauss().DatasetName = '$seed'" > $seedfile
 echo "Config file:"
 cat $seedfile
+# Run
 gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+# Move output
 mv $seed-*.xgen {output_file}
 mv $seed-*-histos.root {output_histos}
 ls -ltr
+# Do links
+if [ "{do_link}" == true ]; then
+    ln -sf {output_file} {output_file_link}
+    ln -sf {output_histos} {output_histos_link}
+if
+# Cleanup
 rm -rf {workdir}/$seed
 echo "------------------------------------------------------------------------"
 echo "Job ended on" `date`
@@ -109,17 +118,21 @@ def run(config_files, link_from):
     _, _, log_file = _paths.prepare_path('mc/{}'.format(evt_type),
                                          _paths.get_log_path,
                                          None)  # No linking is done for logs
-    _, _, output_file = _paths.prepare_path('{}_$seed'.format(evt_type),
-                                            _paths.get_genlevel_mc_path,
-                                            link_from,
-                                            evt_type=evt_type)
-    _, _, output_histos = _paths.prepare_path('{}_$seed'.format(evt_type),
-                                              _paths.get_genlevel_histos_path,
-                                              None,
-                                              evt_type=evt_type)
+    do_link, output_file, output_file_link = _paths.prepare_path('{}_$seed'.format(evt_type),
+                                                                 _paths.get_genlevel_mc_path,
+                                                                 link_from,
+                                                                 evt_type=evt_type)
+    _, output_histos, output_histos_link = _paths.prepare_path('{}_$seed'.format(evt_type),
+                                                               _paths.get_genlevel_histos_path,
+                                                               link_from,
+                                                               evt_type=evt_type)
+    link_status = 'true' if do_link else 'false'
     extra_config = {'workdir': '$TMPDIR',
+                    'do_link': link_status,
                     'output_file': output_file,
+                    'output_file_link': output_file_link,
                     'output_histos': output_histos,
+                    'output_histos_link': output_histos_link,
                     'decfile': decfile,
                     'n_events': config['prod']['nevents-per-job']}
     # Prepare batch
