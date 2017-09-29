@@ -102,14 +102,14 @@ echo "------------------------------------------------------------------------"
         """
         err_file = batch_config.pop('errfile', log_file)
         log_file, ext = os.path.splitext(log_file)
-        log_file = '%s%s.%s' % (log_file, self.JOBID_FORMAT, ext)
+        log_file = '%s%s%s' % (log_file, self.JOBID_FORMAT, ext)
         err_file, ext = os.path.splitext(err_file)
-        err_file = '%s%s.%s' % (err_file, self.JOBID_FORMAT, ext)
+        err_file = '%s%s%s' % (err_file, self.JOBID_FORMAT, ext)
         # Build header
         header = [self.DIRECTIVES['job-name'] % job_name,
                   self.DIRECTIVES['logfile'] % log_file,
                   self.DIRECTIVES['errfile'] % err_file,
-                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '02:00:00')]
+                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '01:00:00')]
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
@@ -119,9 +119,10 @@ echo "------------------------------------------------------------------------"
                 continue
             header.append(directive % batch_value)
         script_config = extra_config if extra_config is not None else {}
-        script_config['workdir'] = os.getcwd()
+        script_config['workdir'] = script_config.get('workdir', os.getcwd())
         script_config['header'] = '\n'.join(header)
         script_config['shell'] = batch_config.pop('shell', '/bin/bash')
+        script_config['jobid_var'] = self.JOBID_VARIABLE
         # Submit using stdin
         logger.debug('Submitting job')
         proc = subprocess.Popen(self.SUBMIT_COMMAND,

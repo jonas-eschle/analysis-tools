@@ -16,8 +16,6 @@ from collections import OrderedDict, defaultdict
 import yaml
 import yamlordereddictloader
 
-import ROOT
-
 from analysis.utils.logging_color import get_logger
 
 
@@ -234,6 +232,8 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         ValueError: If the action is badly configured.
 
     """
+    import ROOT
+
     if external_vars is None:
         external_vars = {}
     constraint = None

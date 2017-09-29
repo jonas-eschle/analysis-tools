@@ -9,6 +9,7 @@
 
 import argparse
 import os
+from math import ceil
 
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
@@ -25,19 +26,20 @@ SCRIPT = """#!{shell}
 echo "------------------------------------------------------------------------"
 echo "Job started on" `date`
 echo "------------------------------------------------------------------------"
+set -e
 if [ -f $HOME/.localrc ]; then
   source $HOME/.localrc
 fi
 source LbLogin.sh -c x86_64-slc5-gcc46-opt
 source SetupProject.sh Gauss v45r11
-seed=`echo ${{{jobid_var}}} | cut -d'.' -f1`
+seed=`echo ${jobid_var} | cut -d'.' -f1`
 echo "------------------------------------------------------------------------"
 echo "Seed is "$seed
 echo "------------------------------------------------------------------------"
 cd {workdir}
 mkdir $seed
 cd $seed
-echo $PWD
+echo "Workdir: "$PWD
 seedfile={workdir}/$seed/$seed.py
 echo "from Configurables import GenInit,LHCbApp,Gauss
 GaussGen = GenInit('GaussGen')
@@ -45,6 +47,7 @@ GaussGen.FirstEventNumber = 1
 GaussGen.RunNumber        = $seed
 LHCbApp().EvtMax = {n_events}
 Gauss().DatasetName = '$seed'" > $seedfile
+echo "Config file:"
 cat $seedfile
 gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile}.py $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
 mv $seed-*.xgen {output_file}
@@ -103,21 +106,22 @@ def run(config_files, link_from):
     else:
         decfile = '$GAUSSOPTS/{decfile}.py'
     # Prepare job
-    log_file = _paths.prepare_path('mc/{}'.format(evt_type),
-                                   _paths.get_log_path,
-                                   None)  # No linking is done for logs
-    output_file = _paths.prepare_path('{}_$seed'.format(evt_type),
-                                      _paths.get_genlevel_mc_path,
-                                      link_from,
-                                      evt_type=evt_type)
-    output_histos = _paths.prepare_path('{}_$seed'.format(evt_type),
-                                        _paths.get_genlevel_histos_path,
-                                        None,
-                                        evt_type=evt_type)
+    _, _, log_file = _paths.prepare_path('mc/{}'.format(evt_type),
+                                         _paths.get_log_path,
+                                         None)  # No linking is done for logs
+    _, _, output_file = _paths.prepare_path('{}_$seed'.format(evt_type),
+                                            _paths.get_genlevel_mc_path,
+                                            link_from,
+                                            evt_type=evt_type)
+    _, _, output_histos = _paths.prepare_path('{}_$seed'.format(evt_type),
+                                              _paths.get_genlevel_histos_path,
+                                              None,
+                                              evt_type=evt_type)
     extra_config = {'workdir': '$TMPDIR',
                     'output_file': output_file,
                     'output_histos': output_histos,
-                    'decfile': decfile}
+                    'decfile': decfile,
+                    'n_events': config['prod']['nevents-per-job']}
     # Prepare batch
     batch_config = config.get('batch', {})
     try:
@@ -125,7 +129,7 @@ def run(config_files, link_from):
     except ValueError:
         raise
     # Submit
-    njobs = config['prod'].get('nevents-per-job', config['prod']['nevents'])
+    njobs = int(ceil(1.0*config['prod']['nevents']/config['prod']['nevents-per-job']))
     for _ in range(njobs):
         # Submit
         try:

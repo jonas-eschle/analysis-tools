@@ -178,8 +178,8 @@ It is controlled by a configuration file with the following format:
 ```
 event-type: 324324
 prod:
-  events: 100000
-  events-per-job: 5000
+  nevents: 100000
+  nevents-per-job: 5000
 batch:
   backend: slurm
   runtime: 2:00:00
