@@ -136,14 +136,14 @@ def run(config_files, link_from, verbose):
     try:
         models = {model_name: config[model_name]
                   for model_name
-                  in config['fit'].get('models', ['model'])}
+                  in config['fit'].get('models', ['model'])}  # DEFAULT
     except KeyError as error:
         logger.error("Missing model configuration -> %s", str(error))
         raise KeyError("Missing model configuration")
     if not models:
         logger.error("No model was specified in the config file!")
         raise KeyError()
-    fit_strategies = config['fit'].get('strategies', ['simple'])
+    fit_strategies = config['fit'].get('strategies', ['simple'])  # DEFAULT
     if not fit_strategies:
         logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()
@@ -173,9 +173,9 @@ def run(config_files, link_from, verbose):
                                    'source-type': 'toy',
                                    'tree': 'data',
                                    'output-format': 'pandas',
-                                   'selection': data_source.get('selection', None)}),
-                         data_source['nevents'],
-                         data_source.get('category', None))
+                                   'selection': data_source.get('selection')}),
+                         data_source['nevents'],  # explicit fail?
+                         data_source.get('category'))
         # Generator values
         toy_info = get_data({'source': source_toy,
                              'source-type': 'toy',
@@ -200,7 +200,7 @@ def run(config_files, link_from, verbose):
         gen_values_frame = {}
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
-                                 config.get('link-from', None),
+                                 config.get('link-from'),
                                  _paths.get_toy_fit_path) as toy_fit_file:
             with pd.HDFStore(toy_fit_file, mode='w') as hdf_file:
                 logger.debug("Checking generator values")
@@ -275,8 +275,8 @@ def run(config_files, link_from, verbose):
                                      fit_strategy,
                                      dataset,
                                      verbose,
-                                     Extended=config['fit'].get('extended', True),
-                                     Minos=config['fit'].get('minos', True))
+                                     Extended=config['fit'].get('extended', True),  # DEFAULT
+                                     Minos=config['fit'].get('minos', True))  # DEFAULT
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
@@ -307,7 +307,7 @@ def run(config_files, link_from, verbose):
     try:
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
-                                 config.get('link-from', None),
+                                 config.get('link-from'),
                                  _paths.get_toy_fit_path) as toy_fit_file:
             with modify_hdf(toy_fit_file) as hdf_file:
                 # First fit results

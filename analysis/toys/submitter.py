@@ -91,7 +91,7 @@ class ToySubmitter(object):
         # Store infotmation
         self.config = config
         # Assign link-from giving priority to the argument
-        self.config['link-from'] = link_from if link_from else config.get('link-from', None)
+        self.config['link-from'] = link_from if link_from else config.get('link-from')
         self.link_from = link_from
         self.extend = extend
         self.overwrite = overwrite
@@ -159,7 +159,7 @@ class ToySubmitter(object):
                                                  None)  # No linking is done for logs
         # Calculate number of jobs and submit
         ntoys = config[self.NTOYS_KEY]
-        ntoys_per_job = config.get(self.NTOYS_PER_JOB_KEY, ntoys)
+        ntoys_per_job = config.get(self.NTOYS_PER_JOB_KEY, ntoys)  # DEFAULT
         n_jobs = int(1.0*ntoys/ntoys_per_job)
         if ntoys % ntoys_per_job:
             n_jobs += 1
