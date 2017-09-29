@@ -127,6 +127,7 @@ def run(config_files, link_from):
                                                                link_from,
                                                                evt_type=evt_type)
     link_status = 'true' if do_link else 'false'
+    nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
     extra_config = {'workdir': '$TMPDIR',
                     'do_link': link_status,
                     'output_file': output_file,
@@ -134,7 +135,7 @@ def run(config_files, link_from):
                     'output_histos': output_histos,
                     'output_histos_link': output_histos_link,
                     'decfile': decfile,
-                    'n_events': config['prod']['nevents-per-job']}
+                    'n_events': nevents}
     # Prepare batch
     batch_config = config.get('batch', {})
     try:
@@ -143,6 +144,7 @@ def run(config_files, link_from):
         raise
     # Submit
     njobs = int(ceil(1.0*config['prod']['nevents']/config['prod']['nevents-per-job']))
+    logger.info("About to send %s jobs with %s events each.", njobs, nevents)
     for _ in range(njobs):
         # Submit
         try:
