@@ -124,12 +124,18 @@ get_toy_fit_config_path = register_path('toy_fit_config', ['data_files', 'toys',
 get_log_path = register_path('log', ['data_files', 'logs'], 'log')
 get_efficiency_path = register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
 get_acceptance_path = register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
+get_genlevel_mc_path = register_path('genlevel_mc', ['data_files', 'mc'], 'xgen',
+                                     lambda name, args, kwargs: os.path.join(str(kwargs['evt_type']),
+                                                                             name))
+get_genlevel_histos_path = register_path('genlevel_histos', ['data_files', 'mc'], 'root',
+                                         lambda name, args, kwargs: os.path.join(str(kwargs['evt_type']),
+                                                                                 name + '_histos'))
 get_plot_style_path = register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
                                     lambda name, args, kwargs: 'matplotlib_' + name)
 get_fit_result_path = register_path('fit_result', ['data_files', 'fit'], 'yaml')
 
 
-def prepare_path(name, path_func, link_from, **kwargs):
+def prepare_path(name, path_func, link_from, *args, **kwargs):
     """Build the folder structure for any output.
 
     The output file name is obtained from `path_func` and the possibility of
@@ -144,6 +150,7 @@ def prepare_path(name, path_func, link_from, **kwargs):
         path_func (Callable): Function to execute to get the path.
         link_from (str): Base directory for symlinking. If `None`, no symlinking
             is done.
+        *args (list): Extra arguments for the `path_func`.
         **kwargs (dict): Extra arguments for the `path_func`.
 
     Returns:
@@ -158,7 +165,7 @@ def prepare_path(name, path_func, link_from, **kwargs):
         do_link = True
         if not os.path.exists(src_base_dir):
             raise OSError("Cannot find storage folder -> %s" % src_base_dir)
-    dest_file_name = path_func(name, **kwargs)
+    dest_file_name = path_func(name, *args, **kwargs)
     rel_file_name = os.path.relpath(dest_file_name,
                                     dest_base_dir)
     src_file_name = os.path.join(src_base_dir, rel_file_name)
