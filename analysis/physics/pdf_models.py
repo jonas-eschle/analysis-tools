@@ -199,7 +199,7 @@ class ArgusConvGaussPdfMixin(object):
 
         """
         super(ArgusConvGaussPdfMixin, self).__init__(config, parameters)
-        self._buffer_fraction = config.get('buffer_fraction', 1.0)
+        self._buffer_fraction = config.get('buffer_fraction', 1.0)  # DEFAULT
 
     def get_unbound_pdf(self, name, title):
         """Get the convolved PDF.
@@ -353,7 +353,7 @@ class RooWorkspaceMixin(object):
             var = self._workspace.var(obs_name)
             if not var:
                 raise KeyError("Observable %s not present in RooWorkspace" % obs_name)
-            if obs_id not in self._objects or var != self._objects[obs_id]:
+            if obs_id not in self or var != self[obs_id]:
                 self.set(obs_id, var)
                 self.set_observable(obs_id, title=obs_title, limits=(obs_min, obs_max), units=unit)
         return super(RooWorkspaceMixin, self).get_observables()
