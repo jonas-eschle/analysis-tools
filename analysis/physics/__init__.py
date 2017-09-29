@@ -181,7 +181,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                 if pdf_name not in yields:
                     yields[pdf_name] = sanitize_parameter(yield_, 'Yield', 'Yield')
                     # yields[pdf_name][0].setStringAttribute('shared', 'true')
-            if isinstance(pdf_config.get('pdf', None), str):
+            if isinstance(pdf_config.get('pdf'), str):
                 factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
             else:
                 factories[pdf_name] = configure_model(pdf_config, shared_vars[pdf_name])
@@ -254,7 +254,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if isinstance(config.values()[0].get('pdf', None), str):
+            if isinstance(config.values()[0].get('pdf'), str):
                 shared = {'pdf': shared_vars}
                 return configure_prod_factory({'pdf': config}, shared)
             else:
