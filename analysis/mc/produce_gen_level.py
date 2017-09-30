@@ -53,14 +53,22 @@ cat $seedfile
 # Run
 gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
 # Move output
-mv $seed-*.xgen {output_file}
-mv $seed-*-histos.root {output_histos}
+echo "Done"
+ls -ltr
+echo "Copying output : {output_file}"
+cp $seed-*.xgen {output_file}
+output_gen_log=`dirname {output_file_link}`/${{seed}}_GeneratorLog.xml
+echo "Copying GeneratorLog.xml : ${{output_gen_log}}"
+cp GeneratorLog.xml ${{output_gen_log}}
+echo "Copying output histos: {output_histos}"
+cp $seed-*-histos.root {output_histos}
 ls -ltr
 # Do links
 if [ "{do_link}" == true ]; then
+    echo "Links requested to {output_file_link} and {output_histos_link}"
     ln -sf {output_file} {output_file_link}
     ln -sf {output_histos} {output_histos_link}
-if
+fi
 # Cleanup
 rm -rf {workdir}/$seed
 echo "------------------------------------------------------------------------"
