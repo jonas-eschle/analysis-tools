@@ -49,7 +49,7 @@ def _get_path(dirs, extension, name_transformation, name, *args, **kwargs):
         str: Absolute path of the object.
 
     """
-    assert extension and extension.startswith('.'), \
+    assert not extension or extension.startswith('.'), \
         "Extension is expected to start with '.'. Given extension: {}".format(extension)
 
     path = os.path.join(*([get_global_var('BASE_PATH')] +

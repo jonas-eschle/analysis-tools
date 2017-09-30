@@ -57,7 +57,7 @@ echo "Done"
 ls -ltr
 echo "Copying output to {output_path}"
 cp $seed-*.xgen {output_path}
-output_gen_log=`dirname {output_path_link}`/${{seed}}_GeneratorLog.xml
+output_gen_log={output_path_link}/${{seed}}_GeneratorLog.xml
 echo "Copying GeneratorLog.xml : ${{output_gen_log}}"
 cp GeneratorLog.xml ${{output_gen_log}}
 echo "Copying output histos"
@@ -125,12 +125,17 @@ def run(config_files, link_from):
     _, _, log_file = _paths.prepare_path('mc/{}'.format(evt_type),
                                          _paths.get_log_path,
                                          None)  # No linking is done for logs
-    do_link, output_path, output_path_link = _paths.prepare_path('{}_$seed'.format(evt_type),
+    do_link, output_path, output_path_link = _paths.prepare_path('',
                                                                  _paths.get_genlevel_mc_path,
                                                                  link_from,
                                                                  evt_type=evt_type)
     link_status = 'true' if do_link else 'false'
     nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
+    logger.info("Generatic %s events of decfile -> %s", nevents, decfile)
+    logger.info("Output path: %s", output_path)
+    logger.info("Log file location: %s", log_file)
+    if do_link:
+        logger.info("Linking to %s", output_path_link)
     extra_config = {'workdir': '$TMPDIR',
                     'do_link': link_status,
                     'output_path': output_path,
