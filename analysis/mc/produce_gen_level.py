@@ -57,6 +57,7 @@ echo "Done"
 ls -ltr
 echo "Copying output to {output_path}"
 cp $seed-*.xgen {output_path}
+cp $seed-*-histos.root {output_path}
 output_gen_log={output_path_link}/${{seed}}_GeneratorLog.xml
 echo "Copying GeneratorLog.xml : ${{output_gen_log}}"
 cp GeneratorLog.xml ${{output_gen_log}}
