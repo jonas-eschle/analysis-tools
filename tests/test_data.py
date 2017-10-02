@@ -46,7 +46,7 @@ def test_load_with_weights(pandas_weights):
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': 'half'})
+                         'weights': 'half'})  # wrong keyword?
         assert data.isWeighted()
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)

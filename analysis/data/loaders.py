@@ -171,7 +171,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     # Variables
     var_list = kwargs.get('variables', None)
     # Raise an error if some weights are not loaded.
-    if not (set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list))) :
+    if var_list and not (set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list))) :
         raise ValueError("Missing weights in the list of variables read from input file.")
     acc_var = ''
     # Acceptance specified
