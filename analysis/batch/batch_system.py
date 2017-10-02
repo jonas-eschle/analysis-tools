@@ -107,10 +107,10 @@ echo "------------------------------------------------------------------------"
         err_file, ext = os.path.splitext(err_file)
         err_file = '%s%s%s' % (err_file, self.JOBID_FORMAT, ext)
         # Build header
-        header = [self.DIRECTIVES['job-name'] % job_name,
-                  self.DIRECTIVES['logfile'] % log_file,
-                  self.DIRECTIVES['errfile'] % err_file,
-                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '01:00:00')]
+        header = [self.DIRECTIVES['job-name'].format(job_name),
+                  self.DIRECTIVES['logfile'].format(log_file),
+                  self.DIRECTIVES['errfile'].format(err_file),
+                  self.DIRECTIVES['runtime'].format(batch_config.pop('runtime', '01:00:00'))]
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
@@ -126,6 +126,8 @@ echo "------------------------------------------------------------------------"
         script_config['jobid_var'] = self.JOBID_VARIABLE
         # Submit using stdin
         logger.debug('Submitting job')
+        #  print script.format(**script_config)
+        #  assert False
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
@@ -171,12 +173,12 @@ class Torque(BatchSystem):
     """Implement the Torque/PBS batch system."""
 
     SUBMIT_COMMAND = 'qsub'
-    DIRECTIVES = {'job-name': '#PBS -N %s',
-                  'logfile': '#PBS -o %s',
-                  'errfile': '#PBS -e %s',
+    DIRECTIVES = {'job-name': '#PBS -N {}',
+                  'logfile': '#PBS -o {}',
+                  'errfile': '#PBS -e {}',
                   'mergelogs': '#PBS -j oe',
-                  'runtime': '#PBS -l cput=%s',
-                  'memory': '#PBS -l mem=%s'}
+                  'runtime': '#PBS -l cput={0}\n#PBS -l walltime={0}',
+                  'memory': '#PBS -l mem={}'}
     JOBID_FORMAT = '_${PBS_JOBID}'
     JOBID_VARIABLE = 'PBS_JOBID'
 
@@ -185,14 +187,14 @@ class Slurm(BatchSystem):
     """Implement the Slurm batch system."""
 
     SUBMIT_COMMAND = 'sbatch'
-    DIRECTIVES = {'job-name': '#SBATCH -J %s',
-                  'logfile': '#SBATCH -o %s',
-                  'errfile': '#SBATCH -e %s',
+    DIRECTIVES = {'job-name': '#SBATCH -J {}',
+                  'logfile': '#SBATCH -o {}',
+                  'errfile': '#SBATCH -e {}',
                   'mergelogs': '',
-                  'runtime': '#SBATCH -t %s',
-                  'memory': '#SBATCH --mem=%s',
-                  'memory-per-cpu': '#SBATCH --mem-per-cpu=%s',
-                  'queue': '#SBATCH --partition=%s'}
+                  'runtime': '#SBATCH -t {}',
+                  'memory': '#SBATCH --mem={}',
+                  'memory-per-cpu': '#SBATCH --mem-per-cpu={}',
+                  'queue': '#SBATCH --partition={}'}
     JOBID_FORMAT = '_%j'
     JOBID_VARIABLE = 'SLURM_JOB_ID'
 
