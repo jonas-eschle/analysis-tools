@@ -71,7 +71,7 @@ def load_pdf_by_name(name, use_mathmore=False):
                       lib_dirs=get_global_var('PDF_PATHS'),
                       use_mathmore=use_mathmore)
     except OSError:
-        raise OSError("Don't know this PDF! -> %s" % name)
+        raise OSError("Don't know this PDF! -> {}".format(name))
     return getattr(ROOT, os.path.splitext(os.path.split(name)[1])[0])
 
 

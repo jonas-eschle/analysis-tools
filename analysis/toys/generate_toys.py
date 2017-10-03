@@ -74,9 +74,9 @@ def generate(physics_factory, n_events):
         for label, n_events_label in n_events.items():
             label_factory = physics_factory.get_children().get(label, None)
             if not label_factory:
-                raise KeyError("Unknown label -> %s" % label)
-            label_df = generate_events(label_factory.get_pdf("GenPdf_%s" % label,
-                                                             "GenPdf_%s" % label),
+                raise KeyError("Unknown label -> {}".format(label))
+            label_df = generate_events(label_factory.get_pdf("GenPdf_{}".format(label),
+                                                             "GenPdf_{}".format(label)),
                                        observables,
                                        n_events_label).assign(category=label)
             if output_dataset is None:
@@ -114,8 +114,8 @@ def run(config_files, link_from):
                                        'name',
                                        'gen-model'])
     except OSError:
-        raise OSError("Cannot load configuration files: %s",
-                      config_files)
+        raise OSError("Cannot load configuration files: {}"
+                      .format(config_files))
     except ConfigError as error:
         if 'gen/nevents' in error.missing_keys:
             logger.error("Number of events not specified")
@@ -123,7 +123,7 @@ def run(config_files, link_from):
             logger.error("No name was specified in the config file!")
         if 'gen-model' in error.missing_keys:
             logger.error("No generation model were specified in the config file!")
-        raise KeyError("ConfigError raised -> %s" % error.missing_keys)
+        raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
@@ -150,7 +150,7 @@ def run(config_files, link_from):
         physics = configure_model(config['gen-model'])
     except KeyError as error:
         logger.error("Cannot find physics factory")
-        raise ValueError('%s' % error)
+        raise ValueError('{}'.format(error))
     except ValueError:
         logger.error("Problem dealing with shared parameters")
         raise

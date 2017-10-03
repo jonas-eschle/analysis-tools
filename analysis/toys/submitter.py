@@ -79,8 +79,8 @@ class ToySubmitter(object):
                     logger.error(error_message)
             raise KeyError()
         except OSError, error:
-            raise OSError("Cannot load configuration file: %s",
-                          config_files)
+            raise OSError("Cannot load configuration file: {}"
+                          .format(config_files))
         except KeyError, error:
             # logger.error(str(error))
             raise
@@ -147,10 +147,10 @@ class ToySubmitter(object):
                 os.remove(expected_dest)
         # Some bookkeeping
         if not os.path.exists(script_to_run):
-            raise OSError("Cannot find %s!" % script_to_run)
+            raise OSError("Cannot find {}!".format(script_to_run))
         script_args = []
         if config['link-from']:
-            script_args.append('--link-from=%s' % config['link-from'])
+            script_args.append('--link-from={}'.format(config['link-from']))
         script_args.append(config_file_dest)
         # Prepare paths
         # pylint: disable=E1101

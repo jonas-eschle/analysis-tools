@@ -87,8 +87,9 @@ class BaseFactory(object):
                                    param_dict.pop(parameter_name),
                                    {key.split('/')[-1]: val for key, val in param_dict.items()})
         if missing_parameters:
-            raise KeyError("Missing parameters -> %s" % ','.join(missing_parameter
-                                                                 for missing_parameter in missing_parameters))
+            raise KeyError("Missing parameters -> {}".format(','.join(missing_parameter
+                                                                      for missing_parameter in
+                                                                      missing_parameters)))
         if param_dict:
             logger.debug("Trying to set unsupported params in config. I stored them but they can cause problems -> %s",
                          ','.join(param_dict.keys()))
@@ -264,15 +265,15 @@ class BaseFactory(object):
 
     def _add_superscript(self, name, superscript, old_first=True):
         subscript_match = re.search(r'\^{(.*?)}', name)
-        sub_func = lambda match, name=superscript: '^{%s,%s}' % (match.groups()[0], name) \
+        sub_func = lambda match, name=superscript: '^{{{},{}}}'.format(match.groups()[0], name) \
             if old_first \
-            else lambda match, name=superscript: '^{%s,%s}' % (name, match.groups()[0])
+            else lambda match, name=superscript: '^{{{},{}}}'.format(name, match.groups()[0])
         if subscript_match:
             new_name = re.sub(r'\^{(.*?)}',
                               sub_func,
                               name)
         else:
-            new_name = '%s^{%s}' % (name, superscript)
+            new_name = '{}^{{{}}}'.format(name, superscript)
         return new_name
 
     def rename_children_parameters(self, naming_scheme=None):
@@ -280,7 +281,7 @@ class BaseFactory(object):
             naming_scheme = self._children.viewitems()
         for label, factory in list(naming_scheme):
             # Recursively rename children
-            factory.rename_children_parameters(('%s,%s' % (label, child_name), child)
+            factory.rename_children_parameters(('{},{}'.format(label, child_name), child)
                                                for child_name, child in factory.get_children().items())
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
@@ -298,7 +299,7 @@ class BaseFactory(object):
         if self.has_to_be_extended():
             raise ValueError("Requested non-extended PDF, "
                              "but the factory needs to be extended")
-        pdf_name = 'pdf_%s' % name
+        pdf_name = 'pdf_{}'.format(name)
         return self.get(pdf_name) \
             if pdf_name in self \
             else self.set(pdf_name, self.get_unbound_pdf(name, title))
@@ -325,12 +326,12 @@ class BaseFactory(object):
         # Configure yield
         if not self.is_extended():
             if yield_val is None:
-                raise ValueError("Yield value not given -> %s" % self)
+                raise ValueError("Yield value not given -> {}".format(self))
             self.set_yield_var(yield_val)
         elif yield_val is not None:
             logger.warning("Specified yield value but it's already defined. Ignoring.")
         # Avoid name clashes
-        pdf_name = 'pdfext_%s' % name
+        pdf_name = 'pdfext_{}'.format(name)
         return self.get(pdf_name) \
             if pdf_name in self \
             else self.set(pdf_name, self.get_unbound_extended_pdf(name, title))
@@ -368,7 +369,7 @@ class BaseFactory(object):
 
         """
         if obs_id not in self.OBSERVABLES:
-            raise KeyError("Unknown observable -> %s" % obs_id)
+            raise KeyError("Unknown observable -> {}".format(obs_id))
         new_config = list(self.OBSERVABLES[obs_id])
         if obs:
             self._objects[obs_id] = obs
@@ -615,7 +616,7 @@ class ProductPhysicsFactory(BaseFactory):
             except KeyError:
                 pass
         if not has_changed:
-            raise KeyError("Unknown observable -> %s" % obs_id)
+            raise KeyError("Unknown observable -> {}".format(obs_id))
 
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
@@ -730,7 +731,7 @@ class SumPhysicsFactory(BaseFactory):
             # Store the fractions and propagate
             for yield_val in yield_values:
                 if yield_val.getVal() > 1:
-                    raise ValueError("Specified a fraction larger than 1 -> %s" % yield_val.GetName())
+                    raise ValueError("Specified a fraction larger than 1 -> {}".format(yield_val.GetName()))
                 # Not very good heuristics
                 if yield_val.getStringAttribute('shared') != 'true':
                     yield_val.SetName(yield_val.GetName().replace('Yield', 'Fraction'))
@@ -745,7 +746,7 @@ class SumPhysicsFactory(BaseFactory):
                     # Need no rename because RooFracRemainder needs a RooArgSet and there will be clashes
                     # between vars named 'Fraction'. It's stupid, since the name is not used after.
                     for yield_num, yield_val in enumerate(yield_values):
-                        yield_val.SetName('%s_%s' % (yield_val.GetName(), yield_num))
+                        yield_val.SetName('{}_{}'.format(yield_val.GetName(), yield_num))
                     child['Fraction'] = ROOT.RooFracRemainder("Fraction", "Fraction", list_to_rooargset(yield_values))
                     child._constraints.update({constraint
                                                for _, constraint in children_yields.values()
@@ -896,7 +897,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
         for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
             sim_pdf.addPdf(child.get_pdf(new_name, new_name),
-                           '{%s}' % category
+                           '{{{}}}'.format(category)
                            if category.count(';') > 0
                            else category)
         return sim_pdf
@@ -907,7 +908,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
         for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
             sim_pdf.addPdf(child.get_extended_pdf(new_name, new_name),
-                           '{%s}' % category
+                           '{{{}}}'.format(category)
                            if category.count(';') > 0
                            else category)
             yields.add(child.get_yield_var())
@@ -957,7 +958,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
             except KeyError:
                 pass
         if not has_changed:
-            raise KeyError("Unknown observable -> %s" % obs_id)
+            raise KeyError("Unknown observable -> {}".format(obs_id))
 
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
@@ -1013,7 +1014,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
         if cat_var not in dataset.columns:
             cat_var = 'category'
             if cat_var not in dataset.columns:
-                raise KeyError("Category var not found in dataset -> %s" % self._category.GetName())
+                raise KeyError("Category var not found in dataset -> {}".format(self._category.GetName()))
         categories = dataset.groupby(cat_var).indices.keys()
         # A simple check
         if not set(categories).issubset(set(self._children.keys())):
