@@ -26,7 +26,7 @@ logger = get_logger('analysis.efficiency.calculate_efficiency')
 get_efficiency_plot_path = _paths.register_path('efficiency_plot',
                                                 ['data_files', 'efficiency'],
                                                 'eps',
-                                                lambda name, args, kwargs: name + '_%s' % kwargs['var'])
+                                                lambda name, args, kwargs: name + '_{}'.format(kwargs['var']))
 
 
 def run(config_files, link_from):
@@ -55,8 +55,8 @@ def run(config_files, link_from):
                                                'model',
                                                'variables'])
     except OSError:
-        raise OSError("Cannot load configuration files: %s",
-                      config_files)
+        raise OSError("Cannot load configuration files: {}"
+                      .format(config_files))
     except _config.ConfigError as error:
         if 'name' in error.missing_keys:
             logger.error("No name was specified in the config file!")
@@ -70,7 +70,7 @@ def run(config_files, link_from):
             logger.error("No efficiency model parameters specified in the config file!")
         if 'variables' in error.missing_keys:
             logger.error("No efficiency variables to model have been specified in the config file!")
-        raise KeyError("ConfigError raised -> %s" % error.missing_keys)
+        raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
@@ -82,7 +82,7 @@ def run(config_files, link_from):
                                                             var=var_name)
     efficiency_class = get_efficiency_model_class(config['model'])
     if not efficiency_class:
-        raise ValueError("Unknown efficiency model -> %s", config['model'])
+        raise ValueError("Unknown efficiency model -> {}".format(config['model']))
     # Let's do it
     # pylint: disable=E1101
     if not all(os.path.exists(file_name)
@@ -106,9 +106,9 @@ def run(config_files, link_from):
             try:
                 eff = efficiency_class.fit(input_data, config['variables'], weight_var, **config['parameters'])
             except (ValueError, TypeError) as error:
-                raise ValueError("Cannot configure the efficiency model -> %s", error.message)
+                raise ValueError("Cannot configure the efficiency model -> {}".format(error.message))
             except KeyError as error:
-                raise RuntimeError("Missing key -> %s", error)
+                raise RuntimeError("Missing key -> {}".format(error))
             except Exception as error:
                 raise RuntimeError(error)
             output_file = eff.write_to_disk(config['name'], link_from)
@@ -119,8 +119,8 @@ def run(config_files, link_from):
         if plot_files:
             import seaborn as sns
             sns.set_style("white")
-            plt.style.use('file://%s' % os.path.join(get_global_var('STYLE_PATH'),
-                                                     'matplotlib_LHCb.mplstyle'))
+            plt.style.use('file://{}'.format(os.path.join(get_global_var('STYLE_PATH'),
+                                                          'matplotlib_LHCb.mplstyle')))
             plots = eff.plot(input_data, weight_var, labels=config.get('plot-labels', {}))
             for var_name, plot in plots.items():
                 logger.info("Plotting '%s' efficiency -> %s",

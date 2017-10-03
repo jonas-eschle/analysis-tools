@@ -49,7 +49,7 @@ def load_config(*file_names, **options):
     unfolded_data = []
     for file_name in file_names:
         if not os.path.exists(file_name):
-            raise OSError("Cannot find config file -> %s" % file_name)
+            raise OSError("Cannot find config file -> {}".format(file_name))
         try:
             with open(file_name) as input_obj:
                 unfolded_data.extend(unfold_config(yaml.load(input_obj,
@@ -61,7 +61,7 @@ def load_config(*file_names, **options):
     if 'root' in options:
         data_root = options['root']
         if data_root not in data:
-            raise ConfigError("Root node not found in dataset -> %s" % data_root)
+            raise ConfigError("Root node not found in dataset -> {}".format(**data_root))
         data = data[data_root]
     if 'validate' in options:
         missing_keys = []
@@ -74,7 +74,7 @@ def load_config(*file_names, **options):
             if key not in data_keys:
                 missing_keys.append(key)
         if missing_keys:
-            raise ConfigError("Failed validation: %s are missing" % ','.join(missing_keys),
+            raise ConfigError("Failed validation: {} are missing".format(','.join(missing_keys)),
                               missing_keys)
     return data
 
@@ -161,7 +161,7 @@ def unfold_config(dictionary):
     for key, val in dictionary.viewitems():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
-                output_list.append(('%s/%s' % (key, sub_key), sub_val))
+                output_list.append(('{}/{}'.format(key, sub_key), sub_val))
         else:
             output_list.append((key, val))
     return output_list
@@ -260,7 +260,8 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 try:
                     _, min_val, max_val = action_params
                 except ValueError:
-                    raise ValueError("Wrongly specified var (need to give 1 or 3 arguments) -> %s" % action_params)
+                    raise ValueError("Wrongly specified var (need to give 1 or 3 arguments) "
+                                     "-> {}".format(action_params))
                 parameter.setMin(float(min_val))
                 parameter.setMax(float(max_val))
                 parameter.setConstant(False)
@@ -275,7 +276,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 else:
                     raise ValueError
             except ValueError:
-                raise ValueError("Wrongly specified Gaussian constraint -> %s" % action_params)
+                raise ValueError("Wrongly specified Gaussian constraint -> {}".format(action_params))
             constraint = ROOT.RooGaussian(name + 'Constraint',
                                           name + 'Constraint',
                                           parameter,
@@ -287,12 +288,12 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         try:
             ref_var, second_var = action_params
         except ValueError:
-            raise ValueError("Wrong number of arguments for %s -> %s" % (action, action_params))
+            raise ValueError("Wrong number of arguments for {} -> {}".format(action, action_params))
         try:
             if ref_var.startswith('@'):
                 ref_var = ref_var[1:]
             else:
-                raise ValueError("The first value for a %s must be a reference." % action)
+                raise ValueError("The first value for a {} must be a reference.".format(action))
             ref_var, constraint = external_vars[ref_var]
             if second_var.startswith('@'):
                 second_var = second_var[1:]
@@ -313,13 +314,13 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             else:
                 second_var = ROOT.RooFit.RooConst(float(second_var))
         except KeyError, error:
-            raise ValueError("Missing parameter definition -> %s" % error)
+            raise ValueError("Missing parameter definition -> {}".format(error))
         if action == 'SHIFT':
             parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))
         elif action == 'SCALE':
             parameter = ROOT.RooProduct(name, title, ROOT.RooArgList(ref_var, second_var))
     else:
-        raise KeyError('Unknown action -> %s' % action)
+        raise KeyError('Unknown action -> {}'.format(action))
     return parameter, constraint
 
 
@@ -362,14 +363,15 @@ def get_shared_vars(config, external_vars=None):
         if len(split_element) == 4:
             ref_name, var_name, var_title, var_config = split_element
             if ref_name in refs:
-                raise ValueError("Shared parameter defined twice -> %s" % ref_name)
+                raise ValueError("Shared parameter defined twice -> {}".format(ref_name))
             var, constraint = configure_parameter(var_name, var_title, var_config, refs)
             var.setStringAttribute('shared', 'true')
             refs[ref_name] = (var, constraint)
         elif len(split_element) == 1:
             pass
         else:
-            raise ValueError("Badly configured shared parameter -> %s: %s" % (config_element, config_value))
+            raise ValueError("Badly configured shared parameter -> {}: {}".format(config_element,
+                                                                                  config_value))
     # Now replace the refs by the shared variables in a recursive defaultdict
     recurse_dict = lambda: defaultdict(recurse_dict)
     new_config = []

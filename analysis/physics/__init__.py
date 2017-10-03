@@ -63,9 +63,9 @@ def get_physics_factory(observable, pdf_type):
     """
     factories = get_global_var('PHYSICS_FACTORIES')
     if observable not in factories:
-        raise KeyError("Unknown observable type -> %s" % observable)
+        raise KeyError("Unknown observable type -> {}".format(observable))
     if pdf_type not in factories[observable]:
-        raise KeyError("Unknown PDF type -> %s" % pdf_type)
+        raise KeyError("Unknown PDF type -> {}".format(pdf_type))
     return factories[observable][pdf_type]
 
 
@@ -239,7 +239,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                                      in config['pdf'].items()),
                                                          cat)
         for cat in cat_list:
-            sim_factory.set('cat_%s' % cat.GetName(), cat)
+            sim_factory.set('cat_{}'.format(cat.GetName()), cat)
         return sim_factory
 
     import analysis.physics.factory as factory

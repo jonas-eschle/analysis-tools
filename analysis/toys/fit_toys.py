@@ -88,8 +88,8 @@ def get_datasets(data_frames, acceptance, fit_models):
     try:
         # TODO: Check the categories
         return ({ds_name: dataset_from_pandas(model.transform_dataset(dataset),
-                                              "data_%s" % ds_name,
-                                              "data_%s" % ds_name,
+                                              "data_{}".format(ds_name),
+                                              "data_{}".format(ds_name),
                                               weight_var=weight_var,
                                               categories=model.get_category_vars())
                  for ds_name, model in fit_models.items()},
@@ -122,7 +122,7 @@ def run(config_files, link_from, verbose):
                                                'name',
                                                'data'])
     except OSError:
-        raise OSError("Cannot load configuration files: %s" % config_files)
+        raise OSError("Cannot load configuration files: {}".format(config_files))
     except _config.ConfigError as error:
         if 'fit/nfits' in error.missing_keys:
             logger.error("Number of fits not specified")
@@ -130,7 +130,7 @@ def run(config_files, link_from, verbose):
             logger.error("No name was specified in the config file!")
         if 'data' in error.missing_keys:
             logger.error("No input data specified in the config file!")
-        raise KeyError("ConfigError raised -> %s" % error.missing_keys)
+        raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
     try:
@@ -190,7 +190,7 @@ def run(config_files, link_from, verbose):
         fit_models = {}
         for model_name in models:
             if model_name not in config:
-                raise KeyError("Missing model definition -> %s" % model_name)
+                raise KeyError("Missing model definition -> {}".format(model_name))
             fit_models[model_name] = configure_model(config[model_name])
     except KeyError:
         logger.exception('Error loading model')
@@ -204,20 +204,21 @@ def run(config_files, link_from, verbose):
                                  _paths.get_toy_fit_path) as toy_fit_file:
             with pd.HDFStore(toy_fit_file, mode='w') as hdf_file:
                 logger.debug("Checking generator values")
-                test_gen = [('gen_%s' % data_source) in hdf_file
+                test_gen = [('gen_{}'.format(data_source)) in hdf_file
                             for data_source in gen_values]
                 if all(test_gen):  # The data were written already, crosscheck values
                     for source_id, gen_value in gen_values.items():
-                        if not all(hdf_file['gen_%s' % data_source][var_name].iloc[0] == var_value
+                        if not all(hdf_file['gen_{}'.format(data_source)][var_name].iloc[0] == var_value
                                    for var_name, var_value in gen_value.items()):
-                            raise AttributeError("Generated and stored values don't match for source '%s'" % source_id)
+                            raise AttributeError(
+                                "Generated and stored values don't match for source '{}'".format(source_id))
                 elif not any(test_gen):  # No data were there, just overwrite
                     for source_id, gen_values in gen_values.items():
                         gen_data = {'id': source_id,
                                     'source': _paths.get_toy_path(config['data'][source_id]['source']),
                                     'nevents': config['data'][source_id]['nevents']}
                         gen_data.update(gen_values)
-                        gen_values_frame['gen_%s' % source_id] = pd.DataFrame([gen_data])
+                        gen_values_frame['gen_{}'.format(source_id)] = pd.DataFrame([gen_data])
                 else:
                     raise AttributeError("Inconsistent number of data sources")
     except OSError, excp:
@@ -229,7 +230,7 @@ def run(config_files, link_from, verbose):
             if 'acceptance' in config \
             else None
     except _config.ConfigError as error:
-        raise KeyError("Error loading acceptance -> %s" % error)
+        raise KeyError("Error loading acceptance -> {}".format(error))
     # Prepare output
     gen_events = defaultdict(list)
     # Set seed
@@ -257,7 +258,7 @@ def run(config_files, link_from, verbose):
                                                   acceptance,
                                                   fit_models)
             for sample_name, sample_size in sample_sizes.items():
-                gen_events['N^{%s}_{gen}' % sample_name].append(sample_size)
+                gen_events['N^{{{}}}_{{gen}}'.format(sample_name)].append(sample_size)
             logger.debug("Sampling finalized")
         except KeyError:
             logger.exception("Bad data configuration")

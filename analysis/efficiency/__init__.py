@@ -81,7 +81,7 @@ def load_efficiency_model(model_name, **extra_parameters):
     """
     path = get_efficiency_path(model_name)
     if not os.path.exists(path):
-        raise OSError("Cannot find efficiency file -> %s" % path)
+        raise OSError("Cannot find efficiency file -> {}".format(path))
     config = load_config(path, validate=('model', 'variables', 'parameters'))
     return get_efficiency_model(config, **extra_parameters)
 
@@ -108,11 +108,11 @@ def get_efficiency_model(efficiency_config, **extra_parameters):
     # Check the configuration
     for key in ('model', 'variables', 'parameters'):
         if key not in efficiency_config:
-            raise KeyError("Bad configuration -> '%s' key is missing" % key)
+            raise KeyError("Bad configuration -> '{}' key is missing".format(key))
     # Now load efficiency
     model = get_efficiency_model_class(efficiency_config['model'])
     if not model:
-        raise KeyError("Unknown efficiency model -> '%s'" % efficiency_config['model'])
+        raise KeyError("Unknown efficiency model -> '{}'".format(efficiency_config['model']))
     return model(efficiency_config['variables'], efficiency_config['parameters'])
 
 
@@ -147,7 +147,7 @@ def load_acceptance(name, **extra_parameters):
     # pylint: disable=E1101
     path = get_acceptance_path(name)
     if not os.path.exists(path):
-        raise OSError("Cannot find efficiency file -> %s" % path)
+        raise OSError("Cannot find efficiency file -> {}".format(path))
     config = load_config(path, validate=('variables', 'generation', 'reconstruction'))
     config['generation'].update(extra_parameters.get('generation', {}))
     config['reconstruction'].update(extra_parameters.get('reconstruction', {}))
@@ -178,7 +178,7 @@ def get_acceptance(config):
     config_keys = [key for key, _ in unfold_config(config)]
     # missing_keys should be empty if the needed keys have been provided. Otherwise complain!
     missing_keys = set(('variables', 'generation/name', 'reconstruction/name')) - set(config_keys)
-    
+
     if missing_keys:
         raise ConfigError("Missing configuration key! -> {}".format(missing_keys))
     # Load the efficiencies

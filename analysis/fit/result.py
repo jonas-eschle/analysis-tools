@@ -159,7 +159,7 @@ class FitResult(object):
                                                       'covariance-matrix/matrix',
                                                       'status')))
         except ConfigError as error:
-            raise KeyError("Missing keys in input file -> %s" % ','.join(error.missing_keys))
+            raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
         return self
 
     @ensure_initialized
