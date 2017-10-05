@@ -141,17 +141,17 @@ def factory_with_blind_yield():
     """Load a PhysicsFactory with blinded yield."""
     return load_model("""mass:
     pdf: cb
-    yield: 'VAR 1000 300 2000'
+    yield: 'BLIND yieldstr 18 94 @yield1'
     parameters:
         mu: 5246.7 5200 5300
         sigma1: '@sigma/sigma/sigma/41 35 45'
         sigma2: '@sigma'
-        shared_yield: '@yield1/yield1/yield1/VAR 1000 300 2000'
+        shared_yield: '@yield1/Yield/Yield/VAR 1000 300 2000'
         alpha_shared: '@alpha_blind/alpha_blind/alpha_blind/VAR 0.25923 0.1 0.5'
         n1: 5.6689 2 9
         n2: 1.6 0.2 2
-        alpha1: '@alpha_blind'
-        alpha2: -1.9749 -3.5 -1.0
+        alpha1: 'BLIND mystr 10 50 @alpha_blind'
+        alpha2: '-1.9749 -3.5 -1.0'
         frac: 0.84873 0.1 1.0""")
 
 
@@ -185,6 +185,12 @@ def test_factory_get_extendedpdf_blind(factory, factory_with_blind_yield):
     model_yield = factory_with_blind_yield.get_extended_pdf("TestFactoryWithBlindYield",
                                                             "TestFactoryWithBlindYield")
 
+    print("value from direct rooRealVar", factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getVal())
+    print("Hidden value", factory_with_blind_yield.get_fit_parameters()[2].getHiddenVal())
+
+    factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].setVal(0.42)
+    assert factory_with_blind_yield.get_fit_parameters()[2].getHiddenVal() != \
+           factory_with_blind_yield.get_fit_parameters()[2].getVal()
     assert model.getVariables()["Yield"].getVal() == 1000.0
     assert model_yield.getVariables()["Yield"].getVal() == 1000.0
 
