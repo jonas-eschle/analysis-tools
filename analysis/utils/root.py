@@ -76,7 +76,11 @@ def destruct_object(object_):
 
     """
     if issubclass(type(object_), ROOT.TObject):
-        object_.IsA().Destructor(object_)
+        try:
+            object_.IsA().Destructor(object_)
+        except Exception as err:
+            print("error occured when deleting root object: ", err)
+
 
 
 # Functional programming hack
