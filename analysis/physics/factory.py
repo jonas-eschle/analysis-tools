@@ -81,7 +81,7 @@ class BaseFactory(object):
         # Now, build parameters
         missing_parameters = []
         for parameter_name in self.PARAMETERS:
-            if parameter_name not in param_dict:
+            if parameter_name not in list(param_dict):
                 missing_parameters.append(parameter_name)
                 continue
             self._create_parameter(parameter_name,
