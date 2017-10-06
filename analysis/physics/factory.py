@@ -204,7 +204,7 @@ class BaseFactory(object):
     def _create_parameter(self, parameter_name, parameter_value, external_vars=None):
         if parameter_name in self._objects:
             return self._objects[parameter_name]
-        if isinstance(parameter_value, tuple):  # It's a parameter with a constraint
+        if isinstance(parameter_value, (tuple, list)):  # It's a parameter with a constraint
             parameter_value, constraint = parameter_value
         elif isinstance(parameter_value, ROOT.TObject):  # It's an already built parameter
             if parameter_value.getStringAttribute('tempName') == 'true':
