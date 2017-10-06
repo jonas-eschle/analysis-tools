@@ -534,7 +534,7 @@ class PhysicsFactory(BaseFactory):
         if 'Yield' not in self._objects:
             self._create_parameter('Yield', yield_)
         else:
-            if isinstance(yield_, tuple):
+            if isinstance(yield_, (list, tuple)):
                 yield_ = yield_[0]
             if isinstance(self._objects['Yield'], ROOT.RooRealVar):
                 if isinstance(yield_, ROOT.RooRealVar):
@@ -648,7 +648,7 @@ class ProductPhysicsFactory(BaseFactory):
 
     def set_yield_var(self, yield_):
         constraint = None
-        if isinstance(yield_, tuple):
+        if isinstance(yield_, (list, tuple)):
             yield_, constraint = yield_
         if 'Yield' not in self._objects:
             self._objects['Yield'] = yield_
