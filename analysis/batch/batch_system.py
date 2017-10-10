@@ -117,7 +117,7 @@ echo "------------------------------------------------------------------------"
             if directive is None:
                 logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
                 continue
-            header.append(directive % batch_value)
+            header.append(directive.format(batch_value))
         script_config = extra_config if extra_config is not None else {}
         script_config['workdir'] = script_config.get('workdir', os.getcwd())
         script_config['header'] = '\n'.join(header)
