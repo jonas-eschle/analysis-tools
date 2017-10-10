@@ -148,7 +148,7 @@ def compare_configs(config1, config2):
 def unfold_config(dictionary):
     """Convert a dictionary to a list of key, value pairs.
 
-    Unfolding is done a la viewitems, but recursively. While
+    Unfolding is done a la viewitems, but recursively.
 
     Arguments:
         dictionary (dict): Dictionary to update.
