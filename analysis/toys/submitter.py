@@ -113,14 +113,14 @@ class ToySubmitter(object):
             OSError: If there is a problem preparing the output path.
 
         """
+        flat_config = dict(_config.unfold_config(self.config))
         # Check if it has not been produced yet
         # pylint: disable=E1102
         config_file_dest = self.TOY_CONFIG_PATH_GETTER(self.config['name'])
         # First check the config (we may have already checked)
         if os.path.exists(config_file_dest):  # It exists, check they match
             config_dest = _config.load_config(config_file_dest)
-            if _config.compare_configs(dict(_config.unfold_config(self.config)),
-                                       config_dest).difference(set(self.ALLOWED_CONFIG_DIFFS)):
+            if _config.compare_configs(flat_config, config_dest).difference(set(self.ALLOWED_CONFIG_DIFFS)):
                 logger.error("Non-matching configuration already exists with that name!")
                 raise AttributeError()
         # Now check output
@@ -158,8 +158,8 @@ class ToySubmitter(object):
                                                  _paths.get_log_path,
                                                  None)  # No linking is done for logs
         # Calculate number of jobs and submit
-        ntoys = self.config[self.NTOYS_KEY]
-        ntoys_per_job = self.config.get(self.NTOYS_PER_JOB_KEY, ntoys)
+        ntoys = flat_config[self.NTOYS_KEY]
+        ntoys_per_job = flat_config.get(self.NTOYS_PER_JOB_KEY, ntoys)
         n_jobs = int(1.0*ntoys/ntoys_per_job)
         if ntoys % ntoys_per_job:
             n_jobs += 1
