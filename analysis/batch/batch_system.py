@@ -128,7 +128,8 @@ echo "------------------------------------------------------------------------"
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
-        return proc.communicate(input=script.format(**script_config))[0].rstrip('\n')
+        stdout, stderr = proc.communicate(input=script.format(**script_config))
+        return stdout.rstrip('\n')
 
     # pylint: disable=too-many-arguments
     def submit_script(self, job_name, cmd_script, script_args,
