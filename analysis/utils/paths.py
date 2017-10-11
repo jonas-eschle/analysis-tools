@@ -102,13 +102,13 @@ def register_path(path_type,
     # Register the partialled function in globals
     func_name = 'get_' + path_type + '_path'
     if func_name in globals():
-        raise KeyError("Path type already registered -> %s" % path_type)
+        raise KeyError("Path type already registered -> {}".format(path_type))
     logger.debug("Registering path %s", func_name)
     func = partial(_get_path, parent_dirs, extension, name_transformation)
     # Create the docstring
-    func.__doc__ = """Get the path for %s.
+    func.__doc__ = """Get the path for {}.
 
-    The file name is {BASE_PATH}/%s/{name}%s and its existence is
+    The file name is {{BASE_PATH}}/{}/{{name}}{} and its existence is
     not checked.
 
     Arguments:
@@ -117,7 +117,7 @@ def register_path(path_type,
     Returns:
         str: Absolute path of the file.
 
-    """ % (path_type, os.sep.join(parent_dirs), extension)
+    """.format(path_type, os.sep.join(parent_dirs), extension)
     globals()['get_' + path_type + '_path'] = func
     return func
 
@@ -167,7 +167,7 @@ def prepare_path(name, path_func, link_from, *args, **kwargs):
     if dest_base_dir != src_base_dir:
         do_link = True
         if not os.path.exists(src_base_dir):
-            raise OSError("Cannot find storage folder -> %s" % src_base_dir)
+            raise OSError("Cannot find storage folder -> {}".format(src_base_dir))
     dest_file_name = path_func(name, *args, **kwargs)
     rel_file_name = os.path.relpath(dest_file_name, dest_base_dir)
     src_file_name = os.path.join(src_base_dir, rel_file_name)
@@ -224,9 +224,9 @@ def work_on_file(name, path_func, link_from=None):
     try:
         do_link, src_file, dest_file = prepare_path(name, link_from, path_func)
     except OSError as error:
-        raise OSError("Error preparing path -> %s" % str(error))
+        raise OSError("Error preparing path -> {}".format(str(error)))
     lock_file = os.path.join(os.path.dirname(src_file),
-                             '.%s.lock' % os.path.split(src_file)[1])
+                             '.{}.lock'.format(os.path.split(src_file)[1]))
     with fasteners.InterProcessLock(lock_file):
         logger.debug("Got lock!")
         yield src_file

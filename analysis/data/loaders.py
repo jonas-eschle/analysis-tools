@@ -89,10 +89,10 @@ def _load_pandas(file_name, tree_name, variables, selection):
 
     """
     if not os.path.exists(file_name):
-        raise OSError("Cannot find input file -> %s" % file_name)
+        raise OSError("Cannot find input file -> {}".format(file_name))
     with pd.HDFStore(file_name, 'r') as store:
         if tree_name not in store:
-            raise KeyError("Cannot find tree in input file -> %s" % tree_name)
+            raise KeyError("Cannot find tree in input file -> {}".format(tree_name))
         if selection:
             output_data = store[tree_name].query(selection)
             if variables:
@@ -163,7 +163,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         name = kwargs['name']
         title = kwargs.get('title', name)
     except KeyError as error:
-        raise KeyError("Missing configuration key -> %s" % error)
+        raise KeyError("Missing configuration key -> {}".format(error))
     # Check weights
     try:
         weight_var, weights_to_normalize, weights_not_to_normalize = _analyze_weight_config(kwargs)
@@ -211,7 +211,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         except Exception as error:
             raise ValueError(str(error))
         if acc_var in frame.columns:
-            raise ValueError("Name clash: the column '%s' is present in the dataset" % acc_var)
+            raise ValueError("Name clash: the column '{}' is present in the dataset".format(acc_var))
         if acc_var == 'acceptance_fit':
             frame['acceptance_fit'] = acceptance.get_fit_weights(frame)
         else:
@@ -276,16 +276,16 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     logger.debug("Loading ROOT file in RooDataSet format -> %s:%s",
                  file_name, tree_name)
     if not os.path.exists(file_name):
-        raise OSError("Cannot find input file -> %s" % file_name)
+        raise OSError("Cannot find input file -> {}".format(file_name))
     try:
         name = kwargs['name']
         title = kwargs.get('title', name)
     except KeyError as error:
-        raise KeyError("Missing configuration key -> %s" % error)
+        raise KeyError("Missing configuration key -> {}".format(error))
     tfile = ROOT.TFile.Open(file_name)
     tree = tfile.Get(tree_name)
     if not tree:
-        raise KeyError("Cannot find tree in input file -> %s" % tree_name)
+        raise KeyError("Cannot find tree in input file -> {}".format(tree_name))
     leaves = set(get_list_of_leaves(tree))
     variables = set(kwargs.get('variables', leaves))
     # Acceptance
@@ -300,7 +300,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         variables = set(variables) | set(weights_to_normalize) | set(weights_not_to_normalize)
     # Crosscheck leaves
     if variables - leaves:
-        raise ValueError("Cannot find leaves in input -> %s" % (variables - leaves))
+        raise ValueError("Cannot find leaves in input -> {}".format(variables - leaves))
     selection = kwargs.get('selection', None)
     leave_set = ROOT.RooArgSet()
     leave_list = []
@@ -324,24 +324,24 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     dataset = ROOT.RooDataSet(name, title, var_set, ROOT.RooFit.Import(tree))
     if weight_var:
         # Weights to normalize
-        to_normalize_w = ROOT.RooFormulaVar("%s_not_normalized" % weight_var,
-                                            "%s_not_normalized" % weight_var,
+        to_normalize_w = ROOT.RooFormulaVar("{}_not_normalized".format(weight_var),
+                                            "{}_not_normalized".format(weight_var),
                                             "*".join(weights_to_normalize),
                                             list_to_rooarglist(var_list[weight] for weight in weights_to_normalize))
         var_set.append(to_normalize_w)
         dataset.addColumn(to_normalize_w)
-        sum_weights = sum(dataset.get(entry)["%s_not_normalized" % weight_var].getVal()
+        sum_weights = sum(dataset.get(entry)["{}_not_normalized".format(weight_var)].getVal()
                           for entry in dataset.sumEntries())
-        normalized_w = ROOT.RooFormulaVar("%s_normalized" % weight_var,
-                                          "%s_normalized" % weight_var,
-                                          "%s_not_normalized/%s" % (weight_var, sum_weights),
+        normalized_w = ROOT.RooFormulaVar("{}_normalized".format(weight_var),
+                                          "{}_normalized".format(weight_var),
+                                          "{}_not_normalized/{}".format(weight_var, sum_weights),
                                           ROOT.RooArgList(to_normalize_w))
         var_set.append(normalized_w)
         dataset.addColumn(normalized_w)
         # Non-normalized weights
         weights = ROOT.RooFormulaVar(weight_var,
                                      weight_var,
-                                     "*".join(weights_not_to_normalize + ["%s_normalized" % weight_var]),
+                                     "*".join(weights_not_to_normalize + ["{}_normalized".format(weight_var)]),
                                      list_to_rooarglist([var_list[weight] for weight in weights_not_to_normalize] +
                                                         [normalized_w]))
         var_set.append(weights)
@@ -385,7 +385,7 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
     logger.debug("Loading ROOT file in pandas format -> %s:%s",
                  file_name, tree_name)
     if not os.path.exists(file_name):
-        raise OSError("Cannot find input file -> %s" % file_name)
+        raise OSError("Cannot find input file -> {}".format(file_name))
     selection = kwargs.get('selection', None)
     variables = kwargs.get('variables', None)
     if selection:

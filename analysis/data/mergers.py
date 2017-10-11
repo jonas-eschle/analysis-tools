@@ -41,7 +41,7 @@ def merge(data_list, **kwargs):
         raise NotImplementedError()
         # return merge_pandas(data_list)
     else:
-        raise AttributeError("Unknown dataset type -> %s" % type(data_list[0]))
+        raise AttributeError("Unknown dataset type -> {}".format(type(data_list[0])))
 
 
 def merge_root(data_list, name=None, title=None, destruct_data=True):

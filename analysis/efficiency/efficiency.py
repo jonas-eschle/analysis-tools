@@ -80,7 +80,7 @@ class Efficiency(object):
             try:
                 self._var_names[old_name] = new_name
             except ValueError:
-                raise KeyError("Cannot find variable name -> %s" % old_name)
+                raise KeyError("Cannot find variable name -> {}".format(old_name))
 
     def get_efficiency(self, data):
         """Get the efficiency for the given event or dataset.
@@ -228,7 +228,7 @@ class Efficiency(object):
             return regex.sub(lambda match: conv[match.group()], text)
 
         if weight_var and weight_var not in data.columns:
-            raise ValueError("The weight variable is not find in the dataset -> %s", weight_var)
+            raise ValueError("The weight variable is not find in the dataset -> {}".format(weight_var))
         if labels is None:
             labels = {}
         figures = {}

@@ -103,9 +103,9 @@ echo "------------------------------------------------------------------------"
         """
         err_file = batch_config.pop('errfile', log_file)
         log_file, ext = os.path.splitext(log_file)
-        log_file = '%s%s%s' % (log_file, self.JOBID_FORMAT, ext)
+        log_file = '{}{}{}'.format(log_file, self.JOBID_FORMAT, ext)
         err_file, ext = os.path.splitext(err_file)
-        err_file = '%s%s%s' % (err_file, self.JOBID_FORMAT, ext)
+        err_file = '{}{}{}'.format(err_file, self.JOBID_FORMAT, ext)
         # Build header
         header = [self.DIRECTIVES['job-name'].format(job_name),
                   self.DIRECTIVES['logfile'].format(log_file),
@@ -126,8 +126,6 @@ echo "------------------------------------------------------------------------"
         script_config['jobid_var'] = self.JOBID_VARIABLE
         # Submit using stdin
         logger.debug('Submitting job')
-        #  print script.format(**script_config)
-        #  assert False
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
@@ -152,9 +150,9 @@ echo "------------------------------------------------------------------------"
             str: JobID.
 
         """
-        cmd = '%s %s %s' % (executable + ' ' if executable else './',
-                            cmd_script,
-                            ' '.join(script_args))
+        cmd = '{} {} {}'.format(executable + ' ' if executable else './',
+                                cmd_script,
+                                ' '.join(script_args))
         return self.submit_job(job_name, self.DEFAULT_SCRIPT, log_file, extra_config={'script': cmd}, **batch_config)
 
     def get_job_id(self):

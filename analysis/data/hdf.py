@@ -42,7 +42,7 @@ def modify_hdf(file_name, compress=True):
         yield data_file
     logger.debug('Compressing...')
     if compress:
-        compressed_file = "%s.out" % file_name
+        compressed_file = "{}.out".format(file_name)
         try:
             cmd = ["ptrepack",
                    "--chunkshape=auto",

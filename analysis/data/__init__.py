@@ -59,7 +59,7 @@ def load_data(config_file, key=None, **kwargs):
     """
     config_file = os.path.abspath(config_file)
     if not os.path.exists(config_file):
-        raise OSError("Cannot find config file -> %s" % config_file)
+        raise OSError("Cannot find config file -> {}".format(config_file))
     return get_data(load_config(config_file,
                                 root=key,
                                 validate=['source', 'tree', 'output-format']),
@@ -99,16 +99,16 @@ def get_data(data_config, **kwargs):
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
-            raise KeyError("Bad data configuration -> '%s' key is missing" % key)
+            raise KeyError("Bad data configuration -> '{}' key is missing".format(key))
     source_name = data_config.pop('source')
     try:
         source_type = data_config.pop('source-type', None)
         file_name = source_name if not source_type \
-            else getattr(paths, 'get_%s_path' % source_type)(source_name)
+            else getattr(paths, 'get_{}_path'.format(source_type))(source_name)
         if not os.path.exists(file_name):
-            raise OSError("Cannot find input file -> %s" % file_name)
+            raise OSError("Cannot find input file -> {}".format(file_name))
     except AttributeError:
-        raise AttributeError("Unknown source type -> %s" % source_type)
+        raise AttributeError("Unknown source type -> {}".format(source_type))
     tree_name = data_config.pop('tree')
     output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches
@@ -118,13 +118,13 @@ def get_data(data_config, **kwargs):
         if not input_type:
             input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:
-        raise KeyError("Unknown file extension -> %s. Cannot load file." % input_ext)
+        raise KeyError("Unknown file extension -> {}. Cannot load file.".format(input_ext))
     try:
         get_data_func = getattr(_loaders,
-                                'get_%s_from_%s_file' % (output_format, input_type))
+                                'get_{}_from_{}_file'.format(output_format, input_type))
     except AttributeError:
         raise ValueError("Output format unavailable for input file"
-                         "with extension %s -> %s" % (input_ext, output_format))
+                         "with extension {} -> {}".format(input_ext, output_format))
     logger.debug("Loading data file -> %s:%s", file_name, tree_name)
     return get_data_func(file_name, tree_name, data_config)
 

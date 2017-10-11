@@ -41,7 +41,7 @@ def register_fit_strategy(name, fit_function):
         fit_function_args = inspect.getargspec(fit_function).args
     if len(fit_function_args) != 3:
         raise ValueError("The strategy function needs to have 3 arguments")
-    logger.debug("Registering %s fitting strategy", name)
+    logger.debug("Registering {} fitting strategy".format(name))
     get_global_var('FIT_STRATEGIES').update({name: fit_function})
     return len(get_global_var('FIT_STRATEGIES'))
 
@@ -96,7 +96,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     try:
         fit_func = get_fit_strategy(strategy)
     except KeyError:
-        raise KeyError("Unknown fit strategy -> %s" % strategy)
+        raise KeyError("Unknown fit strategy -> {}".format(strategy))
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
             if factory.is_extended() \
