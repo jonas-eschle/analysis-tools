@@ -163,7 +163,6 @@ def unfold_config(dictionary):
             for sub_key, sub_val in unfold_config(val):
                 # convert non-hashable values to hashable (approximately)
                 if isinstance(sub_val, list):
-                    print("value (list) converted to tuple", sub_val)
                     sub_val = tuple(sub_val)
                 output_list.append(('{}/{}'.format(key, sub_key), sub_val))
         else:
@@ -192,7 +191,6 @@ def fold_config(unfolded_data, dict_class=dict):
     for key, value in unfolded_data:
         # convert tuples back to list
         if isinstance(value, tuple):
-            print("value (tuple) converted to list", value)
             value = list(value)
         current_level = output_dict
         for sub_key in key.split('/'):
