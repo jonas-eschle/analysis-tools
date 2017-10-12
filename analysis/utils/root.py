@@ -76,11 +76,7 @@ def destruct_object(object_):
 
     """
     if issubclass(type(object_), ROOT.TObject):
-        try:
-            object_.IsA().Destructor(object_)
-        except Exception as err:
-            print("error occured when deleting root object: ", err)
-
+        object_.IsA().Destructor(object_)
 
 
 # Functional programming hack
@@ -146,6 +142,7 @@ def list_to_rooargset(iterable):
 
     """
     return list_to_rooabscollection(iterable, ROOT.RooArgSet)
+
 
 def iterate_roocollection(collection):
     """Iterate a RooAbsCollection object.
