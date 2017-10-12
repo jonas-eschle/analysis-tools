@@ -188,11 +188,16 @@ def test_factory_get_extendedpdf_blind(factory, factory_with_blind_yield):
     print("value from direct rooRealVar", factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getVal())
     print("Hidden value", factory_with_blind_yield.get_fit_parameters()[2].getHiddenVal())
 
-    factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].setVal(0.42)
-    assert factory_with_blind_yield.get_fit_parameters()[2].getHiddenVal() != \
-           factory_with_blind_yield.get_fit_parameters()[2].getVal()
-    assert model.getVariables()["Yield"].getVal() == 1000.0
-    assert model_yield.getVariables()["Yield"].getVal() == 1000.0
+    assert factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getMax() == 0.5
+    assert factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getMin() == 0.1
+    assert isinstance(factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'],
+                      ROOT.RooRealVar)
+    assert isinstance(factory_with_blind_yield.get_fit_parameters()[2], ROOT.RooUnblindPrecision)
+
+    assert isinstance(factory_with_blind_yield.get_yield_var(), ROOT.RooUnblindPrecision)
+    assert isinstance(factory_with_blind_yield.get_yield_var().getVariables()['Yield'], ROOT.RooRealVar)
+    assert factory_with_blind_yield.get_yield_var().getVariables()['Yield'].getMax() == 2000
+    assert factory_with_blind_yield.get_yield_var().getVariables()['Yield'].getMin() == 300
 
 
 # pylint: disable=W0621
