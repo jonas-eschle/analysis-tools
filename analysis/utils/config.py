@@ -287,7 +287,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         # SHIFT @var val
         try:
             if action == 'BLIND':
-                blind_str, blind_central, blind_sigma, ref_var = action_params
+                ref_var, blind_str, blind_central, blind_sigma = action_params
                 second_var = ''
             else:
                 ref_var, second_var = action_params
@@ -305,7 +305,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 if not constraint:
                     constraint = const
                 else:
-                    raise NotImplementedError("Two constrained variables in SHIFT or SCALED are not allowed")
+                    raise NotImplementedError("Two constrained variables in SHIFT or SCALE are not allowed")
             elif ':' in second_var:
                 from analysis.fit.result import FitResult
                 fit_name, var_name = second_var.split(':')

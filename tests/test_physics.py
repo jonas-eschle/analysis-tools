@@ -141,7 +141,7 @@ def factory_with_blind_yield():
     """Load a PhysicsFactory with blinded yield."""
     return load_model("""mass:
     pdf: cb
-    yield: 'BLIND yieldstr 18 94 @yield1'
+    yield: 'BLIND @yield1 yieldstr 18 94'
     parameters:
         mu: 5246.7 5200 5300
         sigma1: '@sigma/sigma/sigma/41 35 45'
@@ -150,7 +150,7 @@ def factory_with_blind_yield():
         alpha_shared: '@alpha_blind/alpha_blind/alpha_blind/VAR 0.25923 0.1 0.5'
         n1: 5.6689 2 9
         n2: 1.6 0.2 2
-        alpha1: 'BLIND mystr 10 50 @alpha_blind'
+        alpha1: 'BLIND @alpha_blind mystr 10 50'
         alpha2: '-1.9749 -3.5 -1.0'
         frac: 0.84873 0.1 1.0""")
 
