@@ -124,9 +124,9 @@ class ToySubmitter(object):
                 logger.error("Non-matching configuration already exists with that name!")
                 raise AttributeError()
         # Now check output
-        _, expected_src, expected_dest = _paths.prepare_path(self.config['name'],
-                                                             self.TOY_PATH_GETTER,
-                                                             self.config['link-from'])
+        _, expected_src, expected_dest = _paths.prepare_path(name=self.config['name'],
+                                                             path_func=self.TOY_PATH_GETTER,
+                                                             link_from=self.config['link-from'])
         # Check file existence
         if os.path.exists(expected_src):
             logger.warning("Output data file exists! %s", expected_src)
@@ -154,9 +154,9 @@ class ToySubmitter(object):
         script_args.append(config_file_dest)
         # Prepare paths
         # pylint: disable=E1101
-        _, log_file_fmt, _ = _paths.prepare_path(self.config['name'],
-                                                 _paths.get_log_path,
-                                                 None)  # No linking is done for logs
+        _, log_file_fmt, _ = _paths.prepare_path(name=self.config['name'],
+                                                 path_func=_paths.get_log_path,
+                                                 link_from=None)  # No linking is done for logs
         # Calculate number of jobs and submit
         ntoys = flat_config[self.NTOYS_KEY]
         ntoys_per_job = flat_config.get(self.NTOYS_PER_JOB_KEY, ntoys)
