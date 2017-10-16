@@ -477,12 +477,14 @@ def legacy_syntax_factory():
     return load_model("""mass:
     pdf: cb
     parameters:
-        mu: SHIFT @shift_mu @muMC
+        mu: SHIFT @muMC @shift_mu"""  # intentionally inverted syntax
+        """
         shift_mu: '@shift_mu/shift_mu/shift_mu/VAR 41 35 45'
         muMC: '@muMC/muMC/muMC/CONST 5100'
         sigmaMC: '@sigmaMC/sigmaMC/sigmaMC/CONST 4'
         scale_sigma1: '@scale_sigma1/scale_sigma1/scale_sigma1/VAR 2 0.1 5'
-        sigma1: 'SCALE @scale_sigma1 @sigmaMC'
+        sigma1: 'SCALE @sigmaMC @scale_sigma1'"""  # intentionally inverted syntax
+        """
         scale_sigma2: '@scale_sigma2/scale_sigma2/scale_sigma2/VAR 3 0.2 4'
         sigma2: 'SCALE @scale_sigma2 42'
         shift_n1: '@shift_n1/shift_n1/shift_n1/VAR 4 3 5'
