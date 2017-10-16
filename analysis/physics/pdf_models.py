@@ -30,7 +30,7 @@ class GaussianPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooGaussian.
 
         """
@@ -58,7 +58,7 @@ class CBPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooCBShape.
 
         """
@@ -90,7 +90,7 @@ class BifurcatedCBPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.BifurcatedCB.
 
         """
@@ -127,7 +127,7 @@ class DoubleCBPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooAddPdf: Sum of two `ROOT.CBShape`.
 
         """
@@ -161,7 +161,7 @@ class ExponentialPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooExponential.
 
         """
@@ -211,7 +211,7 @@ class ArgusConvGaussPdfMixin(object):
             The Argus and Gaussian PDFs are created new everytime the RooFFTConvPdf is
             instantiated.
 
-        Returns:
+        Return:
             lambda.
 
         """
@@ -259,7 +259,7 @@ class IpatiaPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooIpatia.
 
         """
@@ -298,7 +298,7 @@ class Ipatia2PdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooIpatia2.
 
         """
@@ -315,7 +315,7 @@ class RooWorkspaceMixin(object):
     def __init__(self, config, parameters=None):
         """Load the workspace.
 
-        Raises:
+        Raise:
             KeyError: On any errors.
 
         """
@@ -363,7 +363,7 @@ class RooWorkspaceMixin(object):
 
         Returns a copy of the RooKeysPdf from the RooWorkspace.
 
-        Returns:
+        Return:
             ROOT.RooKeysPdf.
 
         """

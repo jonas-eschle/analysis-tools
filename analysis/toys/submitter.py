@@ -55,7 +55,7 @@ class ToySubmitter(object):
             extend (bool): Extend the production?
             overwrite (bool): Overwrite an existing production?
 
-        Raises:
+        Raise:
             NotImplementedError: If some of the mandatory attributes are not
                 set.
             OSError: If there is a problem with the configuration file, either in
@@ -107,7 +107,7 @@ class ToySubmitter(object):
         Arguments:
             script_to_run (str): Script to run in the cluster.
 
-        Raises:
+        Raise:
             AssertionError: If the qsub command cannot be found.
             AttributeError: If non-matching configuration file was found.
             OSError: If there is a problem preparing the output path.

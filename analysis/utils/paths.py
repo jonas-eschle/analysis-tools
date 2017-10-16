@@ -45,7 +45,7 @@ def _get_path(dirs, extension, name_transformation, name, *args, **kwargs):
         *args (list): Positional arguments to be passed to `name_transformation`.
         *kwargs (list): Keyword arguments to be passed to `name_transformation`.
 
-    Returns:
+    Return:
         str: Absolute path of the object.
 
     """
@@ -81,10 +81,10 @@ def register_path(path_type,
                 lambda name, args, kwargs: name
                 ```
 
-    Returns:
+    Return:
         Callable: The created function.
 
-    Raises:
+    Raise:
         ValueError: If the signature of the `name_transformation` doesn't match the specifications.
         KeyError: If the path has already been registered.
 
@@ -109,7 +109,7 @@ def register_path(path_type,
     Arguments:
         name (str): Name of the object.
 
-    Returns:
+    Return:
         str: Absolute path of the file.
 
     """.format(path_type, os.sep.join(parent_dirs), extension)
@@ -151,7 +151,7 @@ def prepare_path(name, path_func, link_from, *args, **kwargs):
         *args (list): Extra arguments for the `path_func`.
         **kwargs (dict): Extra arguments for the `path_func`.
 
-    Returns:
+    Return:
         tuple (bool, str, str): Need to do soft-linking, path of true output file,
             path of soft-link output.
 
@@ -191,7 +191,7 @@ def work_on_file(name, path_func, link_from=None):
     Yields:
         str: Path ot the file.
 
-    Raises:
+    Raise:
         OSError: If there is a problem preparing the path.
 
     """

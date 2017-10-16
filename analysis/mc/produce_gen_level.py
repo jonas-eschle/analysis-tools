@@ -84,10 +84,10 @@ def run(config_files, link_from):
         config_files (list[str]): Path to the configuration files.
         link_from (str): Path to link the results from.
 
-    Returns:
+    Return:
         int: Number of submitted jobs.
 
-    Raises:
+    Raise:
         OSError: If the configuration file does not exist.
         KeyError: If some configuration data are missing.
         ValueError: If no suitable batch backend is found.

@@ -37,7 +37,7 @@ def register_physics_factories(observable, factories):
         observable (str): Observable name.
         factories (dict): Factory name -> factory class mapping.
 
-    Returns:
+    Return:
         int: Number of registered physics factories for the given observable.
 
     """
@@ -54,10 +54,10 @@ def get_physics_factory(observable, pdf_type):
         observable (str): Observable name.
         pdf_type (str): Type of the pdf.
 
-    Returns:
+    Return:
         `PhysicsFactory`: Requested PhysicsFactory.
 
-    Raises:
+    Raise:
         KeyError: If the type of factory is unknown.
 
     """
@@ -73,7 +73,7 @@ def get_physics_factory(observable, pdf_type):
 def rename_on_recursion_end(func):
     """Perform a recursive rename at the end of the configuration recursion.
 
-    Raises:
+    Raise:
         RuntimeError: If the wrapped function doesn't return a physics
             factory.
 
@@ -81,7 +81,7 @@ def rename_on_recursion_end(func):
     def wrapped(*args, **kwargs):
         """Check the parent caller to determine when to rename.
 
-        Raises:
+        Raise:
             RuntimeError: If the wrapped function doesn't return a physics
                 factory.
 
@@ -105,7 +105,7 @@ def rename_on_recursion_end(func):
 def configure_model(config, shared_vars=None, external_vars=None):
     """
 
-    Raises:
+    Raise:
         ConfigError: If the shared parameters are badly configured.
 
     """

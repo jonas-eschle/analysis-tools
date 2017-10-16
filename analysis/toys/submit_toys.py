@@ -117,7 +117,7 @@ def process_scan_val(value, other_values=None):
         value (str): String specification of the value to scan.
         other_values (dict, optional): Values to use for interpolation.
 
-    Raises:
+    Raise:
         ValueError: When the scan specification is not properly formed.
 
     """

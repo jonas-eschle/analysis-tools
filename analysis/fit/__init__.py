@@ -27,10 +27,10 @@ def register_fit_strategy(name, fit_function):
         name (str): Name of the strategy.
         fit_function (Callable): Fit function.
 
-    Returns:
+    Return:
         int: Number of registered fit strategies.
 
-    Raises:
+    Raise:
         ValueError: If the fit function doesn't have the correct number of parameters.
 
     """
@@ -53,10 +53,10 @@ def get_fit_strategy(name):
     Arguments:
         name (str): Name of the fit strategy.
 
-    Returns:
+    Return:
         Callable: The fit function.
 
-    Raises:
+    Raise:
         KeyError: If the strategy is not registered.
 
     """
@@ -68,7 +68,7 @@ def get_fit_strategy(name):
 def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     """Fit a dataset.
 
-    Raises:
+    Raise:
         KeyError: If the fit strategy is not registered.
         ValueError: If there is a problem getting the PDF.
 

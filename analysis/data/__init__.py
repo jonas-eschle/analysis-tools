@@ -20,7 +20,7 @@ logger = get_logger('analysis.data')
 def register_file_type(extension, file_type):
     """Register a file type with a given extension.
 
-    Returns:
+    Return:
         int: Number of extensions registered with that particular file type.
 
     """
@@ -48,10 +48,10 @@ def load_data(config_file, key=None, **kwargs):
             given, the root of the YAML file will be used as configuration.
         **kwargs (dict): Dictionary to override keys from the dictionary.
 
-    Returns:
+    Return:
         object: Data object.
 
-    Raises:
+    Raise:
         OSError: If the config file cannot be loaded.
         ConfigError: If the validation of the ConfigFile fails.
 
@@ -80,7 +80,7 @@ def get_data(data_config, **kwargs):
     Optional config keys:
         + `input-type`: type of input, in case the extension has not been registered.
 
-    Raises:
+    Raise:
         AttributeError: If the specified source type is unknown.
         KeyError: If the input file extension is not recognized.
         OSError: If the input file can't be found.

@@ -49,12 +49,12 @@ def get_datasets(data_frames, acceptance, fit_models):
             the data categories, with the name of the output as key.
         categories (dict, optional): Category of each data frame.
 
-    Returns:
+    Return:
         tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the
             combination of the several input sources with the transformations applied,
             and number of generated events per data sample.
 
-    Raises:
+    Raise:
         KeyError: If there is information missing from the data configuration.
 
     """
@@ -107,7 +107,7 @@ def run(config_files, link_from, verbose):
         link_from (str): Path to link the results from.
         verbose (bool): Give verbose output?
 
-    Raises:
+    Raise:
         OSError: If there either the configuration file does not exist some
             of the input toys cannot be found.
         AttributeError: If the input data are incompatible with a previous fit.

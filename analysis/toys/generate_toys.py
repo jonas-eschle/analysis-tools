@@ -39,10 +39,10 @@ def generate(physics_factory, n_events):
             observables, parameters and PDFs from.
         n_events (dict, int): Number of events to generate.
 
-    Returns:
+    Return:
         `pandas.DataFrame`: Generated events.
 
-    Raises:
+    Raise:
         ValueError: If the number of events to generate is not properly specified.
         KeyError: If an unknown simultaneous category label is requested.
 
@@ -57,7 +57,7 @@ def generate(physics_factory, n_events):
             obs_set (`ROOT.RooArgSet`): Observables to generate.
             n_events (int): Number of events to generate.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Generated events.
 
         """
@@ -99,7 +99,7 @@ def run(config_files, link_from):
         config_files (list[str]): Path to the configuration files.
         link_from (str): Path to link the results from.
 
-    Raises:
+    Raise:
         KeyError: If some configuration data are missing.
         OSError: If there either the configuration file does not exist or if
             there is a problem preparing the output path.
