@@ -114,20 +114,20 @@ class ToySubmitter(object):
             OSError: If there is a problem preparing the output path.
 
         """
-        config = dict(_config.unfold_config(self.config))
+        flat_config = dict(_config.unfold_config(self.config))
         # Check if it has not been produced yet
         # pylint: disable=E1102
-        config_file_dest = self.TOY_CONFIG_PATH_GETTER(config['name'])
+        config_file_dest = self.TOY_CONFIG_PATH_GETTER(self.config['name'])
         # First check the config (we may have already checked)
         if os.path.exists(config_file_dest):  # It exists, check they match
             config_dest = _config.load_config(config_file_dest)
-            if _config.compare_configs(config, config_dest).difference(set(self.ALLOWED_CONFIG_DIFFS)):
+            if _config.compare_configs(flat_config, config_dest).difference(set(self.ALLOWED_CONFIG_DIFFS)):
                 logger.error("Non-matching configuration already exists with that name!")
                 raise AttributeError()
         # Now check output
-        _, expected_src, expected_dest = _paths.prepare_path(config['name'],
-                                                             self.TOY_PATH_GETTER,
-                                                             config['link-from'])
+        _, expected_src, expected_dest = _paths.prepare_path(name=self.config['name'],
+                                                             path_func=self.TOY_PATH_GETTER,
+                                                             link_from=self.config['link-from'])
         # Check file existence
         if os.path.exists(expected_src):
             logger.warning("Output data file exists! %s", expected_src)
@@ -150,17 +150,17 @@ class ToySubmitter(object):
         if not os.path.exists(script_to_run):
             raise OSError("Cannot find {}!".format(script_to_run))
         script_args = []
-        if config['link-from']:
-            script_args.append('--link-from={}'.format(config['link-from']))
+        if self.config['link-from']:
+            script_args.append('--link-from={}'.format(self.config['link-from']))
         script_args.append(config_file_dest)
         # Prepare paths
         # pylint: disable=E1101
-        _, log_file_fmt, _ = _paths.prepare_path(config['name'],
-                                                 _paths.get_log_path,
-                                                 None)  # No linking is done for logs
+        _, log_file_fmt, _ = _paths.prepare_path(name=self.config['name'],
+                                                 path_func=_paths.get_log_path,
+                                                 link_from=None)  # No linking is done for logs
         # Calculate number of jobs and submit
-        ntoys = config[self.NTOYS_KEY]
-        ntoys_per_job = config.get(self.NTOYS_PER_JOB_KEY, ntoys)
+        ntoys = flat_config[self.NTOYS_KEY]
+        ntoys_per_job = flat_config.get(self.NTOYS_PER_JOB_KEY, ntoys)
         n_jobs = int(1.0*ntoys/ntoys_per_job)
         if ntoys % ntoys_per_job:
             n_jobs += 1
@@ -168,11 +168,11 @@ class ToySubmitter(object):
         _config.write_config(self.config, config_file_dest)
         for _ in range(n_jobs):
             # Write the config file
-            job_id = self.batch_system.submit_script(config['name'],
+            job_id = self.batch_system.submit_script(self.config['name'],
                                                      script_to_run,
                                                      script_args,
                                                      log_file_fmt,
-                                                     **config.get('batch', {}))
+                                                     **self.config.get('batch', {}))
             logger.info('Submitted JobID: %s', job_id)
 
 

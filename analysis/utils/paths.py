@@ -222,16 +222,17 @@ def work_on_file(name, path_func, link_from=None):
                 os.symlink(src_file, dest_file)
 
     try:
-        do_link, src_file, dest_file = prepare_path(name, link_from, path_func)
+        do_link, src_file, dest_file = prepare_path(name=name, path_func=path_func,
+                                                    link_from=link_from)
     except OSError as error:
         raise OSError("Error preparing path -> {}".format(str(error)))
     lock_file = os.path.join(os.path.dirname(src_file),
                              '.{}.lock'.format(os.path.split(src_file)[1]))
     with fasteners.InterProcessLock(lock_file):
-        logger.debug("Got lock!")
+        logger.debug("Got lock (file: {})!".format(lock_file))
         yield src_file
         if do_link:
             link_files((src_file, dest_file))
-        logger.debug('Releasing lock!')
+        logger.debug('Releasing lock (file: {})!'.format(lock_file))
 
 # EOF

@@ -29,7 +29,7 @@ def modify_hdf(file_name, compress=True):
         no error is raised.
 
     Arguments:
-        file_name (str): Final (desination) file name to write to.
+        file_name (str): Final (destination) file name to write to.
         compress (bool, optional): Compress the file after closing? This is very
             useful when appending to an existing file. Defaults to `True`.
 

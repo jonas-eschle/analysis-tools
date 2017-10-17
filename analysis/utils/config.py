@@ -164,6 +164,9 @@ def unfold_config(dictionary):
         # for key, val in dictionary.viewitems():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
+                # convert non-hashable values to hashable (approximately)
+                if isinstance(sub_val, list):
+                    sub_val = tuple(sub_val)
                 output_list.append(('{}/{}'.format(key, sub_key), sub_val))
         else:
             output_list.append((key, val))
@@ -172,6 +175,9 @@ def unfold_config(dictionary):
 
 def fold_config(unfolded_data, dict_class=dict):
     """Convert an unfolded dictionary (a la viewitems) back to a dictionary.
+
+    Tuples are converted to lists. This reflects the inverted behaviour
+    to :py:func:`unfold_config`.
 
     Note:
         If a key is specified more than once, the latest value is taken.
@@ -186,6 +192,9 @@ def fold_config(unfolded_data, dict_class=dict):
     """
     output_dict = dict_class()
     for key, value in unfolded_data:
+        # convert tuples back to list
+        if isinstance(value, tuple):
+            value = list(value)
         current_level = output_dict
         for sub_key in key.split('/'):
             previous_level = current_level
@@ -255,7 +264,12 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             except KeyError:
                 value = result.get_const_parameter(var_name)
         else:
-            value = float(action_params[0])
+            try:
+                value = float(action_params[0])
+            except ValueError:
+
+                print("error, action params[0]", action_params[0])
+
         parameter = ROOT.RooRealVar(name, title, value)
         if action == 'VAR':  # Free parameter, we specify its initial value
             parameter.setConstant(False)
