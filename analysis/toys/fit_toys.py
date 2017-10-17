@@ -200,8 +200,8 @@ def run(config_files, link_from, verbose):
         gen_values_frame = {}
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
-                                 config.get('link-from', None),
-                                 _paths.get_toy_fit_path) as toy_fit_file:
+                                 _paths.get_toy_fit_path,
+                                 config.get('link-from', None)) as toy_fit_file:
             with pd.HDFStore(toy_fit_file, mode='w') as hdf_file:
                 logger.debug("Checking generator values")
                 test_gen = [('gen_{}'.format(data_source)) in hdf_file
@@ -308,8 +308,8 @@ def run(config_files, link_from, verbose):
     try:
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
-                                 link_from=config.get('link-from', None),
-                                 path_func=_paths.get_toy_fit_path) as toy_fit_file:
+                                 path_func=_paths.get_toy_fit_path,
+                                 link_from=config.get('link-from', None)) as toy_fit_file:
             with modify_hdf(toy_fit_file) as hdf_file:
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)

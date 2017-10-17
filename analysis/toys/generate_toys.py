@@ -174,8 +174,8 @@ def run(config_files, link_from):
     try:
         # Save
         with work_on_file(config['name'],
-                          link_from=config.get('link-from', None),
-                          path_func=get_toy_path) as toy_file:
+                          path_func=get_toy_path,
+                          link_from=config.get('link-from', None)) as toy_file:
             with modify_hdf(toy_file) as hdf_file:
                 hdf_file.append('data', dataset.assign(jobid=job_id))
                 hdf_file.append('toy_info', pd.DataFrame(toy_info))
