@@ -158,7 +158,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                                                 factory_config,
                                                                                 shared_vars['pdf'][observable]))
                                                              for observable, factory_config
-                                                             in config.get('pdf').items()),
+                                                             in config['pdf'].items()),
                                                  parameters=config)
                                                  # parameters={param_name: (param_val, None)
                                                  #             for param_name, param_val in params.items()})
