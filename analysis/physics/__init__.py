@@ -111,7 +111,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
     """
     def sanitize_parameter(param, name, title):
         constraint = None
-        if isinstance(param, tuple):
+        if isinstance(param, (list, tuple)):
             param, constraint = param
         if not isinstance(param, ROOT.TObject):
             param, constraint = configure_parameter(name, title, param)

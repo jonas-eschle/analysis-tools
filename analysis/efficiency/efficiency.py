@@ -286,7 +286,7 @@ class Efficiency(object):
         """
         if not self.MODEL_NAME:
             raise NotImplementedError("Cannot save generic Efficiency")
-        with work_on_file(name, link_from, get_efficiency_path) as file_name:
+        with work_on_file(name, get_efficiency_path, link_from) as file_name:
             write_config({'model': self.MODEL_NAME,
                           'variables': self.get_variables(),
                           'parameters': self._config},
