@@ -447,4 +447,78 @@ def test_simfactory_vs_factory(factory, sim_factory):
     assert fac_model.getVal() == sim_model.getComponents()["TestSimFactory^{label1,signal,mass}_{noext}"].getVal()
 
 
+@pytest.fixture
+def shift_scale_factory():
+    """Load a PhysicsFactory."""
+    return load_model("""mass:
+    pdf: cb
+    parameters:
+        mu: SHIFT @shift_mu @muMC
+        shift_mu: '@shift_mu/shift_mu/shift_mu/VAR 41 35 45'
+        muMC: '@muMC/muMC/muMC/CONST 5100'
+        sigmaMC: '@sigmaMC/sigmaMC/sigmaMC/CONST 4'
+        scale_sigma1: '@scale_sigma1/scale_sigma1/scale_sigma1/VAR 2 0.1 5'
+        sigma1: 'SCALE @scale_sigma1 @sigmaMC'
+        scale_sigma2: '@scale_sigma2/scale_sigma2/scale_sigma2/VAR 3 0.2 4'
+        sigma2: 'SCALE @scale_sigma2 42'
+        shift_n1: '@shift_n1/shift_n1/shift_n1/VAR 4 3 5'
+        n1: 'SHIFT @shift_n1 5.6689'
+        n2:  1.6 0.2 2
+        alpha1: 0.25923 0.1 0.5
+        alpha2:  -1.9749 -3.5 -1.0
+        frac: 0.84873 0.1 1.0""")
+
+
+# in the Kstee angular analysis, there are several config files which use a different
+# syntax than expected. As RooAddition and RooMultiplication
+@pytest.fixture
+def legacy_syntax_factory():
+    """Load a PhysicsFactory."""
+    return load_model("""mass:
+    pdf: cb
+    parameters:
+        mu: SHIFT @muMC @shift_mu"""  # intentionally inverted syntax
+        """
+        shift_mu: '@shift_mu/shift_mu/shift_mu/VAR 41 35 45'
+        muMC: '@muMC/muMC/muMC/CONST 5100'
+        sigmaMC: '@sigmaMC/sigmaMC/sigmaMC/CONST 4'
+        scale_sigma1: '@scale_sigma1/scale_sigma1/scale_sigma1/VAR 2 0.1 5'
+        sigma1: 'SCALE @sigmaMC @scale_sigma1'"""  # intentionally inverted syntax
+        """
+        scale_sigma2: '@scale_sigma2/scale_sigma2/scale_sigma2/VAR 3 0.2 4'
+        sigma2: 'SCALE @scale_sigma2 42'
+        shift_n1: '@shift_n1/shift_n1/shift_n1/VAR 4 3 5'
+        n1: 'SHIFT @shift_n1 5.6689'
+        n2:  1.6 0.2 2
+        alpha1: 0.25923 0.1 0.5
+        alpha2:  -1.9749 -3.5 -1.0
+        frac: 0.84873 0.1 1.0""")
+
+
+def  scale_shift_tester(factory):
+
+    assert isinstance(factory.get_fit_parameters()[0], ROOT.RooAddition)
+    assert isinstance(factory.get_fit_parameters()[0].getVariables()["shift_mu"], ROOT.RooRealVar)
+    assert isinstance(factory.get_fit_parameters()[0].getVariables()["muMC"], ROOT.RooRealVar)
+
+    assert isinstance(factory.get_fit_parameters()[3], ROOT.RooAddition)
+    assert isinstance(factory.get_fit_parameters()[3].getVariables()["shift_n1"], ROOT.RooRealVar)
+
+    assert isinstance(factory.get_fit_parameters()[1], ROOT.RooProduct)
+    assert isinstance(factory.get_fit_parameters()[1].getVariables()["scale_sigma1"], ROOT.RooRealVar)
+    assert isinstance(factory.get_fit_parameters()[1].getVariables()["sigmaMC"], ROOT.RooRealVar)
+
+    assert isinstance(factory.get_fit_parameters()[4], ROOT.RooProduct)
+    assert isinstance(factory.get_fit_parameters()[4].getVariables()["scale_sigma2"], ROOT.RooRealVar)
+
+
+
+def test_scale_shift(shift_scale_factory):
+    scale_shift_tester(shift_scale_factory)
+
+
+def test_legacy_syntax_factory(legacy_syntax_factory):
+    scale_shift_tester(legacy_syntax_factory)
+
+
 # EOF
