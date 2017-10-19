@@ -212,6 +212,10 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             shared variable, the second can be a number or a shared variable.
         * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
+        * 'BLIND' covers the actual parameter by altering its value in an unknown way. The first
+          value must be a shared variable whereas the following are a string and two floats.
+          They represent a randomization string, a mean and a width (both used for the
+          randomization of the value as well).
 
     In addition, wherever a variable value is expected one can use a 'fit_name:var_name' specification to
     load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error
