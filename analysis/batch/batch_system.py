@@ -24,7 +24,7 @@ def which(program):
     Arguments:
         program (str): Command to check.
 
-    Returns:
+    Return:
         str: Path of the program. Returns None if it cannot be found.
 
     """
@@ -79,7 +79,7 @@ echo "------------------------------------------------------------------------"
     def is_available(self):
         """Check if the bacth system is available.
 
-        Returns:
+        Return:
             bool: If the batch system is available.
 
         """
@@ -97,7 +97,7 @@ echo "------------------------------------------------------------------------"
                 to `None`.
             **batch_config (dict): Configuration of the batch system.
 
-        Returns:
+        Return:
             str: Job ID
 
         """
@@ -114,7 +114,7 @@ echo "------------------------------------------------------------------------"
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
-            directive = self.DIRECTIVES.get(batch_option, None)
+            directive = self.DIRECTIVES.get(batch_option)
             if directive is None:
                 logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
                 continue
@@ -126,6 +126,7 @@ echo "------------------------------------------------------------------------"
         script_config['jobid_var'] = self.JOBID_VARIABLE
         # Submit using stdin
         logger.debug('Submitting job')
+        #  logger.debug(script.format(**script_config))
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
@@ -147,7 +148,7 @@ echo "------------------------------------------------------------------------"
             executable (str, optional): Command to execute the script. Defaults to 'python'.
             **batch_config (dict): Configuration of the batch system.
 
-        Returns:
+        Return:
             str: JobID.
 
         """
@@ -161,7 +162,7 @@ echo "------------------------------------------------------------------------"
 
         Only works if we are in the batch system.
 
-        Returns:
+        Return:
             str: Job ID.
 
         """

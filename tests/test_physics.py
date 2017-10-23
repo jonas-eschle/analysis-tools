@@ -80,7 +80,7 @@ class FlatQ2(phys_factory.PhysicsFactory):
         Returns a lambda that builds the `RooPolynomial` starting from
             order 0.
 
-        Returns:
+        Return:
             lambda.
 
         """

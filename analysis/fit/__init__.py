@@ -28,10 +28,10 @@ def register_fit_strategy(name, fit_function):
         name (str): Name of the strategy.
         fit_function (Callable): Fit function.
 
-    Returns:
+    Return:
         int: Number of registered fit strategies.
 
-    Raises:
+    Raise:
         ValueError: If the fit function doesn't have the correct number of parameters.
 
     """
@@ -41,7 +41,7 @@ def register_fit_strategy(name, fit_function):
         fit_function_args = inspect.getargspec(fit_function).args
     if len(fit_function_args) != 3:
         raise ValueError("The strategy function needs to have 3 arguments")
-    logger.debug("Registering {} fitting strategy".format(name))
+    logger.debug("Registering %s fitting strategy", name)
     get_global_var('FIT_STRATEGIES').update({name: fit_function})
     return len(get_global_var('FIT_STRATEGIES'))
 
@@ -58,10 +58,10 @@ def get_fit_strategy(name):
     Arguments:
         name (str): Name of the fit strategy.
 
-    Returns:
+    Return:
         Callable: The fit function.
 
-    Raises:
+    Raise:
         KeyError: If the strategy is not registered.
 
     """
@@ -73,7 +73,7 @@ def get_fit_strategy(name):
 def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     """Fit a dataset.
 
-    Raises:
+    Raise:
         KeyError: If the fit strategy is not registered.
         ValueError: If there is a problem getting the PDF.
 
@@ -82,8 +82,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
 
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-    if 'Range' not in kwargs:
-        kwargs['Range'] = 'Full'
+    kwargs.setdefault('Range', 'Full')
     for command, val in kwargs.items():
         roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:

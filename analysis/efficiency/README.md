@@ -138,7 +138,7 @@ plot-labels:
     acc_phi: '$\phi$ (rad)'
 ```
 
-A weight variable can be specified in `data/weight`.
+A weight variable can be specified in `data/weight-var-name`.
 
 This has the advantage of taking care of saving the plots `$BASE_PATH/data/efficiency/{name}_{var}.eps` and handling the errors in a more graceful way.
 

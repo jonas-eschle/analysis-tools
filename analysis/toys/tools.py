@@ -36,10 +36,10 @@ def load_toy_fits(*toy_list, **kwargs):
             + `fail_on_incompatible` (bool, optional): Fail when incompatible
             data frames are found? Defaults to `True`.
 
-    Returns:
+    Return:
         `pandas.DataFrame`: Merged data frame.
 
-    Raises:
+    Raise:
         OSError: If some of the toys do not exist.
         KeyError: If the data frames from the different stores are not compatible
             and `fail_on_incompatible` is set.
@@ -49,7 +49,7 @@ def load_toy_fits(*toy_list, **kwargs):
     if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toy_list):
         raise OSError("Cannot load all toys")
     with contextlib2.ExitStack() as toy_stack:
-        fit_results = [toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name)))['fit_results']
+        fit_results = [toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))['fit_results']
                        for toy_name in toy_list]
         if not all(all(fit_result.columns == fit_results[0].columns)
                    for fit_result in fit_results):

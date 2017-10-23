@@ -51,12 +51,22 @@ Gauss().DatasetName = '$seed'" > $seedfile
 echo "Config file:"
 cat $seedfile
 # Run
-gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+if [ "{remove_detector}" == true ]; then
+    gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+else
+    gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+fi
 # Move output
 echo "Done"
 ls -ltr
+[ -d {output_path} ] || mkdir -p {output_path}
+[ -d {output_path_link} ] || mkdir -p {output_path_link}
 echo "Copying output to {output_path}"
-cp $seed-*.xgen {output_path}
+if [ "{remove_detector}" == true ]; then
+    cp $seed-*.xgen {output_path}
+else
+    cp $seed-*.sim {output_path}
+fi
 cp $seed-*-histos.root {output_path}
 output_gen_log={output_path_link}/${{seed}}_GeneratorLog.xml
 echo "Copying GeneratorLog.xml : ${{output_gen_log}}"
@@ -84,10 +94,10 @@ def run(config_files, link_from):
         config_files (list[str]): Path to the configuration files.
         link_from (str): Path to link the results from.
 
-    Returns:
+    Return:
         int: Number of submitted jobs.
 
-    Raises:
+    Raise:
         OSError: If the configuration file does not exist.
         KeyError: If some configuration data are missing.
         ValueError: If no suitable batch backend is found.
@@ -118,9 +128,8 @@ def run(config_files, link_from):
     try:
         evt_type = int(evt_type)
     except ValueError:  # There's non-numerical chars, we assume it's a path
-        if not os.path.isabs(evt_type):
-            evt_type = os.path.abspath(evt_type)
-        decfile = evt_type
+        decfile = evt_type if os.path.isabs(evt_type) else os.path.abspath(evt_type)
+        evt_type = os.path.splitext(os.path.split(decfile)[1])[0]
     else:
         decfile = '$DECFILESROOT/options/{}.py'.format(evt_type)
     # Prepare job
@@ -132,6 +141,7 @@ def run(config_files, link_from):
                                                                  link_from=link_from,
                                                                  evt_type=evt_type)
     link_status = 'true' if do_link else 'false'
+    remove_detector = 'true' if config['prod'].get('remove-detector', True) else 'false'
     nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
     logger.info("Generatic %s events of decfile -> %s", nevents, decfile)
     logger.info("Output path: %s", output_path)
@@ -140,6 +150,7 @@ def run(config_files, link_from):
         logger.info("Linking to %s", output_path_link)
     extra_config = {'workdir': '$TMPDIR',
                     'do_link': link_status,
+                    'remove_detector': remove_detector,
                     'output_path': output_path,
                     'output_path_link': output_path_link,
                     'decfile': decfile,
@@ -159,6 +170,9 @@ def run(config_files, link_from):
             job_id = batch_system.submit_job('MC_%s' % evt_type, SCRIPT, log_file,
                                              extra_config=extra_config,
                                              **batch_config)
+            if 'submit error' in job_id:
+                logger.error(job_id)
+                raise Exception
             logger.debug("Submitted job -> %s", job_id)
         except Exception:
             logger.exception('Error submitting MC production job')

@@ -19,16 +19,16 @@ def get_batch_system(name=None):
         name (str, optional): Name of the batch system to get. Defaults to
             None, in which case the batch system detection is activated.
 
-    Returns:
+    Return:
         str: Detected batch system.
 
-    Raises:
+    Raise:
         ValueError: If no batch system was detected.
 
     """
     from analysis.batch.batch_system import BATCH_SYSTEMS
     if name:
-        batch_system = BATCH_SYSTEMS.get(name, None)
+        batch_system = BATCH_SYSTEMS.get(name)
         if batch_system:
             return batch_system
     else:
@@ -41,7 +41,7 @@ def get_batch_system(name=None):
 def get_job_id():
     """Get job ID from the environment.
 
-    Returns:
+    Return:
         str: JobID, empty if it's a local job.
 
     """

@@ -42,14 +42,14 @@ def fit_result():
 # pylint: disable=W0621
 def test_fitresult_convergence(fit_result):
     """Test fit result convergence."""
-    assert FitResult().from_roofit(fit_result).has_converged()
+    assert FitResult.from_roofit(fit_result).has_converged()
 
 
 # pylint: disable=W0621
 def test_fitresult_yaml_conversion(fit_result):
     """Test YAML conversion."""
-    res = FitResult().from_roofit(fit_result)
-    res_conv = FitResult().from_yaml(res.to_yaml())
+    res = FitResult.from_roofit(fit_result)
+    res_conv = FitResult.from_yaml(res.to_yaml())
     assert (res_conv.get_covariance_matrix() == res.get_covariance_matrix()).all()
 
 

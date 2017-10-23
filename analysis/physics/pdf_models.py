@@ -31,7 +31,7 @@ class GaussianPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooGaussian.
 
         """
@@ -59,7 +59,7 @@ class CBPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooCBShape.
 
         """
@@ -91,7 +91,7 @@ class BifurcatedCBPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.BifurcatedCB.
 
         """
@@ -128,7 +128,7 @@ class DoubleCBPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooAddPdf: Sum of two `ROOT.CBShape`.
 
         """
@@ -162,7 +162,7 @@ class ExponentialPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooExponential.
 
         """
@@ -212,7 +212,7 @@ class ArgusConvGaussPdfMixin(object):
             The Argus and Gaussian PDFs are created new everytime the RooFFTConvPdf is
             instantiated.
 
-        Returns:
+        Return:
             lambda.
 
         """
@@ -260,7 +260,7 @@ class IpatiaPdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooIpatia.
 
         """
@@ -299,7 +299,7 @@ class Ipatia2PdfMixin(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Returns:
+        Return:
             ROOT.RooIpatia2.
 
         """
@@ -316,7 +316,7 @@ class RooWorkspaceMixin(object):
     def __init__(self, config, parameters=None):
         """Load the workspace.
 
-        Raises:
+        Raise:
             KeyError: On any errors.
 
         """
@@ -354,7 +354,7 @@ class RooWorkspaceMixin(object):
             var = self._workspace.var(obs_name)
             if not var:
                 raise KeyError("Observable {} not present in RooWorkspace".format(obs_name))
-            if obs_id not in self._objects or var != self._objects[obs_id]:
+            if obs_id not in self or var != self[obs_id]:
                 self.set(obs_id, var)
                 self.set_observable(obs_id, title=obs_title, limits=(obs_min, obs_max), units=unit)
         return super(RooWorkspaceMixin, self).get_observables()
@@ -364,7 +364,7 @@ class RooWorkspaceMixin(object):
 
         Returns a copy of the RooKeysPdf from the RooWorkspace.
 
-        Returns:
+        Return:
             ROOT.RooKeysPdf.
 
         """

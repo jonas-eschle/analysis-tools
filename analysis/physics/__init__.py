@@ -38,7 +38,7 @@ def register_physics_factories(observable, factories):
         observable (str): Observable name.
         factories (dict): Factory name -> factory class mapping.
 
-    Returns:
+    Return:
         int: Number of registered physics factories for the given observable.
 
     """
@@ -55,10 +55,10 @@ def get_physics_factory(observable, pdf_type):
         observable (str): Observable name.
         pdf_type (str): Type of the pdf.
 
-    Returns:
+    Return:
         `PhysicsFactory`: Requested PhysicsFactory.
 
-    Raises:
+    Raise:
         KeyError: If the type of factory is unknown.
 
     """
@@ -74,7 +74,7 @@ def get_physics_factory(observable, pdf_type):
 def rename_on_recursion_end(func):
     """Perform a recursive rename at the end of the configuration recursion.
 
-    Raises:
+    Raise:
         RuntimeError: If the wrapped function doesn't return a physics
             factory.
 
@@ -82,7 +82,7 @@ def rename_on_recursion_end(func):
     def wrapped(*args, **kwargs):
         """Check the parent caller to determine when to rename.
 
-        Raises:
+        Raise:
             RuntimeError: If the wrapped function doesn't return a physics
                 factory.
 
@@ -106,7 +106,7 @@ def rename_on_recursion_end(func):
 def configure_model(config, shared_vars=None, external_vars=None):
     """
 
-    Raises:
+    Raise:
         ConfigError: If the shared parameters are badly configured.
 
     """
@@ -121,7 +121,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
     def configure_factory(observable, config, shared_vars):
         logger.debug("Configuring factory -> %s", config)
         if 'yield' in config:
-            yield_ = config['yield']
+            yield_ = config.pop('yield')
             if 'yield' not in shared_vars:
                 shared_vars['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
         # if 'yield' in shared_vars:
@@ -159,7 +159,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                                                 factory_config,
                                                                                 shared_vars['pdf'][observable]))
                                                              for observable, factory_config
-                                                             in config['pdf'].items()),
+                                                             in config.pop('pdf').items()),
                                                  parameters=config)
                                                  # parameters={param_name: (param_val, None)
                                                  #             for param_name, param_val in params.items()})
@@ -168,6 +168,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
+        global_yield = config.pop('yield', None)
         for pdf_name, pdf_config in config.items():
             # Disable parameter propagation
             # if 'parameters' not in pdf_config:
@@ -176,13 +177,13 @@ def configure_model(config, shared_vars=None, external_vars=None):
             #                                  for param_name, param_val
             #                                  in config.get('parameters', {}).items()})
             if 'yield' in shared_vars[pdf_name]:
-                yields[pdf_name] = shared_vars[pdf_name]['yield']
+                yields[pdf_name] = shared_vars[pdf_name].pop('yield')
             if 'yield' in pdf_config:
-                yield_ = pdf_config['yield']
+                yield_ = pdf_config.pop('yield')
                 if pdf_name not in yields:
                     yields[pdf_name] = sanitize_parameter(yield_, 'Yield', 'Yield')
                     # yields[pdf_name][0].setStringAttribute('shared', 'true')
-            if isinstance(pdf_config.get('pdf', None), str):
+            if isinstance(pdf_config.get('pdf'), str):
                 factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
             else:
                 factories[pdf_name] = configure_model(pdf_config, shared_vars[pdf_name])
@@ -192,7 +193,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
             factory_name, factory_obj = list(factories.items())[0]
             if factory_name in yields:
                 factory_obj.set_yield_var(yields[factory_name])
-            return factory_obj
+            output_factory = factory_obj
         else:
             parameters = {}
             if (len(factories) - len(yields)) > 1:
@@ -201,12 +202,15 @@ def configure_model(config, shared_vars=None, external_vars=None):
                 if list(yields.keys())[-1] == list(factories.keys())[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
                 if 'yield' in config:
-                    yield_ = config['yield']
+                    yield_ = config.pop('yield')
                     if 'yield' not in shared_vars:
                         parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
                 # if 'yield' in parameters:
                 #     parameters['yield'][0].setStringAttribute('shared', 'true')
-            return factory.SumPhysicsFactory(factories, yields, parameters)
+            output_factory = factory.SumPhysicsFactory(factories, yields, parameters)
+        if global_yield:
+            output_factory.set_yield_var(global_yield)
+        return output_factory
 
     def configure_simul_factory(config, shared_vars):
         logger.debug("Configuring simultaneous -> %s", dict(config))
@@ -244,6 +248,9 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return sim_factory
 
     import analysis.physics.factory as factory
+
+    # copy: to not alter argument; shallow (not deep!): do not duplicate ROOT objects
+    config = config.copy()
     # Prepare shared variables
     if shared_vars is None:
         try:
@@ -255,7 +262,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if isinstance(list(config.values())[0].get('pdf', None), str):
+            indices = list(range(len(config)))
+            try:  # remove 'yield'
+                indices.pop(list(config.keys()).index('yield'))
+            except ValueError:  # no yield defined
+                index = 0
+            else:
+                index = indices[0]
+            if isinstance(list(config.values())[index].get('pdf'), str):
                 shared = {'pdf': shared_vars}
                 return configure_prod_factory({'pdf': config}, shared)
             else:
@@ -274,7 +288,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                     sh_vars['parameters'].update(shared_vars['parameters'])
                 else:
                     sh_vars['parameters'] = shared_vars['parameters']
-                return configure_factory(pdf_obs, pdf_config, sh_vars)
+                return configure_factory(observable=pdf_obs, config=pdf_config, shared_vars=sh_vars)
     raise RuntimeError()
 
 

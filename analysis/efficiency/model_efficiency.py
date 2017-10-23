@@ -39,7 +39,7 @@ def run(config_files, link_from):
         config_files (list[str]): Path to the configuration files.
         link_from (str): Path to link the results from.
 
-    Raises:
+    Raise:
         OSError: If there either the configuration file does not exist some
             of the input files cannot be found.
         KeyError: If some configuration data are missing.

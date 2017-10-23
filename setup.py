@@ -26,7 +26,7 @@ setup(name='analysis',
                         'contextlib2',
                         'yamlordereddictloader',
                         'root_pandas>=0.2.0',
-                        'numpy',
+                        'numpy>=1.13.1',
                         'scipy',
                         'psutil',
                         'matplotlib',
@@ -34,4 +34,4 @@ setup(name='analysis',
       packages=['analysis'],
       zip_safe=False)
 
-# EOF
+# EOFpi

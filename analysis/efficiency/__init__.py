@@ -37,7 +37,7 @@ def register_efficiency_model(model_name, model_class):
         model_name (str): Name of the model.
         model_class (`Efficiency`): Efficiency model to register.
 
-    Returns:
+    Return:
         int: Number of registered efficiency models
 
     """
@@ -57,11 +57,11 @@ def get_efficiency_model_class(model_name):
     Arguments:
         model_name (str): Name of the efficiency model class.
 
-    Returns:
+    Return:
         `Efficiency`: Efficiency class, non-instantiated.
 
     """
-    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower(), None)
+    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower())
 
 
 def load_efficiency_model(model_name, **extra_parameters):
@@ -75,7 +75,7 @@ def load_efficiency_model(model_name, **extra_parameters):
         **extra_parameters (dict): Extra configuration parameters to override the entries
             in the `parameters` node loaded from the efficiency file.
 
-    Raises:
+    Raise:
         OSError: If the efficiency file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
@@ -98,10 +98,10 @@ def get_efficiency_model(efficiency_config, **extra_parameters):
         **extra_parameters (dict): Extra configuration parameters to override the entries
             in the `parameters` node in `efficiency_config`.
 
-    Returns:
+    Return:
         `analysis.efficiency.efficiency.Efficiency`: Efficiency object.
 
-    Raises:
+    Raise:
         KeyError: If there is a configuration error
 
     """
@@ -137,10 +137,10 @@ def load_acceptance(name, **extra_parameters):
                                     reconstruction={'rename-vars':{'acc_q2':'q2',
                                                                    'acc_cosThetaL':'ctl'}})
 
-    Returns:
+    Return:
         `analysis.efficiency.Acceptance`: Acceptance object.
 
-    Raises:
+    Raise:
         OSError: If the efficiecny file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
@@ -168,10 +168,10 @@ def get_acceptance(config):
                 to the name of the reconstruction efficiency. Any other key will be passed to `get_efficiency` as
                 `extra_parameters`
 
-    Returns:
+    Return:
         `analysis.efficiency.acceptance.Acceptance`: Acceptance object.
 
-    Raises:
+    Raise:
         analysis.utils.config.ConfigError: If the input config is missing keys.
         See `analysis.utils.config.load_config`.
 

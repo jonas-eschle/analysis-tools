@@ -32,7 +32,7 @@ def add_pdf_paths(*paths):
     Arguments:
         *paths (list): List of paths to append.
 
-    Returns:
+    Return:
         list: Updated PDF paths.
 
     """
@@ -60,10 +60,10 @@ def load_pdf_by_name(name, use_mathmore=False):
         use_mathmore (bool, optional): Load libMathMore before compiling.
             Defaults to False.
 
-    Returns:
+    Return:
         `ROOT.RooAbsPdf`: RooFit PDF object.
 
-    Raises:
+    Raise:
         OSError: If the .cc file corresponding to `name` cannot be found.
 
     """
