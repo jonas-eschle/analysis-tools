@@ -221,6 +221,10 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             shared variable, the second can be a number or a shared variable.
         * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
+        * 'BLIND' covers the actual parameter by altering its value in an unknown way. The first
+          value must be a shared variable whereas the following are a string and two floats.
+          They represent a randomization string, a mean and a width (both used for the
+          randomization of the value as well).
 
     In addition, wherever a variable value is expected one can use a 'fit_name:var_name' specification to
     load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error
@@ -297,10 +301,14 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                                           ROOT.RooFit.RooConst(value),
                                           ROOT.RooFit.RooConst(value_error))
             parameter.setConstant(False)
-    elif action in ('SHIFT', 'SCALE'):
+    elif action in ('SHIFT', 'SCALE', 'BLIND'):
         # SHIFT @var val
         try:
-            ref_var, second_var = action_params
+            if action == 'BLIND':
+                ref_var, blind_str, blind_central, blind_sigma = action_params
+                second_var = ''
+            else:
+                ref_var, second_var = action_params
         except ValueError:
             raise ValueError("Wrong number of arguments for {} -> {}".format(action, action_params))
         try:
@@ -315,7 +323,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 if not constraint:
                     constraint = const
                 else:
-                    raise NotImplementedError("Two constrained variables in SHIFT or SCALED are not allowed")
+                    raise NotImplementedError("Two constrained variables in SHIFT or SCALE are not allowed")
             elif ':' in second_var:
                 from analysis.fit.result import FitResult
                 fit_name, var_name = second_var.split(':')
@@ -326,13 +334,17 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                     value = result.get_const_parameter(var_name)
                 second_var = ROOT.RooFit.RooConst(value)
             else:
-                second_var = ROOT.RooFit.RooConst(float(second_var))
+                if action in ('SHIFT', 'SCALE'):
+                    second_var = ROOT.RooFit.RooConst(float(second_var))
         except KeyError, error:
             raise ValueError("Missing parameter definition -> {}".format(error))
         if action == 'SHIFT':
             parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))
         elif action == 'SCALE':
             parameter = ROOT.RooProduct(name, title, ROOT.RooArgList(ref_var, second_var))
+        elif action == 'BLIND':
+            parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
+                                                 float(blind_central), float(blind_sigma), ref_var)
     else:
         raise KeyError('Unknown action -> {}'.format(action))
     return parameter, constraint
