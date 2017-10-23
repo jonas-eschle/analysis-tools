@@ -6,6 +6,7 @@
 # @date   13.01.2017
 # =============================================================================
 """Configuration files."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import random
@@ -158,7 +159,7 @@ def unfold_config(dictionary):
 
     """
     output_list = []
-    for key, val in dictionary.viewitems():
+    for key, val in dictionary.items():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
                 # convert non-hashable values to hashable (approximately)
