@@ -22,7 +22,7 @@ class Acceptance(object):
             gen_efficiency (`analysis.efficiency.Efficiency`): Generator level efficiency.
             reco_efficiency (`analysis.efficiency.Efficiency`): Reconstructed efficiency.
 
-        Raises:
+        Raise:
             KeyError: If the variable names don't match.
 
         """
@@ -44,10 +44,10 @@ class Acceptance(object):
             weight_col (str, optional): Name of the weights column to be added.
                 Defaults to None, in which case the column is not added.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Filtered data frame, with the weights column added.
 
-        Raises:
+        Raise:
             KeyError: If the weight column name already exists in the dataset.
             ValueError: If the acceptance variables cannot be found in the data frame.
 

@@ -27,7 +27,7 @@ def pandas_from_dataset(dataset):
     Arguments:
         dataset (`ROOT.RooDataSet`): Dataset to convert to pandas.
 
-    Returns:
+    Return:
         `pandas.DataFrame`
 
     """
@@ -57,10 +57,10 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
         categories (list[`ROOT.RooCategory`], optional): Categories to separate the data in.
             Their name must correspond to a column in the `frame`.
 
-    Returns:
+    Return:
         ROOT.RooDataSet: Frame converted to dataset.
 
-    Raises:
+    Raise:
         KeyError: If the weight_var or the category is not present in `frame`.
 
     """
@@ -73,7 +73,7 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             var_set (ROOT.RooArgSet): Variables in the dataset.
             input_data (pandas.DataFrame): Input data.
 
-        Returns:
+        Return:
             ROOT.RooDataSet: Output data set.
 
         """

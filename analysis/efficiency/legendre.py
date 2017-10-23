@@ -34,10 +34,10 @@ def process_range(range_lst):
 
     A few functions are allowed: pi, cos, acos, sin, asin, sqrt.
 
-    Returns:
+    Return:
         tuple: Range, (low, high).
 
-    Raises:
+    Raise:
         ValueError: If the range doesn't have two elements or if it cannot
         be interpreted.
 
@@ -87,7 +87,7 @@ def scale_dataset(data, input_min, input_max, output_min, output_max):
         output_min (float): Lower range of the output data.
         output_max (float): Upper range of the output data.
 
-    Returns:
+    Return:
         pandas.Series, numpy.array: Rescaled dataset.
 
     """
@@ -124,7 +124,7 @@ class LegendreEfficiency(Efficiency):
             var_list (list): List of observables to apply the efficiency to.
             config (dict): Efficiency model configuration.
 
-        Raises:
+        Raise:
             KeyError: On missing coefficients.
             ValueError: On bad range or bad symmetric variable defintion.
 
@@ -162,7 +162,7 @@ class LegendreEfficiency(Efficiency):
             randomize (bool, optional): Apply Gaussian randomization to the efficiencies?
                 Defaults to False.
 
-        Returns:
+        Return:
             pandas.Series: Efficiency for each entry of the input.
 
         """
@@ -201,10 +201,10 @@ class LegendreEfficiency(Efficiency):
             chunk_size (int, optional): Size of the chunks to calculate the
                 covariance matrix with. Defaults to 1000.
 
-        Returns:
+        Return:
             `LegendreEfficiency`: Multidimensional efficiency.
 
-        Raises:
+        Raise:
             ValueError: If the legendre orders are not given.
             KeyError: If some of the variables or the weight is missing from the
                 input dataset.
@@ -275,10 +275,10 @@ class LegendreEfficiency(Efficiency):
             var_name (str): Variable to project.
             n_points (int): Number of points of the projection.
 
-        Returns:
+        Return:
             tuple (np.array): x and y coordinates of the projection.
 
-        Raises:
+        Raise:
             ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
@@ -337,7 +337,7 @@ class LegendreEfficiency1D(Efficiency):
             var_list (list): List of observables to apply the efficiency to.
             config (dict): Efficiency model configuration.
 
-        Raises:
+        Raise:
             KeyError: On missing coefficients or wrong number of them.
             ValueError: On bad range definition.
 
@@ -379,7 +379,7 @@ class LegendreEfficiency1D(Efficiency):
             randomize (bool, optional): Apply Gaussian randomization to the efficiencies?
                 Defaults to False.
 
-        Returns:
+        Return:
             pandas.Series: Efficiency
 
         """
@@ -417,10 +417,10 @@ class LegendreEfficiency1D(Efficiency):
             chunk_size (int, optional): Size of the chunks to calculate the
                 covariance matrix with. Defaults to 1000.
 
-        Returns:
+        Return:
             `LegendreEfficiency`: Multidimensional efficiency.
 
-        Raises:
+        Raise:
             ValueError: If the legendre orders are not given.
             KeyError: If some of the variables or the weight is missing from the
                 input dataset.
@@ -482,10 +482,10 @@ class LegendreEfficiency1D(Efficiency):
             var_name (str): Variable to project.
             n_points (int): Number of points of the projection.
 
-        Returns:
+        Return:
             tuple (np.array): x and y coordinates of the projection.
 
-        Raises:
+        Raise:
             ValueError: If the requested variable is not modeled by the efficiency object.
 
         """

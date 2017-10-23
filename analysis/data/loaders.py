@@ -35,11 +35,11 @@ def _analyze_weight_config(config):
     Arguments:
         config (dict): `get_data` configuration.
 
-    Returns:
+    Return:
         tuple (str, list, list): Name of the total weight variable, weight variables to
             normalize, weight variables not to normalize.
 
-    Raises:
+    Raise:
         KeyError: If there is some error in the configuration.
         ValueError: If there are common weights between to-normalize and not-to-normalize
             or if the name of the total weight variable corresponds to one of the weights.
@@ -80,10 +80,10 @@ def _load_pandas(file_name, tree_name, variables, selection):
         variables (list): List of variables to load (speeds up loading).
         selection (str): Not used right now.
 
-    Returns:
+    Return:
         pandas.DataFrame
 
-    Raises:
+    Raise:
         OSError: If the input file does not exist.
         KeyError: If the tree is not found or some of the requested branches are missing.
 
@@ -148,10 +148,10 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
         tree_name (str): Tree to load.
         **kwargs (dict): Extra configuration.
 
-    Returns:
+    Return:
         ROOT.RooDataSet: pandas.DataFrame converted to RooDataSet.
 
-    Raises:
+    Raise:
         KeyError: If there are errors in the `kwargs` variables.
         ValueError: If there is an error in loading the acceptance.
 
@@ -251,10 +251,10 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         tree_name (str): Tree to load.
         **kwargs (dict): Extra configuration.
 
-    Returns:
+    Return:
         ROOT.RooDataSet: ROOT file converted to RooDataSet.
 
-    Raises:
+    Raise:
         KeyError: If there are missing variables in `kwargs`.
         ValueError: If the requested variables cannot be found in the input file.
 
@@ -265,7 +265,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         Arguments:
             tree (`ROOT.TTree`): Tree to extract the leaves from.
 
-        Returns:
+        Return:
             list: Leaves of the tree.
 
         """
@@ -378,7 +378,7 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
         tree_name (str): Tree to load.
         **kwargs (dict): Extra configuration.
 
-    Returns:
+    Return:
         pandas.DataFrame: ROOT file converted to pandas.
 
     """

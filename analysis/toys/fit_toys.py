@@ -9,10 +9,12 @@
 from __future__ import print_function, division, absolute_import
 
 import argparse
+import os
 from collections import defaultdict
 from timeit import default_timer
 
 from scipy.stats import poisson
+import numpy as np
 import pandas as pd
 
 import ROOT
@@ -50,12 +52,12 @@ def get_datasets(data_frames, acceptance, fit_models):
             the data categories, with the name of the output as key.
         categories (dict, optional): Category of each data frame.
 
-    Returns:
+    Return:
         tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the
             combination of the several input sources with the transformations applied,
             and number of generated events per data sample.
 
-    Raises:
+    Raise:
         KeyError: If there is information missing from the data configuration.
 
     """
@@ -108,7 +110,7 @@ def run(config_files, link_from, verbose):
         link_from (str): Path to link the results from.
         verbose (bool): Give verbose output?
 
-    Raises:
+    Raise:
         OSError: If there either the configuration file does not exist some
             of the input toys cannot be found.
         AttributeError: If the input data are incompatible with a previous fit.
@@ -203,7 +205,7 @@ def run(config_files, link_from, verbose):
         with _paths.work_on_file(config['name'],
                                  _paths.get_toy_fit_path,
                                  config.get('link-from', None)) as toy_fit_file:
-            with pd.HDFStore(toy_fit_file, mode='w') as hdf_file:
+            with modify_hdf(toy_fit_file) as hdf_file:
                 logger.debug("Checking generator values")
                 test_gen = [('gen_{}'.format(data_source)) in hdf_file
                             for data_source in gen_values]
@@ -242,6 +244,7 @@ def run(config_files, link_from, verbose):
         import random
         job_id = 'local'
         seed = random.randint(0, 100000)
+    np.random.seed(seed=seed)
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Start looping
     fit_results = defaultdict(list)
@@ -282,7 +285,11 @@ def run(config_files, link_from, verbose):
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
-                result = FitResult().from_roofit(fit_result).to_plain_dict()
+                result_roofit = FitResult().from_roofit(fit_result)
+                result = result_roofit.to_plain_dict()
+                result['cov_matrix'] = result_roofit.get_covariance_matrix()
+                result['param_names'] = result_roofit.get_fit_parameters().keys()
+                result['fitnum'] = fit_num
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
             _root.destruct_object(dataset)
@@ -292,12 +299,19 @@ def run(config_files, link_from, verbose):
     logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/nfits)
     logger.info("Saving to disk")
     data_res = []
+    cov_matrices = {}
     # Get gen values for this model
     for (model_name, fit_strategy), fits in fit_results.items():
         for fit_res in fits:
             fit_res = fit_res.copy()
             fit_res['model_name'] = model_name
             fit_res['fit_strategy'] = fit_strategy
+
+            cov_folder = os.path.join(str(job_id), str(fit_res['fitnum']))
+            param_names = fit_res.pop('param_names')
+            cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'),
+                                                    index=param_names,
+                                                    columns=param_names)
             data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
@@ -314,9 +328,14 @@ def run(config_files, link_from, verbose):
             with modify_hdf(toy_fit_file) as hdf_file:
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
+                # Save covarinance matrix under 'covariance/jobid/fitnum
+                for cov_folder, cov_matrix in cov_matrices.items():
+                    cov_path = os.path.join('covariance', cov_folder)
+                    hdf_file.append(cov_path, cov_matrix)
                 # Generator info
                 for key_name, gen_frame in gen_values_frame.items():
                     hdf_file.append(key_name, gen_frame)
+
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])

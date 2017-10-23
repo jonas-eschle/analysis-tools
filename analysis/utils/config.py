@@ -39,10 +39,10 @@ def load_config(*file_names, **options):
         **options (dict): Configuration options. See above for supported
             options.
 
-    Returns:
+    Return:
         dict: Configuration.
 
-    Raises:
+    Raise:
         OSError: If some file does not exist.
         ConfigError: If key loading or validation fail.
 
@@ -134,7 +134,7 @@ def compare_configs(config1, config2):
         config1 (dict): First configuration.
         config2 (dict): Second configuration
 
-    Returns:
+    Return:
         set: Keys that are different between the two configs,
             taking into account the values and the fact they are
             present in only one or the other.
@@ -154,7 +154,7 @@ def unfold_config(dictionary):
     Arguments:
         dictionary (dict): Dictionary to update.
 
-    Returns:
+    Return:
         set: Unfolded dictionary.
 
     """
@@ -184,7 +184,7 @@ def fold_config(unfolded_data, dict_class=dict):
         unfolded_data (iterable): Data to fold
         dict_class (class): Dictionary-like class used to fold the configuration.
 
-    Returns:
+    Return:
         dict: Folded configuration.
 
     """
@@ -232,12 +232,12 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         title (str): Title of the parameter.
         parameter_config (str): Parameter configuration.
 
-    Returns:
+    Return:
         tuple (ROOT.RooRealVar, ROOT.RooGaussian): Parameter and external constraint
             to apply to it (if requested by the configuration). If no constraint has been
             required, None is returned.
 
-    Raises:
+    Raise:
         KeyError: If the specified action is unknown.
         ValueError: If the action is badly configured.
 
@@ -356,11 +356,11 @@ def get_shared_vars(config, external_vars=None):
         external_vars (dict, optional): Externally defined variables, which take precedence
             over the configuration. Defaults to None.
 
-    Returns:
+    Return:
         dict: Shared parameters build in the same parameter hierachy as the model they
             are included in.
 
-    Raises:
+    Raise:
         ValueError: If one of the parameters is badly configured.
         KeyError: If a parameter is refered to but never configured.
 

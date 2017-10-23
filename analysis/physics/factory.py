@@ -40,7 +40,7 @@ class BaseFactory(object):
         Arguments:
             **config (dict): Configuration of the factory.
 
-        Raises:
+        Raise:
             KeyError: When parameters or observables are missingo or there is an
                 inconsistency in the configuration.
 
@@ -134,10 +134,10 @@ class BaseFactory(object):
             recursive (bool): If True, the object is searched recursively
             including its children with a stop-if-found rule.
 
-        Returns:
+        Return:
             object: Object in the workspace.
 
-        Raises:
+        Raise:
             KeyError: if `key` is not in the internal workspace and no `default`
                 is given.
 
@@ -154,10 +154,10 @@ class BaseFactory(object):
         Arguments:
             key (str): Object identifier.
 
-        Returns:
+        Return:
             object: Object in the workspace.
 
-        Raises:
+        Raise:
             KeyError: if `key` is not in the internal workspace.
 
         """
@@ -172,7 +172,7 @@ class BaseFactory(object):
             overwrite (bool, optional): Replace the existing object?
                 Defaults to False.
 
-        Returns:
+        Return:
             object: The object.
 
         """
@@ -196,7 +196,7 @@ class BaseFactory(object):
         Arguments:
             key (str): Object identifier.
 
-        Returns:
+        Return:
             bool: Wether the object is in the workspace.
 
         """
@@ -242,11 +242,11 @@ class BaseFactory(object):
         Arguments:
             name_dict (dict): (name -> new name) pairs.
 
-        Returns:
+        Return:
             bool: True only if all requested renaming operations have been
                 performed.
 
-        Raises:
+        Raise:
             KeyError: If some of the parameter names are unknown.
 
         """
@@ -295,7 +295,7 @@ class BaseFactory(object):
     def get_pdf(self, name, title):
         """Get the physics PDF.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -310,7 +310,7 @@ class BaseFactory(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -319,10 +319,10 @@ class BaseFactory(object):
     def get_extended_pdf(self, name, title, yield_val=None):
         """Get an extended physics PDF.
 
-        Returns:
+        Return:
             `ROOT.RooExtendPdf`.
 
-        Raises:
+        Raise:
             ValueError: If the yield had not been configured previously
 
         """
@@ -405,7 +405,7 @@ class BaseFactory(object):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -416,7 +416,7 @@ class BaseFactory(object):
 
         Returns the fit parameters by default.
 
-        Returns:
+        Return:
             tuple[`ROOT.RooRealVar`]
 
         """
@@ -462,7 +462,7 @@ class BaseFactory(object):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
@@ -486,7 +486,7 @@ class PhysicsFactory(BaseFactory):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -495,10 +495,10 @@ class PhysicsFactory(BaseFactory):
     def get_unbound_extended_pdf(self, name, title):
         """Get an extended physics PDF.
 
-        Returns:
+        Return:
             `ROOT.RooExtendPdf`.
 
-        Raises:
+        Raise:
             ValueError: If the yield had not been configured previously
 
         """
@@ -513,7 +513,7 @@ class PhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple[`ROOT.RooRealVar`]: Parameters as defined by the `PARAMETERS` attribute.
 
         """
@@ -527,7 +527,7 @@ class PhysicsFactory(BaseFactory):
 
         Returns the fit parameters by default.
 
-        Returns:
+        Return:
             tuple[`ROOT.RooRealVar`]
 
         """
@@ -580,10 +580,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_unbound_extended_pdf(self, name, title, yield_val=None):
         """Get an extended physics PDF.
 
-        Returns:
+        Return:
             `ROOT.RooExtendPdf`.
 
-        Raises:
+        Raise:
             ValueError: If the yield had not been configured previously
 
         """
@@ -599,10 +599,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_observables(self):
         """Get the physics observables.
 
-        Returns:
+        Return:
             tuple: Observables in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -624,10 +624,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
-        Returns:
+        Return:
             tuple: Generation parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -638,10 +638,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple: Fit parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -673,7 +673,7 @@ class ProductPhysicsFactory(BaseFactory):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
@@ -693,7 +693,7 @@ class SumPhysicsFactory(BaseFactory):
 
         In this case, the children are a map of PDF name -> Factory.
 
-        Raises:
+        Raise:
             ValueError: When the observables of the factories are incompatible.
             KeyError: On configuration error.
 
@@ -796,10 +796,10 @@ class SumPhysicsFactory(BaseFactory):
     def get_observables(self):
         """Get the physics observables.
 
-        Returns:
+        Return:
             tuple: Observables in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -812,10 +812,10 @@ class SumPhysicsFactory(BaseFactory):
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
-        Returns:
+        Return:
             tuple: Generation parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -826,10 +826,10 @@ class SumPhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple: Fit parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -869,7 +869,7 @@ class SumPhysicsFactory(BaseFactory):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
@@ -936,10 +936,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_observables(self):
         """Get the physics observables.
 
-        Returns:
+        Return:
             tuple: Observables in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -966,10 +966,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
-        Returns:
+        Return:
             tuple: Generation parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -980,10 +980,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple: Fit parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -1004,10 +1004,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
-        Raises:
+        Raise:
             ValueError: When the dataset contains categories that have not been configured
                 in the class.
             KeyError: If the category is not found in the dataset.
