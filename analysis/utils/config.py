@@ -6,7 +6,6 @@
 # @date   13.01.2017
 # =============================================================================
 """Configuration files."""
-from __future__ import print_function, division, absolute_import
 
 import os
 import random
@@ -31,7 +30,7 @@ def load_config(*file_names, **options):
     if key overlap exists.
     Currently supported options are:
         - `root` (str), which determines the node that is considered as root.
-        - `validate` (iterable), which holds keys to check. If one of these
+        - `validate` (list), which gets a list of keys to check. If one of these
             keys is not present, `config.ConfigError` is raised.
 
     Arguments:
@@ -100,7 +99,7 @@ def write_config(config, file_name):
         if self.alias_key is not None:
             self.represented_objects[self.alias_key] = node
         best_style = True
-        mapping = list(mapping.items())
+        mapping = mapping.items()
         for item_key, item_value in mapping:
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
@@ -159,9 +158,7 @@ def unfold_config(dictionary):
 
     """
     output_list = []
-    for key, val in dictionary.items():
-        # TODO py23: viewitems vs items py2, performance?
-        # for key, val in dictionary.viewitems():
+    for key, val in dictionary.viewitems():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
                 # convert non-hashable values to hashable (approximately)
@@ -329,7 +326,8 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                     value = result.get_const_parameter(var_name)
                 second_var = ROOT.RooFit.RooConst(value)
             else:
-                second_var = ROOT.RooFit.RooConst(float(second_var))
+                if action in ('SHIFT', 'SCALE'):
+                    second_var = ROOT.RooFit.RooConst(float(second_var))
         except KeyError as error:
             raise ValueError("Missing parameter definition -> {}".format(error))
         if action == 'SHIFT':

@@ -114,8 +114,9 @@ def run(config_files, link_from):
         logger.error("YAML parsing error -> %s", error)
         raise
     # Locate decfile
+    evt_type = config['event-type']
     try:
-        evt_type = int(config['event-type'])
+        evt_type = int(evt_type)
     except ValueError:  # There's non-numerical chars, we assume it's a path
         if not os.path.isabs(evt_type):
             evt_type = os.path.abspath(evt_type)

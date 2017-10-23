@@ -144,6 +144,7 @@ def list_to_rooargset(iterable):
     """
     return list_to_rooabscollection(iterable, ROOT.RooArgSet)
 
+
 def iterate_roocollection(collection):
     """Iterate a RooAbsCollection object.
 
