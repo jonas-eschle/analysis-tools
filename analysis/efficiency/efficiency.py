@@ -13,7 +13,6 @@ from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
-# TODO Jonas: add seaborn to deps
 import seaborn as sns
 import sys
 
