@@ -161,6 +161,9 @@ def unfold_config(dictionary):
     for key, val in dictionary.viewitems():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
+                # convert non-hashable values to hashable (approximately)
+                if isinstance(sub_val, list):
+                    sub_val = tuple(sub_val)
                 output_list.append(('{}/{}'.format(key, sub_key), sub_val))
         else:
             output_list.append((key, val))
@@ -169,6 +172,9 @@ def unfold_config(dictionary):
 
 def fold_config(unfolded_data, dict_class=dict):
     """Convert an unfolded dictionary (a la viewitems) back to a dictionary.
+
+    Tuples are converted to lists. This reflects the inverted behaviour
+    to :py:func:`unfold_config`.
 
     Note:
         If a key is specified more than once, the latest value is taken.
@@ -183,6 +189,9 @@ def fold_config(unfolded_data, dict_class=dict):
     """
     output_dict = dict_class()
     for key, value in unfolded_data:
+        # convert tuples back to list
+        if isinstance(value, tuple):
+            value = list(value)
         current_level = output_dict
         for sub_key in key.split('/'):
             previous_level = current_level
@@ -212,6 +221,10 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             shared variable, the second can be a number or a shared variable.
         * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
+        * 'BLIND' covers the actual parameter by altering its value in an unknown way. The first
+          value must be a shared variable whereas the following are a string and two floats.
+          They represent a randomization string, a mean and a width (both used for the
+          randomization of the value as well).
 
     In addition, wherever a variable value is expected one can use a 'fit_name:var_name' specification to
     load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error
@@ -252,7 +265,12 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             except KeyError:
                 value = result.get_const_parameter(var_name)
         else:
-            value = float(action_params[0])
+            try:
+                value = float(action_params[0])
+            except ValueError:
+
+                print("error, action params[0]", action_params[0])
+
         parameter = ROOT.RooRealVar(name, title, value)
         if action == 'VAR':  # Free parameter, we specify its initial value
             parameter.setConstant(False)
@@ -283,10 +301,14 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                                           ROOT.RooFit.RooConst(value),
                                           ROOT.RooFit.RooConst(value_error))
             parameter.setConstant(False)
-    elif action in ('SHIFT', 'SCALE'):
+    elif action in ('SHIFT', 'SCALE', 'BLIND'):
         # SHIFT @var val
         try:
-            ref_var, second_var = action_params
+            if action == 'BLIND':
+                ref_var, blind_str, blind_central, blind_sigma = action_params
+                second_var = ''
+            else:
+                ref_var, second_var = action_params
         except ValueError:
             raise ValueError("Wrong number of arguments for {} -> {}".format(action, action_params))
         try:
@@ -301,7 +323,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                 if not constraint:
                     constraint = const
                 else:
-                    raise NotImplementedError("Two constrained variables in SHIFT or SCALED are not allowed")
+                    raise NotImplementedError("Two constrained variables in SHIFT or SCALE are not allowed")
             elif ':' in second_var:
                 from analysis.fit.result import FitResult
                 fit_name, var_name = second_var.split(':')
@@ -312,13 +334,17 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
                     value = result.get_const_parameter(var_name)
                 second_var = ROOT.RooFit.RooConst(value)
             else:
-                second_var = ROOT.RooFit.RooConst(float(second_var))
+                if action in ('SHIFT', 'SCALE'):
+                    second_var = ROOT.RooFit.RooConst(float(second_var))
         except KeyError, error:
             raise ValueError("Missing parameter definition -> {}".format(error))
         if action == 'SHIFT':
             parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))
         elif action == 'SCALE':
             parameter = ROOT.RooProduct(name, title, ROOT.RooArgList(ref_var, second_var))
+        elif action == 'BLIND':
+            parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
+                                                 float(blind_central), float(blind_sigma), ref_var)
     else:
         raise KeyError('Unknown action -> {}'.format(action))
     return parameter, constraint

@@ -114,8 +114,9 @@ def run(config_files, link_from):
         logger.error("YAML parsing error -> %s", error)
         raise
     # Locate decfile
+    evt_type = config['event-type']
     try:
-        evt_type = int(config['event-type'])
+        evt_type = int(evt_type)
     except ValueError:  # There's non-numerical chars, we assume it's a path
         if not os.path.isabs(evt_type):
             evt_type = os.path.abspath(evt_type)
@@ -123,12 +124,12 @@ def run(config_files, link_from):
     else:
         decfile = '$DECFILESROOT/options/{}.py'.format(evt_type)
     # Prepare job
-    _, _, log_file = _paths.prepare_path('mc/{}'.format(evt_type),
-                                         _paths.get_log_path,
-                                         None)  # No linking is done for logs
-    do_link, output_path, output_path_link = _paths.prepare_path('',
-                                                                 _paths.get_genlevel_mc_path,
-                                                                 link_from,
+    _, _, log_file = _paths.prepare_path(name='mc/{}'.format(evt_type),
+                                         path_func=_paths.get_log_path,
+                                         link_from=None)  # No linking is done for logs
+    do_link, output_path, output_path_link = _paths.prepare_path(name='',
+                                                                 path_func=_paths.get_genlevel_mc_path,
+                                                                 link_from=link_from,
                                                                  evt_type=evt_type)
     link_status = 'true' if do_link else 'false'
     nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
