@@ -118,9 +118,8 @@ def run(config_files, link_from):
     try:
         evt_type = int(evt_type)
     except ValueError:  # There's non-numerical chars, we assume it's a path
-        if not os.path.isabs(evt_type):
-            evt_type = os.path.abspath(evt_type)
-        decfile = evt_type
+        decfile = evt_type if os.path.isabs(evt_type) else os.path.abspath(evt_type)
+        evt_type = os.path.splitext(os.path.split(decfile)[1])[0]
     else:
         decfile = '$DECFILESROOT/options/{}.py'.format(evt_type)
     # Prepare job
