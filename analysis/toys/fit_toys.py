@@ -12,6 +12,7 @@ from collections import defaultdict
 from timeit import default_timer
 
 from scipy.stats import poisson
+import numpy as np
 import pandas as pd
 
 import ROOT
@@ -240,6 +241,7 @@ def run(config_files, link_from, verbose):
         import random
         job_id = 'local'
         seed = random.randint(0, 100000)
+    np.random.seed(seed=seed)
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Start looping
     fit_results = defaultdict(list)

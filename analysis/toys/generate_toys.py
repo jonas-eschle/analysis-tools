@@ -9,6 +9,7 @@
 
 import argparse
 
+import numpy as np
 import pandas as pd
 import ROOT
 
@@ -144,6 +145,7 @@ def run(config_files, link_from):
         import random
         job_id = 'local'
         seed = random.randint(0, 100000)
+    np.random.seed(seed=seed)
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Generate
     try:
