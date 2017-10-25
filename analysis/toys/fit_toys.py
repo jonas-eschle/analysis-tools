@@ -282,6 +282,7 @@ def run(config_files, link_from, verbose):
                     raise RuntimeError()
                 # Now results are in fit_parameters
                 result = FitResult().from_roofit(fit_result).to_plain_dict()
+                result['fitnum'] = fit_num
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
             _root.destruct_object(dataset)
