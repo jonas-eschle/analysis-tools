@@ -39,7 +39,7 @@ class BaseFactory(object):
         Arguments:
             **config (dict): Configuration of the factory.
 
-        Raises:
+        Raise:
             KeyError: When parameters or observables are missingo or there is an
                 inconsistency in the configuration.
 
@@ -87,8 +87,9 @@ class BaseFactory(object):
                                    param_dict.pop(parameter_name),
                                    {key.split('/')[-1]: val for key, val in param_dict.items()})
         if missing_parameters:
-            raise KeyError("Missing parameters -> %s" % ','.join(missing_parameter
-                                                                 for missing_parameter in missing_parameters))
+            raise KeyError("Missing parameters -> {}".format(','.join(missing_parameter
+                                                                      for missing_parameter in
+                                                                      missing_parameters)))
         if param_dict:
             logger.debug("Trying to set unsupported params in config. I stored them but they can cause problems -> %s",
                          ','.join(param_dict.keys()))
@@ -128,13 +129,14 @@ class BaseFactory(object):
 
         Arguments:
             key (str): Object identifier.
-            init_val (object): Object to add to the workspace if the key is not
-                present in the workspace.
+            default (any): The value to return if *key* is not found. Default is None.
+            recursive (bool): If True, the object is searched recursively
+            including its children with a stop-if-found rule.
 
-        Returns:
+        Return:
             object: Object in the workspace.
 
-        Raises:
+        Raise:
             KeyError: if `key` is not in the internal workspace and no `default`
                 is given.
 
@@ -151,10 +153,10 @@ class BaseFactory(object):
         Arguments:
             key (str): Object identifier.
 
-        Returns:
+        Return:
             object: Object in the workspace.
 
-        Raises:
+        Raise:
             KeyError: if `key` is not in the internal workspace.
 
         """
@@ -169,7 +171,7 @@ class BaseFactory(object):
             overwrite (bool, optional): Replace the existing object?
                 Defaults to False.
 
-        Returns:
+        Return:
             object: The object.
 
         """
@@ -193,7 +195,7 @@ class BaseFactory(object):
         Arguments:
             key (str): Object identifier.
 
-        Returns:
+        Return:
             bool: Wether the object is in the workspace.
 
         """
@@ -202,7 +204,7 @@ class BaseFactory(object):
     def _create_parameter(self, parameter_name, parameter_value, external_vars=None):
         if parameter_name in self._objects:
             return self._objects[parameter_name]
-        if isinstance(parameter_value, tuple):  # It's a parameter with a constraint
+        if isinstance(parameter_value, (tuple, list)):  # It's a parameter with a constraint
             parameter_value, constraint = parameter_value
         elif isinstance(parameter_value, ROOT.TObject):  # It's an already built parameter
             if parameter_value.getStringAttribute('tempName') == 'true':
@@ -239,11 +241,11 @@ class BaseFactory(object):
         Arguments:
             name_dict (dict): (name -> new name) pairs.
 
-        Returns:
+        Return:
             bool: True only if all requested renaming operations have been
                 performed.
 
-        Raises:
+        Raise:
             KeyError: If some of the parameter names are unknown.
 
         """
@@ -263,15 +265,15 @@ class BaseFactory(object):
 
     def _add_superscript(self, name, superscript, old_first=True):
         subscript_match = re.search(r'\^{(.*?)}', name)
-        sub_func = lambda match, name=superscript: '^{%s,%s}' % (match.groups()[0], name) \
+        sub_func = lambda match, name=superscript: '^{{{},{}}}'.format(match.groups()[0], name) \
             if old_first \
-            else lambda match, name=superscript: '^{%s,%s}' % (name, match.groups()[0])
+            else lambda match, name=superscript: '^{{{},{}}}'.format(name, match.groups()[0])
         if subscript_match:
             new_name = re.sub(r'\^{(.*?)}',
                               sub_func,
                               name)
         else:
-            new_name = '%s^{%s}' % (name, superscript)
+            new_name = '{}^{{{}}}'.format(name, superscript)
         return new_name
 
     def rename_children_parameters(self, naming_scheme=None):
@@ -279,7 +281,7 @@ class BaseFactory(object):
             naming_scheme = self._children.viewitems()
         for label, factory in list(naming_scheme):
             # Recursively rename children
-            factory.rename_children_parameters(('%s,%s' % (label, child_name), child)
+            factory.rename_children_parameters(('{},{}'.format(label, child_name), child)
                                                for child_name, child in factory.get_children().items())
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
@@ -290,14 +292,14 @@ class BaseFactory(object):
     def get_pdf(self, name, title):
         """Get the physics PDF.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
         if self.has_to_be_extended():
             raise ValueError("Requested non-extended PDF, "
                              "but the factory needs to be extended")
-        pdf_name = 'pdf_%s' % name
+        pdf_name = 'pdf_{}'.format(name)
         return self.get(pdf_name) \
             if pdf_name in self \
             else self.set(pdf_name, self.get_unbound_pdf(name, title))
@@ -305,7 +307,7 @@ class BaseFactory(object):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -314,22 +316,22 @@ class BaseFactory(object):
     def get_extended_pdf(self, name, title, yield_val=None):
         """Get an extended physics PDF.
 
-        Returns:
+        Return:
             `ROOT.RooExtendPdf`.
 
-        Raises:
+        Raise:
             ValueError: If the yield had not been configured previously
 
         """
         # Configure yield
         if not self.is_extended():
             if yield_val is None:
-                raise ValueError("Yield value not given -> %s" % self)
+                raise ValueError("Yield value not given -> {}".format(self))
             self.set_yield_var(yield_val)
         elif yield_val is not None:
             logger.warning("Specified yield value but it's already defined. Ignoring.")
         # Avoid name clashes
-        pdf_name = 'pdfext_%s' % name
+        pdf_name = 'pdfext_{}'.format(name)
         return self.get(pdf_name) \
             if pdf_name in self \
             else self.set(pdf_name, self.get_unbound_extended_pdf(name, title))
@@ -367,7 +369,7 @@ class BaseFactory(object):
 
         """
         if obs_id not in self.OBSERVABLES:
-            raise KeyError("Unknown observable -> %s" % obs_id)
+            raise KeyError("Unknown observable -> {}".format(obs_id))
         new_config = list(self.OBSERVABLES[obs_id])
         if obs:
             self._objects[obs_id] = obs
@@ -400,7 +402,7 @@ class BaseFactory(object):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -411,7 +413,7 @@ class BaseFactory(object):
 
         Returns the fit parameters by default.
 
-        Returns:
+        Return:
             tuple[`ROOT.RooRealVar`]
 
         """
@@ -457,7 +459,7 @@ class BaseFactory(object):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
@@ -481,7 +483,7 @@ class PhysicsFactory(BaseFactory):
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
 
-        Raises:
+        Raise:
             NotImplementedError
 
         """
@@ -490,10 +492,10 @@ class PhysicsFactory(BaseFactory):
     def get_unbound_extended_pdf(self, name, title):
         """Get an extended physics PDF.
 
-        Returns:
+        Return:
             `ROOT.RooExtendPdf`.
 
-        Raises:
+        Raise:
             ValueError: If the yield had not been configured previously
 
         """
@@ -508,7 +510,7 @@ class PhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple[`ROOT.RooRealVar`]: Parameters as defined by the `PARAMETERS` attribute.
 
         """
@@ -522,7 +524,7 @@ class PhysicsFactory(BaseFactory):
 
         Returns the fit parameters by default.
 
-        Returns:
+        Return:
             tuple[`ROOT.RooRealVar`]
 
         """
@@ -532,7 +534,7 @@ class PhysicsFactory(BaseFactory):
         if 'Yield' not in self._objects:
             self._create_parameter('Yield', yield_)
         else:
-            if isinstance(yield_, tuple):
+            if isinstance(yield_, (list, tuple)):
                 yield_ = yield_[0]
             if isinstance(self._objects['Yield'], ROOT.RooRealVar):
                 if isinstance(yield_, ROOT.RooRealVar):
@@ -575,10 +577,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_unbound_extended_pdf(self, name, title, yield_val=None):
         """Get an extended physics PDF.
 
-        Returns:
+        Return:
             `ROOT.RooExtendPdf`.
 
-        Raises:
+        Raise:
             ValueError: If the yield had not been configured previously
 
         """
@@ -594,10 +596,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_observables(self):
         """Get the physics observables.
 
-        Returns:
+        Return:
             tuple: Observables in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -614,15 +616,15 @@ class ProductPhysicsFactory(BaseFactory):
             except KeyError:
                 pass
         if not has_changed:
-            raise KeyError("Unknown observable -> %s" % obs_id)
+            raise KeyError("Unknown observable -> {}".format(obs_id))
 
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
-        Returns:
+        Return:
             tuple: Generation parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -633,10 +635,10 @@ class ProductPhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple: Fit parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -646,7 +648,7 @@ class ProductPhysicsFactory(BaseFactory):
 
     def set_yield_var(self, yield_):
         constraint = None
-        if isinstance(yield_, tuple):
+        if isinstance(yield_, (list, tuple)):
             yield_, constraint = yield_
         if 'Yield' not in self._objects:
             self._objects['Yield'] = yield_
@@ -668,7 +670,7 @@ class ProductPhysicsFactory(BaseFactory):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
@@ -688,7 +690,7 @@ class SumPhysicsFactory(BaseFactory):
 
         In this case, the children are a map of PDF name -> Factory.
 
-        Raises:
+        Raise:
             ValueError: When the observables of the factories are incompatible.
             KeyError: On configuration error.
 
@@ -729,7 +731,7 @@ class SumPhysicsFactory(BaseFactory):
             # Store the fractions and propagate
             for yield_val in yield_values:
                 if yield_val.getVal() > 1:
-                    raise ValueError("Specified a fraction larger than 1 -> %s" % yield_val.GetName())
+                    raise ValueError("Specified a fraction larger than 1 -> {}".format(yield_val.GetName()))
                 # Not very good heuristics
                 if yield_val.getStringAttribute('shared') != 'true':
                     yield_val.SetName(yield_val.GetName().replace('Yield', 'Fraction'))
@@ -744,7 +746,7 @@ class SumPhysicsFactory(BaseFactory):
                     # Need no rename because RooFracRemainder needs a RooArgSet and there will be clashes
                     # between vars named 'Fraction'. It's stupid, since the name is not used after.
                     for yield_num, yield_val in enumerate(yield_values):
-                        yield_val.SetName('%s_%s' % (yield_val.GetName(), yield_num))
+                        yield_val.SetName('{}_{}'.format(yield_val.GetName(), yield_num))
                     child['Fraction'] = ROOT.RooFracRemainder("Fraction", "Fraction", list_to_rooargset(yield_values))
                     child._constraints.update({constraint
                                                for _, constraint in children_yields.values()
@@ -791,10 +793,10 @@ class SumPhysicsFactory(BaseFactory):
     def get_observables(self):
         """Get the physics observables.
 
-        Returns:
+        Return:
             tuple: Observables in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -807,10 +809,10 @@ class SumPhysicsFactory(BaseFactory):
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
-        Returns:
+        Return:
             tuple: Generation parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -821,10 +823,10 @@ class SumPhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple: Fit parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -864,7 +866,7 @@ class SumPhysicsFactory(BaseFactory):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
@@ -895,7 +897,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
         for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
             sim_pdf.addPdf(child.get_pdf(new_name, new_name),
-                           '{%s}' % category
+                           '{{{}}}'.format(category)
                            if category.count(';') > 0
                            else category)
         return sim_pdf
@@ -906,7 +908,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
         for category, child in self._children.items():
             new_name = self._add_superscript(name, category)
             sim_pdf.addPdf(child.get_extended_pdf(new_name, new_name),
-                           '{%s}' % category
+                           '{{{}}}'.format(category)
                            if category.count(';') > 0
                            else category)
             yields.add(child.get_yield_var())
@@ -931,10 +933,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_observables(self):
         """Get the physics observables.
 
-        Returns:
+        Return:
             tuple: Observables in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -956,15 +958,15 @@ class SimultaneousPhysicsFactory(BaseFactory):
             except KeyError:
                 pass
         if not has_changed:
-            raise KeyError("Unknown observable -> %s" % obs_id)
+            raise KeyError("Unknown observable -> {}".format(obs_id))
 
     def get_gen_parameters(self):
         """Get the PDF generation parameters.
 
-        Returns:
+        Return:
             tuple: Generation parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -975,10 +977,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def get_fit_parameters(self, extended=False):
         """Get the PDF fit parameters.
 
-        Returns:
+        Return:
             tuple: Fit parameters in factory order.
 
-        Raises:
+        Raise:
             NotInitializedError: If `__call__` has not been called.
 
         """
@@ -999,10 +1001,10 @@ class SimultaneousPhysicsFactory(BaseFactory):
         Arguments:
             dataset (pandas.DataFrame): Data frame to fold.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
-        Raises:
+        Raise:
             ValueError: When the dataset contains categories that have not been configured
                 in the class.
             KeyError: If the category is not found in the dataset.
@@ -1012,7 +1014,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
         if cat_var not in dataset.columns:
             cat_var = 'category'
             if cat_var not in dataset.columns:
-                raise KeyError("Category var not found in dataset -> %s" % self._category.GetName())
+                raise KeyError("Category var not found in dataset -> {}".format(self._category.GetName()))
         categories = dataset.groupby(cat_var).indices.keys()
         # A simple check
         if not set(categories).issubset(set(self._children.keys())):

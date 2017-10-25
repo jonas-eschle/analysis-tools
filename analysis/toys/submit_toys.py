@@ -117,7 +117,7 @@ def process_scan_val(value, other_values=None):
         value (str): String specification of the value to scan.
         other_values (dict, optional): Values to use for interpolation.
 
-    Raises:
+    Raise:
         ValueError: When the scan specification is not properly formed.
 
     """
@@ -166,11 +166,11 @@ def process_scan_val(value, other_values=None):
         except ValueError:
             raise ValueError("Badly specified scale")
         if var_name not in other_values:
-            raise ValueError("Unknown variable -> %s" % var_name)
+            raise ValueError("Unknown variable -> {}".format(var_name))
         values = [var_val * float(scale_factor)
                   for var_val in other_values[var_name]]
     else:
-        raise ValueError('Unknown scan command -> %s' % action)
+        raise ValueError('Unknown scan command -> {}'.format(action))
     return values
 
 
@@ -248,7 +248,7 @@ def main():
                     temp_config[key] = value
                 logger.debug("Creating configuration %s for scan values -> %s",
                              temp_config['name'],
-                             ", ".join('%s: %s' % val for val in values.items()))
+                             ", ".join('{}: {}'.format(*val) for val in values.items()))
                 # Write temp_file
                 file_ = tempfile.NamedTemporaryFile(delete=False)
                 file_name = file_.name

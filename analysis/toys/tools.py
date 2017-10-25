@@ -35,10 +35,10 @@ def load_toy_fits(*toy_list, **kwargs):
             + `fail_on_incompatible` (bool, optional): Fail when incompatible
             data frames are found? Defaults to `True`.
 
-    Returns:
+    Return:
         `pandas.DataFrame`: Merged data frame.
 
-    Raises:
+    Raise:
         OSError: If some of the toys do not exist.
         KeyError: If the data frames from the different stores are not compatible
             and `fail_on_incompatible` is set.

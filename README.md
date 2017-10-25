@@ -3,13 +3,7 @@ Analysis tools
 
 This repository provides basic tools for doing physics analysis, with emphasis on specialization for each particular analysis.
 
-To install this folder, first install a github dependency
-
-```bash
-pip install git+https://github.com/ibab/root_pandas.git
-```
-
-then, do
+To install this folder, execute the following inside the cloned repo
 
 ```bash
 pip install -e .

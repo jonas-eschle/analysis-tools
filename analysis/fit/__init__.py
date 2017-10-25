@@ -27,16 +27,16 @@ def register_fit_strategy(name, fit_function):
         name (str): Name of the strategy.
         fit_function (Callable): Fit function.
 
-    Returns:
+    Return:
         int: Number of registered fit strategies.
 
-    Raises:
+    Raise:
         ValueError: If the fit function doesn't have the correct number of parameters.
 
     """
     if len(inspect.getargspec(fit_function).args) != 3:
         raise ValueError("The strategy function needs to have 3 arguments")
-    logger.debug("Registering %s fitting strategy", name)
+    logger.debug("Registering {} fitting strategy".format(name))
     get_global_var('FIT_STRATEGIES').update({name: fit_function})
     return len(get_global_var('FIT_STRATEGIES'))
 
@@ -53,10 +53,10 @@ def get_fit_strategy(name):
     Arguments:
         name (str): Name of the fit strategy.
 
-    Returns:
+    Return:
         Callable: The fit function.
 
-    Raises:
+    Raise:
         KeyError: If the strategy is not registered.
 
     """
@@ -68,7 +68,7 @@ def get_fit_strategy(name):
 def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     """Fit a dataset.
 
-    Raises:
+    Raise:
         KeyError: If the fit strategy is not registered.
         ValueError: If there is a problem getting the PDF.
 
@@ -91,7 +91,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     try:
         fit_func = get_fit_strategy(strategy)
     except KeyError:
-        raise KeyError("Unknown fit strategy -> %s" % strategy)
+        raise KeyError("Unknown fit strategy -> {}".format(strategy))
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
             if factory.is_extended() \

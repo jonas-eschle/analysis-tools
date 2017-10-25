@@ -20,7 +20,7 @@ logger = get_logger('analysis.data')
 def register_file_type(extension, file_type):
     """Register a file type with a given extension.
 
-    Returns:
+    Return:
         int: Number of extensions registered with that particular file type.
 
     """
@@ -48,17 +48,17 @@ def load_data(config_file, key=None, **kwargs):
             given, the root of the YAML file will be used as configuration.
         **kwargs (dict): Dictionary to override keys from the dictionary.
 
-    Returns:
+    Return:
         object: Data object.
 
-    Raises:
+    Raise:
         OSError: If the config file cannot be loaded.
         ConfigError: If the validation of the ConfigFile fails.
 
     """
     config_file = os.path.abspath(config_file)
     if not os.path.exists(config_file):
-        raise OSError("Cannot find config file -> %s" % config_file)
+        raise OSError("Cannot find config file -> {}".format(config_file))
     return get_data(load_config(config_file,
                                 root=key,
                                 validate=['source', 'tree', 'output-format']),
@@ -80,7 +80,7 @@ def get_data(data_config, **kwargs):
     Optional config keys:
         + `input-type`: type of input, in case the extension has not been registered.
 
-    Raises:
+    Raise:
         AttributeError: If the specified source type is unknown.
         KeyError: If the input file extension is not recognized.
         OSError: If the input file can't be found.
@@ -98,16 +98,16 @@ def get_data(data_config, **kwargs):
     # Check the configuration
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
-            raise KeyError("Bad data configuration -> '%s' key is missing" % key)
+            raise KeyError("Bad data configuration -> '{}' key is missing".format(key))
     source_name = data_config.pop('source')
     try:
         source_type = data_config.pop('source-type', None)
         file_name = source_name if not source_type \
-            else getattr(paths, 'get_%s_path' % source_type)(source_name)
+            else getattr(paths, 'get_{}_path'.format(source_type))(source_name)
         if not os.path.exists(file_name):
-            raise OSError("Cannot find input file -> %s" % file_name)
+            raise OSError("Cannot find input file -> {}".format(file_name))
     except AttributeError:
-        raise AttributeError("Unknown source type -> %s" % source_type)
+        raise AttributeError("Unknown source type -> {}".format(source_type))
     tree_name = data_config.pop('tree')
     output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches
@@ -117,13 +117,13 @@ def get_data(data_config, **kwargs):
         if not input_type:
             input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:
-        raise KeyError("Unknown file extension -> %s. Cannot load file." % input_ext)
+        raise KeyError("Unknown file extension -> {}. Cannot load file.".format(input_ext))
     try:
         get_data_func = getattr(_loaders,
-                                'get_%s_from_%s_file' % (output_format, input_type))
+                                'get_{}_from_{}_file'.format(output_format, input_type))
     except AttributeError:
         raise ValueError("Output format unavailable for input file"
-                         "with extension %s -> %s" % (input_ext, output_format))
+                         "with extension {} -> {}".format(input_ext, output_format))
     logger.debug("Loading data file -> %s:%s", file_name, tree_name)
     return get_data_func(file_name, tree_name, data_config)
 

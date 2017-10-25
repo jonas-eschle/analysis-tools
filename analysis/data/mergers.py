@@ -21,10 +21,10 @@ def merge(data_list, **kwargs):
         **kwargs (dict): Configuration options. In case of `ROOT.RooDataSet`, we need
             to include the `name` of the merged dataset, and optionally its `title`.
 
-    Returns:
+    Return:
         dataset.
 
-    Raises:
+    Raise:
         ValueError: When the datasets are of different types or cannot be merged.
         AttributeError: When the datasets are of unknown type.
         KeyError: When some configuration is missing.
@@ -40,7 +40,7 @@ def merge(data_list, **kwargs):
         raise NotImplementedError()
         # return merge_pandas(data_list)
     else:
-        raise AttributeError("Unknown dataset type -> %s" % type(data_list[0]))
+        raise AttributeError("Unknown dataset type -> {}".format(type(data_list[0])))
 
 
 def merge_root(data_list, name=None, title=None, destruct_data=True):
@@ -51,10 +51,10 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
         name (str): Dataset title.
         data_list (list[ROOT.RooDataSet]): Datasets to merge.
 
-    Returns:
+    Return:
         ROOT.RooDataSet: Merged dataset.
 
-    Raises:
+    Raise:
         ValueError: If the datasets are incompatible.
         KeyError: If some keyword argument is missing
 
@@ -68,7 +68,7 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
     if len(set(data.isWeighted() for data in data_list)) > 1:
         raise ValueError("Input dataset list contains weighted and uneweighted datasets.")
     # Merge by append, since we don't know the original weight situation
-    output_ds = data_list[0].pop(0)
+    output_ds = data_list.pop(0)
     for data in data_list:
         output_ds.append(data)
         if destruct_data:
@@ -82,10 +82,10 @@ def merge_pandas(data_list):
     Arguments:
         data_list (list[pandas.DataFrame]): Datasets to merge.
 
-    Returns:
+    Return:
         pandas.DataFrame: Merged dataset.
 
-    Raises:
+    Raise:
         ValueError: If the datasets are incompatible.
 
     """

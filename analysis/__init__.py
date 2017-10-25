@@ -23,7 +23,7 @@ def get_global_var(name, default=None):
         default (object, optional): Value to return if the global variable
             is not defined. Defaults to `None`.
 
-    Returns:
+    Return:
         object: Value of the global variable.
 
     """
@@ -37,7 +37,7 @@ def set_global_var(name, value):
         name (str): Name of the variable.
         value (object): Value to assign to the global variable.
 
-    Returns:
+    Return:
         object: Value of the global variable.
 
     """

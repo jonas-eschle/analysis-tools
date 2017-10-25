@@ -55,7 +55,7 @@ class FitResult(object):
     def get_result(self):
         """Get the full fit result information.
 
-        Returns:
+        Return:
             dict: Full fit result information.
 
         """
@@ -68,10 +68,10 @@ class FitResult(object):
         Arguments:
             roofit_result (`ROOT.RooFitResult`): Fit result.
 
-        Returns:
+        Return:
             self
 
-        Raises:
+        Raise:
             AlreadyInitializedError: If the FitResult had already been initialized.
 
         """
@@ -109,10 +109,10 @@ class FitResult(object):
         Arguments:
             yaml_dict (dict, OrderedDict): YAML information to load.
 
-        Returns:
+        Return:
             self
 
-        Raises:
+        Raise:
             KeyError: If any of the FitResult data is missing from the YAML dictionary.
             AlreadyInitializedError: If the FitResult had already been initialized.
 
@@ -141,10 +141,10 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit result.
 
-        Returns:
+        Return:
             self
 
-        Raises:
+        Raise:
             OSError: If the file cannot be found.
             KeyError: If any of the FitResult data is missing from the input file.
             AlreadyInitializedError: If the FitResult had already been initialized.
@@ -159,17 +159,17 @@ class FitResult(object):
                                                       'covariance-matrix/matrix',
                                                       'status')))
         except ConfigError as error:
-            raise KeyError("Missing keys in input file -> %s" % ','.join(error.missing_keys))
+            raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
         return self
 
     @ensure_initialized
     def to_yaml(self):
         """Convert fit result to YAML format.
 
-        Returns:
+        Return:
             str: Output dictionary in YAML format.
 
-        Raises:
+        Raise:
             NotInitializedError: If the fit result has not been initialized.
 
         """
@@ -186,10 +186,10 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit result.
 
-        Returns:
+        Return:
             str: Output file name.
 
-        Raises:
+        Raise:
             NotInitializedError: If the fit result has not been initialized.
 
         """
@@ -215,7 +215,7 @@ class FitResult(object):
                        for val, suffix in zip(param, _SUFFIXES)}
         pandas_dict.update({param_name: val for param_name, val
                             in self._result['const-parameters'].items()})
-        pandas_dict['status_migrad'] = self._result['status']['MIGRAD']
+        pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
         pandas_dict['cov_quality'] = self._result['covariance-matrix']['quality']
@@ -231,11 +231,11 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit parameter.
 
-        Returns:
+        Return:
             tuple (float): Parameter value, Hesse error and upper and lower Minos errors.
                 If the two latter have not been calculated, they are 0.
 
-        Raises:
+        Raise:
             KeyError: If the parameter is unknown.
 
         """
@@ -248,10 +248,10 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit parameter.
 
-        Returns:
+        Return:
             float: Parameter value.
 
-        Raises:
+        Raise:
             KeyError: If the parameter is unknown.
 
         """
@@ -271,10 +271,10 @@ class FitResult(object):
     def get_covariance_matrix(self):
         """Get the fit covariance matrix.
 
-        Returns:
+        Return:
             `numpy.matrix`: Covariance matrix.
 
-        Raises:
+        Raise:
             NotInitializedError: If the FitResult has not been initialized.
 
         """
@@ -284,7 +284,7 @@ class FitResult(object):
     def get_edm(self):
         """Get the fit EDM.
 
-        Returns:
+        Return:
             float
 
         """
@@ -310,7 +310,7 @@ class FitResult(object):
         Arguments:
             include_const (bool, optional): Return constant parameters? Defaults to False.
 
-        Returns:
+        Return:
             OrderedDict
 
         """

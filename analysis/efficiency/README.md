@@ -138,7 +138,7 @@ plot-labels:
     acc_phi: '$\phi$ (rad)'
 ```
 
-A weight variable can be specified in `data/weight`.
+A weight variable can be specified in `data/weight-var-name`.
 
 This has the advantage of taking care of saving the plots `$BASE_PATH/data/efficiency/{name}_{var}.eps` and handling the errors in a more graceful way.
 
@@ -168,3 +168,23 @@ The `Acceptance` class provides two main methods:
   - `apply_accept_reject`, which takes a dataset and filters it according to the configured acceptance.
   - `get_weights`, which returns the weights of the input dataset according to the efficiency.
 
+
+Generator level simulation
+--------------------------
+
+To produce generator level simulation, you can use the `produce_gen_level.py` script.
+It is controlled by a configuration file with the following format:
+
+```
+event-type: 324324
+prod:
+  nevents: 100000
+  nevents-per-job: 5000
+batch:
+  backend: slurm
+  runtime: 2:00:00
+```
+
+where the `event-type` can also be a local file, which is used for the production.
+The rest are self explanatory, but it is important to note that only `prod` is mandatory.
+The batch backend is detected automatically, if not explicitly specified.
