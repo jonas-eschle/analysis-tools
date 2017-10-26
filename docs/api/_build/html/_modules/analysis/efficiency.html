@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.efficiency &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../index.html"/>
+        <link rel="up" title="analysis" href="../analysis.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../analysis.html">analysis</a> &raquo;</li>
+        
+      <li>analysis.efficiency</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.efficiency</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   __init__.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   21.03.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Efficiency classes and utilities.</span>
+
+<span class="sd">Note that the default efficiency models are not loaded into the global variables</span>
+<span class="sd">until this module is imported.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">analysis</span> <span class="k">import</span> <span class="n">get_global_var</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.config</span> <span class="k">import</span> <span class="n">load_config</span><span class="p">,</span> <span class="n">ConfigError</span><span class="p">,</span> <span class="n">unfold_config</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.paths</span> <span class="k">import</span> <span class="n">get_efficiency_path</span><span class="p">,</span> <span class="n">get_acceptance_path</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+<span class="kn">from</span> <span class="nn">.legendre</span> <span class="k">import</span> <span class="n">_EFFICIENCY_MODELS</span> <span class="k">as</span> <span class="n">_LEG_EFFICIENCY_MODELS</span>
+
+<span class="kn">from</span> <span class="nn">.acceptance</span> <span class="k">import</span> <span class="n">Acceptance</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.efficiency&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="register_efficiency_model"><a class="viewcode-back" href="../../analysis.efficiency.html#analysis.efficiency.register_efficiency_model">[docs]</a><span class="k">def</span> <span class="nf">register_efficiency_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">model_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Register an efficiency model.</span>
+
+<span class="sd">    This model then becomes available to `get_efficiency_model` functions.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        model_name (str): Name of the model.</span>
+<span class="sd">        model_class (`Efficiency`): Efficiency model to register.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        int: Number of registered efficiency models</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Registering efficiency model -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">model_name</span><span class="p">)</span>
+    <span class="n">get_global_var</span><span class="p">(</span><span class="s1">&#39;EFFICIENCY_MODELS&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">model_name</span><span class="p">:</span> <span class="n">model_class</span><span class="p">})</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_global_var</span><span class="p">(</span><span class="s1">&#39;EFFICIENCY_MODELS&#39;</span><span class="p">))</span></div>
+
+
+<span class="c1"># Register our models</span>
+<span class="k">for</span> <span class="n">eff_name</span><span class="p">,</span> <span class="n">class_</span> <span class="ow">in</span> <span class="n">_LEG_EFFICIENCY_MODELS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">register_efficiency_model</span><span class="p">(</span><span class="n">eff_name</span><span class="p">,</span> <span class="n">class_</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_efficiency_model_class"><a class="viewcode-back" href="../../analysis.efficiency.html#analysis.efficiency.get_efficiency_model_class">[docs]</a><span class="k">def</span> <span class="nf">get_efficiency_model_class</span><span class="p">(</span><span class="n">model_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load the efficiency class.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        model_name (str): Name of the efficiency model class.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        `Efficiency`: Efficiency class, non-instantiated.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">get_global_var</span><span class="p">(</span><span class="s1">&#39;EFFICIENCY_MODELS&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_efficiency_model"><a class="viewcode-back" href="../../analysis.efficiency.html#analysis.efficiency.load_efficiency_model">[docs]</a><span class="k">def</span> <span class="nf">load_efficiency_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_parameters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load efficiency from file.</span>
+
+<span class="sd">    The file path is determined from the `name` using the `paths.get_efficiency_path`</span>
+<span class="sd">    function.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        model_name (str): Name of the efficiency model.</span>
+<span class="sd">        **extra_parameters (dict): Extra configuration parameters to override the entries</span>
+<span class="sd">            in the `parameters` node loaded from the efficiency file.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        OSError: If the efficiency file does not exist.</span>
+<span class="sd">        analysis.utils.config.ConfigError: If there is a problem with the efficiency model.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">get_efficiency_path</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot find efficiency file -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">get_efficiency_model</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_parameters</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_efficiency_model"><a class="viewcode-back" href="../../analysis.efficiency.html#analysis.efficiency.get_efficiency_model">[docs]</a><span class="k">def</span> <span class="nf">get_efficiency_model</span><span class="p">(</span><span class="n">efficiency_config</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_parameters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get efficiency model class.</span>
+
+<span class="sd">    User-defined models, stored in the `EFFICIENCY_MODELS` global variable,</span>
+<span class="sd">    take precedence.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        efficiency_config (dict): Efficiency configuration.</span>
+<span class="sd">        **extra_parameters (dict): Extra configuration parameters to override the entries</span>
+<span class="sd">            in the `parameters` node in `efficiency_config`.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        `analysis.efficiency.efficiency.Efficiency`: Efficiency object.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        KeyError: If there is a configuration error</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">efficiency_config</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_parameters</span><span class="p">)</span>
+    <span class="c1"># Check the configuration</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">efficiency_config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Bad configuration -&gt; &#39;</span><span class="si">{}</span><span class="s2">&#39; key is missing&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+    <span class="c1"># Now load efficiency</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">get_efficiency_model_class</span><span class="p">(</span><span class="n">efficiency_config</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unknown efficiency model -&gt; &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">efficiency_config</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">efficiency_config</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">],</span> <span class="n">efficiency_config</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="load_acceptance"><a class="viewcode-back" href="../../analysis.efficiency.html#analysis.efficiency.load_acceptance">[docs]</a><span class="k">def</span> <span class="nf">load_acceptance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_parameters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load an acceptance configuration file.</span>
+
+<span class="sd">    The file path is determined from the `name` using the `paths.get_acceptance_path`</span>
+<span class="sd">    function.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        For the exact configuration, see `get_acceptance`.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name (str): Name of the acceptance.</span>
+<span class="sd">        **extra_parameters (dict): Extra configuration parameters to override the entries</span>
+<span class="sd">            in the `parameters` nodes from the `generation` and `reconstruction` efficiencies.</span>
+<span class="sd">            As such, the extra parameters need to be placed under the `generation` or</span>
+<span class="sd">            `reconstruction` keys. For example:</span>
+
+<span class="sd">                &gt;&gt;&gt; load_acceptance(&#39;Test&#39;,</span>
+<span class="sd">                                    reconstruction={&#39;rename-vars&#39;:{&#39;acc_q2&#39;:&#39;q2&#39;,</span>
+<span class="sd">                                                                   &#39;acc_cosThetaL&#39;:&#39;ctl&#39;}})</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        `analysis.efficiency.Acceptance`: Acceptance object.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        OSError: If the efficiecny file does not exist.</span>
+<span class="sd">        analysis.utils.config.ConfigError: If there is a problem with the efficiency model.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=E1101</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">get_acceptance_path</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot find efficiency file -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;generation&#39;</span><span class="p">,</span> <span class="s1">&#39;reconstruction&#39;</span><span class="p">))</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;generation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;generation&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;reconstruction&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reconstruction&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="k">return</span> <span class="n">get_acceptance</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_acceptance"><a class="viewcode-back" href="../../analysis.efficiency.html#analysis.efficiency.get_acceptance">[docs]</a><span class="k">def</span> <span class="nf">get_acceptance</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get an acceptance object.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        config (dict): Acceptance to load. Its keys are:</span>
+<span class="sd">            + `variables` (list[str]): List of variable names.</span>
+<span class="sd">            + `generation` (dict): Generation configuration. It needs to have a `name` entry, which corresponds</span>
+<span class="sd">                to the name of the generator efficiency. Any other key will be passed to `get_efficiency` as</span>
+<span class="sd">                `extra_parameters`</span>
+<span class="sd">            + `reconstruction` (dict): Reconstruction configuration. It needs to have a `name` entry, which corresponds</span>
+<span class="sd">                to the name of the reconstruction efficiency. Any other key will be passed to `get_efficiency` as</span>
+<span class="sd">                `extra_parameters`</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        `analysis.efficiency.acceptance.Acceptance`: Acceptance object.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        analysis.utils.config.ConfigError: If the input config is missing keys.</span>
+<span class="sd">        See `analysis.utils.config.load_config`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">unfold_config</span><span class="p">(</span><span class="n">config</span><span class="p">)]</span>
+    <span class="c1"># missing_keys should be empty if the needed keys have been provided. Otherwise complain!</span>
+    <span class="n">missing_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;generation/name&#39;</span><span class="p">,</span> <span class="s1">&#39;reconstruction/name&#39;</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">config_keys</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">missing_keys</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s2">&quot;Missing configuration key! -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing_keys</span><span class="p">))</span>
+    <span class="c1"># Load the efficiencies</span>
+    <span class="n">gen_efficiency</span> <span class="o">=</span> <span class="n">get_efficiency_model</span><span class="p">(</span><span class="n">load_config</span><span class="p">(</span><span class="n">get_efficiency_path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;generation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)),</span>
+                                                      <span class="n">validate</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">)),</span>
+                                          <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;generation&#39;</span><span class="p">])</span>
+    <span class="n">reco_efficiency</span> <span class="o">=</span> <span class="n">get_efficiency_model</span><span class="p">(</span><span class="n">load_config</span><span class="p">(</span><span class="n">get_efficiency_path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;reconstruction&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)),</span>
+                                                       <span class="n">validate</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">)),</span>
+                                           <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;reconstruction&#39;</span><span class="p">])</span>
+    <span class="c1"># Check the variables</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">gen_efficiency</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s2">&quot;Mismatch in variables between acceptance and generation&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">reco_efficiency</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s2">&quot;Mismatch in variables between acceptance and reconstruction&quot;</span><span class="p">)</span>
+    <span class="c1"># Now create the acceptance</span>
+    <span class="k">return</span> <span class="n">Acceptance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">],</span>
+                      <span class="n">gen_efficiency</span><span class="p">,</span>
+                      <span class="n">reco_efficiency</span><span class="p">)</span></div>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

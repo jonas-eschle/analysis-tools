@@ -1,0 +1,734 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.efficiency.legendre &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis.efficiency" href="../efficiency.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+          <li><a href="../efficiency.html">analysis.efficiency</a> &raquo;</li>
+        
+      <li>analysis.efficiency.legendre</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.efficiency.legendre</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   legendre.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   28.03.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Efficiency expansion with Legendre polynomials.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+<span class="kn">from</span> <span class="nn">.efficiency</span> <span class="k">import</span> <span class="n">Efficiency</span>
+
+<span class="c1"># Shortcuts</span>
+<span class="n">legval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">legval</span>
+<span class="n">legint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">legint</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.efficiency.legendre&#39;</span><span class="p">)</span>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Utils</span>
+<span class="c1">###############################################################################</span>
+<div class="viewcode-block" id="process_range"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.process_range">[docs]</a><span class="k">def</span> <span class="nf">process_range</span><span class="p">(</span><span class="n">range_lst</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process the range, convert to float and manage maths.</span>
+
+<span class="sd">    A few functions are allowed: pi, cos, acos, sin, asin, sqrt.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        tuple: Range, (low, high).</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        ValueError: If the range doesn&#39;t have two elements or if it cannot</span>
+<span class="sd">        be interpreted.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=W0612</span>
+    <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">acos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">asin</span><span class="p">,</span> <span class="n">sqrt</span>  <span class="c1"># For eval</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">high</span><span class="p">,</span> <span class="n">low</span> <span class="o">=</span> <span class="n">range_lst</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong number of elements in range&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">high</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># It&#39;s a literal</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># This is terribly dangerous, but OK...</span>
+            <span class="c1"># pylint: disable=W0123</span>
+            <span class="n">high</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">high</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Badly formed upper bound&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">low</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># It&#39;s a literal</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># This is terribly dangerous, but OK...</span>
+            <span class="c1"># pylint: disable=W0123</span>
+            <span class="n">low</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">low</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Badly formed lower bound&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">low</span><span class="p">)</span> <span class="k">if</span> <span class="n">low</span> <span class="o">&gt;</span> <span class="n">high</span> <span class="k">else</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="scale_dataset"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.scale_dataset">[docs]</a><span class="k">def</span> <span class="nf">scale_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">input_min</span><span class="p">,</span> <span class="n">input_max</span><span class="p">,</span> <span class="n">output_min</span><span class="p">,</span> <span class="n">output_max</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rescale dataset to put it in the correct range.</span>
+
+<span class="sd">    Scaling does (input_min, input_max) -&gt; (output_min, output_max).</span>
+
+<span class="sd">    The formula used to go from (input_min, input_max) to (output_min, output_max) is:</span>
+
+<span class="sd">            (output_max - output_min)(x - input_min)</span>
+<span class="sd">     f(x) = ----------------------------------------  + output_min</span>
+<span class="sd">                      input_max - input_min</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        data (pandas.Series, numpy.array): Data to scale.</span>
+<span class="sd">        input_min (float): Lower range of the input data.</span>
+<span class="sd">        input_max (float): Upper range of the input data.</span>
+<span class="sd">        output_min (float): Lower range of the output data.</span>
+<span class="sd">        output_max (float): Upper range of the output data.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        pandas.Series, numpy.array: Rescaled dataset.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">data</span> <span class="o">&gt;</span> <span class="n">input_max</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">data</span> <span class="o">&lt;</span> <span class="n">input_min</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Scaling a dataset with values outside the range&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">output_max</span><span class="o">-</span><span class="n">output_min</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">data</span><span class="o">-</span><span class="n">input_min</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">input_max</span><span class="o">-</span><span class="n">input_min</span><span class="p">)</span> <span class="o">+</span> <span class="n">output_min</span></div>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Fully correlated Legendre</span>
+<span class="c1">###############################################################################</span>
+<div class="viewcode-block" id="LegendreEfficiency"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency">[docs]</a><span class="k">class</span> <span class="nc">LegendreEfficiency</span><span class="p">(</span><span class="n">Efficiency</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implement an efficiency with correlated Legendre functions.&quot;&quot;&quot;</span>
+
+    <span class="n">MODEL_NAME</span> <span class="o">=</span> <span class="s1">&#39;legendre&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_list</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the internal configuration.</span>
+
+<span class="sd">        In this case, the configuration of the efficiency model is as follows:</span>
+<span class="sd">            {&#39;pol-orders&#39;:</span>
+<span class="sd">                {var_name1: n1,</span>
+<span class="sd">                 var_name2: n2},</span>
+<span class="sd">             &#39;coefficients&#39;: [coeff1, coeff2, ..., coefn1xn2],</span>
+<span class="sd">             &#39;covariance&#39;: [cov1, cov2, ...]</span>
+<span class="sd">             &#39;ranges&#39;: {var_name1: [min_var1, max_var1],</span>
+<span class="sd">                        var_name2: [min_var2, max_var2]},</span>
+<span class="sd">             &#39;symmetric-variables&#39;: [var_1]}</span>
+
+<span class="sd">        The range is used to rescale the data in the `fit` method. If it&#39;s not</span>
+<span class="sd">        given, it&#39;s assumed it is [-1, 1].</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            var_list (list): List of observables to apply the efficiency to.</span>
+<span class="sd">            config (dict): Efficiency model configuration.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: On missing coefficients.</span>
+<span class="sd">            ValueError: On bad range or bad symmetric variable defintion.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LegendreEfficiency</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">var_list</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span> <span class="o">=</span> <span class="p">{</span><span class="n">var_name</span><span class="p">:</span> <span class="n">process_range</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ranges&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">orders</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">][</span><span class="n">var</span><span class="p">]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;coefficients&#39;</span><span class="p">],</span> <span class="n">orders</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;covariance&#39;</span><span class="p">],</span>
+                                      <span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">orders</span><span class="p">),</span>
+                                       <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">orders</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;symmetric-variables&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Symmetrizing legendre polynomial for variable </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">var_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Symmetrized variable </span><span class="si">{}</span><span class="s2"> is not in the list of variables&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">))</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="LegendreEfficiency.get_coefficients"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency.get_coefficients">[docs]</a>    <span class="k">def</span> <span class="nf">get_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the coefficients in matrix form.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">randomize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the efficiency.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            No variable checking is performed.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            data (`pandas.DataFrame`): Data to apply the efficiency to.</span>
+<span class="sd">            randomize (bool, optional): Apply Gaussian randomization to the efficiencies?</span>
+<span class="sd">                Defaults to False.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            pandas.Series: Efficiency for each entry of the input.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">range_var</span><span class="p">,</span> <span class="p">(</span><span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">range_var_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variable_names</span><span class="p">()[</span><span class="n">range_var</span><span class="p">]</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">range_var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">range_var_name</span><span class="p">],</span> <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Apply polynomial</span>
+        <span class="k">if</span> <span class="n">randomize</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No covariance matrix has been calculated&quot;</span><span class="p">)</span>
+            <span class="c1"># pylint: disable=E1101</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variables</span><span class="p">():</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">legval</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">tensor</span><span class="o">=</span><span class="n">first</span><span class="p">)</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;efficiency&quot;</span><span class="p">)</span>
+
+    <span class="c1"># pylint: disable=R0914,W0221</span>
+<div class="viewcode-block" id="LegendreEfficiency.fit"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency.fit">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">var_list</span><span class="p">,</span> <span class="n">weight_var</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">legendre_orders</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calculate_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate Legendre coefficients using the method of moments.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            dataset (pandas.DataFrame): Data to model.</span>
+<span class="sd">            var_list (list): Variables to model. Defines the order.</span>
+<span class="sd">            weight_var (str, optional): Variable to use as weight. If `None`</span>
+<span class="sd">                is given, unity weights are used.</span>
+<span class="sd">            legendre_orders (dict): Variable name/max Legendre order.</span>
+<span class="sd">            ranges (dict, optional): Ranges to scale the variables to.</span>
+<span class="sd">            calculate_cov (bool, optional): Calculate the covariance matrix.</span>
+<span class="sd">                Defaults to `False`.</span>
+<span class="sd">            chunk_size (int, optional): Size of the chunks to calculate the</span>
+<span class="sd">                covariance matrix with. Defaults to 1000.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `LegendreEfficiency`: Multidimensional efficiency.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the legendre orders are not given.</span>
+<span class="sd">            KeyError: If some of the variables or the weight is missing from the</span>
+<span class="sd">                input dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">legendre_orders</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing parameter -&gt; legendre_orders&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ranges</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ranges</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">orders</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">legendre_orders</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_list</span><span class="p">)</span>
+        <span class="c1"># Checks</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">var_list</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing variables in the dataset&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weight_var</span> <span class="ow">and</span> <span class="n">weight_var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing weight variable in the dataset&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Copying input data&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">var_list</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Scaling data&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">range_var</span><span class="p">,</span> <span class="n">range_</span> <span class="ow">in</span> <span class="n">ranges</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span> <span class="o">=</span> <span class="n">process_range</span><span class="p">(</span><span class="n">range_</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">range_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">range_var</span><span class="p">],</span> <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Loop</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Calculating moments&#39;</span><span class="p">)</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span>
+        <span class="n">it_coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nditer</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span>
+                              <span class="n">flags</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;multi_index&#39;</span><span class="p">],</span>
+                              <span class="n">op_flags</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;readwrite&#39;</span><span class="p">])</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="n">weight_var</span><span class="p">])</span> <span class="k">if</span> <span class="n">weight_var</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">inv_sum_weights</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="c1"># Array to store the calculation of the legendres event by event</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span> <span class="o">+</span> <span class="n">orders</span><span class="p">)</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">it_coeffs</span><span class="o">.</span><span class="n">finished</span><span class="p">:</span>
+            <span class="n">current_orders</span> <span class="o">=</span> <span class="n">it_coeffs</span><span class="o">.</span><span class="n">multi_index</span>
+            <span class="c1"># Calculate the corresponding legendre for each variable</span>
+            <span class="n">legendres</span> <span class="o">=</span> <span class="p">[</span><span class="n">legval</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">current_orders</span><span class="p">[</span><span class="n">var_number</span><span class="p">]),</span> <span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+                         <span class="k">for</span> <span class="n">var_number</span><span class="p">,</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">var_list</span><span class="p">)]</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span>
+                                     <span class="p">((</span><span class="mf">2.</span><span class="o">*</span><span class="n">current_order</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+                                      <span class="k">for</span> <span class="n">current_order</span> <span class="ow">in</span> <span class="n">current_orders</span><span class="p">))</span> <span class="o">*</span> \
+                <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">,</span> <span class="p">[</span><span class="n">weights</span><span class="p">]</span> <span class="o">+</span> <span class="n">legendres</span><span class="p">)</span>
+            <span class="n">events</span><span class="p">[(</span><span class="bp">Ellipsis</span><span class="p">,)</span> <span class="o">+</span> <span class="n">current_orders</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+            <span class="n">it_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">inv_sum_weights</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="n">it_coeffs</span><span class="o">.</span><span class="n">iternext</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating covariance matrix&quot;</span><span class="p">)</span>
+        <span class="c1"># Flatten</span>
+        <span class="n">err_diff_t</span> <span class="o">=</span> <span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">weights</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span>
+        <span class="n">err_diff</span> <span class="o">=</span> <span class="n">err_diff_t</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="n">calculate_cov</span><span class="p">:</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">err_diff</span><span class="p">[:,</span> <span class="n">chunk</span><span class="p">:</span><span class="nb">min</span><span class="p">(</span><span class="n">chunk</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])],</span>
+                                  <span class="n">err_diff_t</span><span class="p">[</span><span class="n">chunk</span><span class="p">:</span><span class="nb">min</span><span class="p">(</span><span class="n">chunk</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">:]</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+                           <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chunk_size</span><span class="p">))</span> <span class="o">*</span> <span class="n">inv_sum_weights</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">orders</span><span class="p">),</span>
+                              <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">orders</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">LegendreEfficiency</span><span class="p">(</span><span class="n">var_list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">:</span> <span class="n">legendre_orders</span><span class="p">,</span>
+                                             <span class="s1">&#39;coefficients&#39;</span><span class="p">:</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                                             <span class="s1">&#39;covariance&#39;</span><span class="p">:</span> <span class="n">sigma</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                                             <span class="s1">&#39;ranges&#39;</span><span class="p">:</span> <span class="n">ranges</span><span class="p">})</span></div>
+
+    <span class="c1"># pylint: disable=R0914</span>
+<div class="viewcode-block" id="LegendreEfficiency.project_efficiency"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency.project_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">project_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">n_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Project the efficiency in one variable.</span>
+
+<span class="sd">        If multidimensional, the non-projected variables are integrated analytically.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            var_name (str): Variable to project.</span>
+<span class="sd">            n_points (int): Number of points of the projection.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple (np.array): x and y coordinates of the projection.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the requested variable is not modeled by the efficiency object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+        <span class="n">coeff_iter</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">non_int_order</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">var_pos</span><span class="p">]):</span>
+            <span class="n">coeff_iter</span><span class="p">[</span><span class="n">var_pos</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">non_int_order</span><span class="p">]</span>
+            <span class="n">current_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+            <span class="n">current_coeff</span><span class="p">[</span><span class="n">var_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">non_int_order</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">coeff_iter</span><span class="p">):</span>
+                <span class="n">term_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">order_pos</span><span class="p">,</span> <span class="n">order</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">order_pos</span> <span class="o">==</span> <span class="n">var_pos</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">high</span><span class="p">,</span> <span class="n">low</span> <span class="o">=</span> <span class="n">legval</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                       <span class="n">legint</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">order</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                                              <span class="n">lbnd</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">term_val</span> <span class="o">*=</span> <span class="p">(</span><span class="n">high</span><span class="o">-</span><span class="n">low</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">+=</span> <span class="n">term_val</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">legval</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">non_int_order</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">scale_dataset</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                              <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">var_name</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">var_name</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">var_name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">var_name</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div></div>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Uncorrelated Legendre</span>
+<span class="c1">###############################################################################</span>
+<div class="viewcode-block" id="LegendreEfficiency1D"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency1D">[docs]</a><span class="k">class</span> <span class="nc">LegendreEfficiency1D</span><span class="p">(</span><span class="n">Efficiency</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implement an efficiency with uncorrelated Legendre functions.&quot;&quot;&quot;</span>
+
+    <span class="n">MODEL_NAME</span> <span class="o">=</span> <span class="s1">&#39;legendre1d&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_list</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the internal configuration.</span>
+
+<span class="sd">        In this case, the configuration of the efficiency model is as follows:</span>
+<span class="sd">            {&#39;pol-orders&#39;:</span>
+<span class="sd">                {var_name1: n1,</span>
+<span class="sd">                 var_name2: n2},</span>
+<span class="sd">             &#39;coefficients&#39;: [coeff1, coeff2, ..., coefn1xn2],</span>
+<span class="sd">             &#39;ranges&#39;: {var_name1: [min_var1, max_var1],</span>
+<span class="sd">                        var_name2: [min_var2, max_var2]},</span>
+<span class="sd">             &#39;symmetric-variables&#39;: [var_1]}</span>
+
+<span class="sd">        The range is used to rescale the data in the `fit` method. If it&#39;s not</span>
+<span class="sd">        given, it&#39;s assumed it is [-1, 1].</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            var_list (list): List of observables to apply the efficiency to.</span>
+<span class="sd">            config (dict): Efficiency model configuration.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: On missing coefficients or wrong number of them.</span>
+<span class="sd">            ValueError: On bad range definition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LegendreEfficiency1D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">var_list</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span> <span class="o">=</span> <span class="p">{</span><span class="n">var_name</span><span class="p">:</span> <span class="n">process_range</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ranges&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="c1"># Load coefficients</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;coefficients&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">order</span> <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Wrong number of coefficients&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;coefficients&#39;</span><span class="p">],</span>
+                                               <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">([</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">][</span><span class="n">var_name</span><span class="p">]</span>
+                                                          <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()])[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;covariance&#39;</span><span class="p">],</span>
+                                      <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                                       <span class="nb">sum</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;symmetric-variables&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Symmetrizing legendre polynomial for variable </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">var_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Symmetrized variable </span><span class="si">{}</span><span class="s2"> is not in the list of variables&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">))</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="LegendreEfficiency1D.get_coefficients"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency1D.get_coefficients">[docs]</a>    <span class="k">def</span> <span class="nf">get_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the coefficients in list of lists form.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">randomize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the efficiency.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            No variable checking is performed.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            data (`pandas.DataFrame`): Data to apply the efficiency to.</span>
+<span class="sd">            randomize (bool, optional): Apply Gaussian randomization to the efficiencies?</span>
+<span class="sd">                Defaults to False.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            pandas.Series: Efficiency</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">range_var</span><span class="p">,</span> <span class="p">(</span><span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">range_var_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variable_names</span><span class="p">()[</span><span class="n">range_var</span><span class="p">]</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">range_var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">range_var_name</span><span class="p">],</span> <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">randomize</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No covariance matrix has been calculated&quot;</span><span class="p">)</span>
+            <span class="c1"># pylint: disable=E1101</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span>
+        <span class="c1"># Apply polynomials</span>
+        <span class="n">effs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">var_number</span><span class="p">,</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()):</span>
+            <span class="n">effs</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">legval</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">var_number</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">effs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;efficiency&quot;</span><span class="p">)</span>
+
+    <span class="c1"># pylint: disable=R0914,W0221</span>
+<div class="viewcode-block" id="LegendreEfficiency1D.fit"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency1D.fit">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">var_list</span><span class="p">,</span> <span class="n">weight_var</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">legendre_orders</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calculate_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate Legendre coefficients using the method of moments.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            dataset (pandas.DataFrame): Data to model.</span>
+<span class="sd">            var_list (list): Variables to model. Defines the order.</span>
+<span class="sd">            weight_var (str, optional): Variable to use as weight. If `None`</span>
+<span class="sd">                is given, unity weights are used.</span>
+<span class="sd">            legendre_orders (dict): Variable name/max Legendre order.</span>
+<span class="sd">            ranges (dict, optional): Ranges to scale the variables to.</span>
+<span class="sd">            calculate_cov (bool, optional): Calculate the covariance matrix.</span>
+<span class="sd">                Defaults to `False`.</span>
+<span class="sd">            chunk_size (int, optional): Size of the chunks to calculate the</span>
+<span class="sd">                covariance matrix with. Defaults to 1000.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `LegendreEfficiency`: Multidimensional efficiency.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the legendre orders are not given.</span>
+<span class="sd">            KeyError: If some of the variables or the weight is missing from the</span>
+<span class="sd">                input dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">legendre_orders</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing parameter -&gt; legendre_orders&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ranges</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ranges</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Checks</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">var_list</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing variables in the dataset&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weight_var</span> <span class="ow">and</span> <span class="n">weight_var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing weight variable in the dataset&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Copying input data&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">var_list</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Scaling data&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">range_var</span><span class="p">,</span> <span class="n">range_</span> <span class="ow">in</span> <span class="n">ranges</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span> <span class="o">=</span> <span class="n">process_range</span><span class="p">(</span><span class="n">range_</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">range_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">range_var</span><span class="p">],</span> <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Loop</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="n">weight_var</span><span class="p">])</span> <span class="k">if</span> <span class="n">weight_var</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">inv_sum_weights</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">coeff_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">sum</span><span class="p">(</span><span class="n">legendre_orders</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                          <span class="nb">sum</span><span class="p">(</span><span class="n">legendre_orders</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+        <span class="n">current_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">var_list</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Calculating moments for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span>
+            <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">legendre_orders</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">legendre_orders</span><span class="p">[</span><span class="n">var_name</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">current_order</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">legendre_orders</span><span class="p">[</span><span class="n">var_name</span><span class="p">]):</span>
+                <span class="n">event</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">current_order</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">weights</span> <span class="o">*</span> \
+                    <span class="n">legval</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">current_order</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+                <span class="n">events</span><span class="p">[:,</span> <span class="n">current_order</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+                <span class="n">coefficients</span><span class="p">[</span><span class="n">current_order</span><span class="p">]</span> <span class="o">=</span> <span class="n">inv_sum_weights</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="n">coeff_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coefficients</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">err_diff_t</span> <span class="o">=</span> <span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">weights</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">coefficients</span><span class="p">))</span>
+            <span class="n">err_diff</span> <span class="o">=</span> <span class="n">err_diff_t</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">if</span> <span class="n">calculate_cov</span><span class="p">:</span>
+                <span class="n">cov_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">err_diff</span><span class="p">[:,</span> <span class="n">chunk</span><span class="p">:</span><span class="nb">min</span><span class="p">(</span><span class="n">chunk</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])],</span>
+                                           <span class="n">err_diff_t</span><span class="p">[</span><span class="n">chunk</span><span class="p">:</span><span class="nb">min</span><span class="p">(</span><span class="n">chunk</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">:]</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+                                    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chunk_size</span><span class="p">))</span> <span class="o">*</span> <span class="n">inv_sum_weights</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cov_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">legendre_orders</span><span class="p">[</span><span class="n">var_name</span><span class="p">]),</span>
+                                       <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">legendre_orders</span><span class="p">[</span><span class="n">var_name</span><span class="p">])))</span>
+            <span class="n">end_index</span> <span class="o">=</span> <span class="n">current_index</span> <span class="o">+</span> <span class="n">legendre_orders</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+            <span class="n">sigma</span><span class="p">[</span><span class="n">current_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">,</span> <span class="n">current_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cov_matrix</span>
+            <span class="n">current_index</span> <span class="o">=</span> <span class="n">end_index</span>
+        <span class="k">return</span> <span class="n">LegendreEfficiency1D</span><span class="p">(</span><span class="n">var_list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;pol-orders&#39;</span><span class="p">:</span> <span class="n">legendre_orders</span><span class="p">,</span>
+                                               <span class="s1">&#39;coefficients&#39;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">coeff_list</span><span class="p">,</span> <span class="p">[]),</span>
+                                               <span class="s1">&#39;covariance&#39;</span><span class="p">:</span> <span class="n">sigma</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                                               <span class="s1">&#39;ranges&#39;</span><span class="p">:</span> <span class="n">ranges</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="LegendreEfficiency1D.project_efficiency"><a class="viewcode-back" href="../../../analysis.efficiency.legendre.html#analysis.efficiency.legendre.LegendreEfficiency1D.project_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">project_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">n_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Project the efficiency in one variable.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            var_name (str): Variable to project.</span>
+<span class="sd">            n_points (int): Number of points of the projection.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple (np.array): x and y coordinates of the projection.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the requested variable is not modeled by the efficiency object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">legval</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">[</span><span class="n">var_pos</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variable_names</span><span class="p">()[</span><span class="n">var_name</span><span class="p">]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">scale_dataset</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                              <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ranges</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div></div>
+
+
+<span class="n">_EFFICIENCY_MODELS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;legendre&#39;</span><span class="p">:</span> <span class="n">LegendreEfficiency</span><span class="p">,</span>
+                      <span class="s1">&#39;legendre1d&#39;</span><span class="p">:</span> <span class="n">LegendreEfficiency1D</span><span class="p">}</span>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

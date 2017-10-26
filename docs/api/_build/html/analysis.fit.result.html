@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>result &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="fit" href="analysis.fit.html"/>
+        <link rel="next" title="mc" href="analysis.mc.html"/>
+        <link rel="prev" title="fit" href="analysis.fit.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.fit.html">fit</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">result</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.toys.html">toys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.fit.html">fit</a> &raquo;</li>
+        
+      <li>result</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.fit.result.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.fit.result">
+<span id="result"></span><h1>result<a class="headerlink" href="#module-analysis.fit.result" title="Permalink to this headline">¶</a></h1>
+<p>Analyze and store fit results.</p>
+<dl class="exception">
+<dt id="analysis.fit.result.AlreadyInitializedError">
+<em class="property">exception </em><code class="descclassname">analysis.fit.result.</code><code class="descname">AlreadyInitializedError</code><a class="reference internal" href="_modules/analysis/fit/result.html#AlreadyInitializedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.AlreadyInitializedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+<p>Used when the internal fit result has already been initialized.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.fit.result.FitResult">
+<em class="property">class </em><code class="descclassname">analysis.fit.result.</code><code class="descname">FitResult</code><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Manager for fit results.</p>
+<p>Transforms <a href="#id1"><span class="problematic" id="id2">`</span></a>RooFitResult`s into something easier to manage and
+allows to save them into YAML format.</p>
+<p>Initialize internal variables.</p>
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.from_roofit">
+<code class="descname">from_roofit</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.from_roofit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.from_roofit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is non empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.from_yaml">
+<code class="descname">from_yaml</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.from_yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.from_yaml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is non empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.from_yaml_file">
+<code class="descname">from_yaml_file</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.from_yaml_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.from_yaml_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is non empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.generate_random_pars">
+<code class="descname">generate_random_pars</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.generate_random_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.generate_random_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.get_const_parameter">
+<code class="descname">get_const_parameter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.get_const_parameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.get_const_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.get_covariance_matrix">
+<code class="descname">get_covariance_matrix</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.get_covariance_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.get_covariance_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.get_edm">
+<code class="descname">get_edm</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.get_edm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.get_edm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.get_fit_parameter">
+<code class="descname">get_fit_parameter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.get_fit_parameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.get_fit_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.get_fit_parameters">
+<code class="descname">get_fit_parameters</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.get_fit_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.get_result">
+<code class="descname">get_result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.get_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.get_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the full fit result information.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>dict: Full fit result information.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.has_converged">
+<code class="descname">has_converged</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.has_converged"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.has_converged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.to_plain_dict">
+<code class="descname">to_plain_dict</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.to_plain_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.to_plain_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.to_yaml">
+<code class="descname">to_yaml</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.to_yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.to_yaml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.fit.result.FitResult.to_yaml_file">
+<code class="descname">to_yaml_file</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#FitResult.to_yaml_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.FitResult.to_yaml_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check result is empty. Raise otherwise.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="analysis.fit.result.NotInitializedError">
+<em class="property">exception </em><code class="descclassname">analysis.fit.result.</code><code class="descname">NotInitializedError</code><a class="reference internal" href="_modules/analysis/fit/result.html#NotInitializedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.NotInitializedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+<p>Use when the FitResult has not been initialized.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.fit.result.ensure_initialized">
+<code class="descclassname">analysis.fit.result.</code><code class="descname">ensure_initialized</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#ensure_initialized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.ensure_initialized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure the fit result is initialized.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.fit.result.ensure_non_initialized">
+<code class="descclassname">analysis.fit.result.</code><code class="descname">ensure_non_initialized</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/fit/result.html#ensure_non_initialized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.fit.result.ensure_non_initialized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure the fit result is not initialized.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.mc.html" class="btn btn-neutral float-right" title="mc" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.fit.html" class="btn btn-neutral" title="fit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

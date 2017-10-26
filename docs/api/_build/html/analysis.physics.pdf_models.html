@@ -1,0 +1,571 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pdf_models &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="physics" href="analysis.physics.html"/>
+        <link rel="next" title="toys" href="analysis.toys.html"/>
+        <link rel="prev" title="factory" href="analysis.physics.factory.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.physics.html">physics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="analysis.physics.factory.html">factory</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pdf_models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.toys.html">toys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.physics.html">physics</a> &raquo;</li>
+        
+      <li>pdf_models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.physics.pdf_models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.physics.pdf_models">
+<span id="pdf-models"></span><h1>pdf_models<a class="headerlink" href="#module-analysis.physics.pdf_models" title="Permalink to this headline">¶</a></h1>
+<p>Basic PDFs to use for building complex factories.</p>
+<dl class="class">
+<dt id="analysis.physics.pdf_models.ArgusConvGaussPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">ArgusConvGaussPdfMixin</code><span class="sig-paren">(</span><em>config</em>, <em>parameters=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#ArgusConvGaussPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.ArgusConvGaussPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Partially reconstructed background mass PDF.</p>
+<p>It’s built as the <cite>RooFFTConvPdf</cite> between a <cite>RooArgusBG</cite> and a <cite>RooGaussian</cite>.</p>
+<dl class="docutils">
+<dt>Parameter names:</dt>
+<dd><ul class="first last simple">
+<li>‘threshold’</li>
+<li>‘slope’</li>
+<li>‘power’</li>
+<li>‘mu’</li>
+<li>‘sigma’</li>
+</ul>
+</dd>
+</dl>
+<p>Configure the partially reconstructed background factory.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><dl class="first last docutils">
+<dt>config (dict): PDF configuration. If it contains ‘buffer_fraction’, it is</dt>
+<dd>used to set the RooFFTConvPdf buffer fraction.</dd>
+</dl>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.ArgusConvGaussPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('threshold', 'slope', 'power', 'mu', 'sigma')</em><a class="headerlink" href="#analysis.physics.pdf_models.ArgusConvGaussPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.ArgusConvGaussPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#ArgusConvGaussPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.ArgusConvGaussPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the convolved PDF.</p>
+<p>Returns a lambda function that will create the <cite>RooFFTConvPdf</cite> mimicking
+usual PDF instantiations.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>The Argus and Gaussian PDFs are created new everytime the RooFFTConvPdf is
+instantiated.</dd>
+<dt>Return:</dt>
+<dd>lambda.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.BifurcatedCBPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">BifurcatedCBPdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#BifurcatedCBPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.BifurcatedCBPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin defining a bifurcated CB.</p>
+<dl class="docutils">
+<dt>Parameter names, and their defaults (when applicable):</dt>
+<dd><ul class="first last simple">
+<li>‘mu’</li>
+<li>‘sigma’</li>
+<li>‘alphaR’</li>
+<li>‘nR’</li>
+<li>‘alphaL’</li>
+<li>‘nL’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.BifurcatedCBPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('mu', 'sigma', 'alphaR', 'nR', 'alphaL', 'nL')</em><a class="headerlink" href="#analysis.physics.pdf_models.BifurcatedCBPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.BifurcatedCBPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#BifurcatedCBPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.BifurcatedCBPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.BifurcatedCB.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.CBPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">CBPdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#CBPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.CBPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin defining a CB.</p>
+<dl class="docutils">
+<dt>Parameter names, and their defaults (when applicable):</dt>
+<dd><ul class="first last simple">
+<li>‘mu’</li>
+<li>‘sigma’</li>
+<li>‘alpha’</li>
+<li>‘n’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.CBPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('mu', 'sigma', 'alpha', 'n')</em><a class="headerlink" href="#analysis.physics.pdf_models.CBPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.CBPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#CBPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.CBPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooCBShape.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.DoubleCBPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">DoubleCBPdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#DoubleCBPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.DoubleCBPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Signal mass fit with the sum of two CB.</p>
+<dl class="docutils">
+<dt>Parameter names, and their defaults (when applicable):</dt>
+<dd><ul class="first last simple">
+<li>‘mu’</li>
+<li>‘sigma1’</li>
+<li>‘alpha1’</li>
+<li>‘n1’</li>
+<li>‘sigma2’</li>
+<li>‘alpha2’</li>
+<li>‘n2’</li>
+<li>‘frac’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.DoubleCBPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('mu', 'sigma1', 'alpha1', 'n1', 'sigma2', 'alpha2', 'n2', 'frac')</em><a class="headerlink" href="#analysis.physics.pdf_models.DoubleCBPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.DoubleCBPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#DoubleCBPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.DoubleCBPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooAddPdf: Sum of two <cite>ROOT.CBShape</cite>.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.ExponentialPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">ExponentialPdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#ExponentialPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.ExponentialPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Exponential mass PDF.</p>
+<dl class="docutils">
+<dt>Parameter names:</dt>
+<dd><ul class="first last simple">
+<li>‘tau’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.ExponentialPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('tau',)</em><a class="headerlink" href="#analysis.physics.pdf_models.ExponentialPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.ExponentialPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#ExponentialPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.ExponentialPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooExponential.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.GaussianPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">GaussianPdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#GaussianPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.GaussianPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin defining a Gaussian.</p>
+<dl class="docutils">
+<dt>Parameter names, and their defaults (when applicable):</dt>
+<dd><ul class="first last simple">
+<li>‘mu’</li>
+<li>‘sigma’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.GaussianPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('mu', 'sigma')</em><a class="headerlink" href="#analysis.physics.pdf_models.GaussianPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.GaussianPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#GaussianPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.GaussianPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooGaussian.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.Ipatia2PdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">Ipatia2PdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#Ipatia2PdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.Ipatia2PdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin defining an Ipatia2 function.</p>
+<dl class="docutils">
+<dt>Parameter names, and their defaults (when applicable):</dt>
+<dd><ul class="first last simple">
+<li>‘l’</li>
+<li>‘zeta’</li>
+<li>‘fb’</li>
+<li>‘sigma’</li>
+<li>‘mu’</li>
+<li>‘a’</li>
+<li>‘n’</li>
+<li>‘a2’</li>
+<li>‘n2’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.Ipatia2PdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('l', 'zeta', 'fb', 'sigma', 'mu', 'a', 'n', 'a2', 'n2')</em><a class="headerlink" href="#analysis.physics.pdf_models.Ipatia2PdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.Ipatia2PdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#Ipatia2PdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.Ipatia2PdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooIpatia2.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.IpatiaPdfMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">IpatiaPdfMixin</code><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#IpatiaPdfMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.IpatiaPdfMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin defining an Ipatia function.</p>
+<dl class="docutils">
+<dt>Parameter names, and their defaults (when applicable):</dt>
+<dd><ul class="first last simple">
+<li>‘l’</li>
+<li>‘zeta’</li>
+<li>‘fb’</li>
+<li>‘sigma’</li>
+<li>‘mu’</li>
+<li>‘a’</li>
+<li>‘n’</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.IpatiaPdfMixin.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = ('l', 'zeta', 'fb', 'sigma', 'mu', 'a', 'n')</em><a class="headerlink" href="#analysis.physics.pdf_models.IpatiaPdfMixin.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.IpatiaPdfMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#IpatiaPdfMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.IpatiaPdfMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooIpatia.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.pdf_models.RooWorkspaceMixin">
+<em class="property">class </em><code class="descclassname">analysis.physics.pdf_models.</code><code class="descname">RooWorkspaceMixin</code><span class="sig-paren">(</span><em>config</em>, <em>parameters=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#RooWorkspaceMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.RooWorkspaceMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Load a PDF from a RooWorkspace.</p>
+<p>Load the workspace.</p>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>KeyError: On any errors.</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.pdf_models.RooWorkspaceMixin.PARAMETERS">
+<code class="descname">PARAMETERS</code><em class="property"> = []</em><a class="headerlink" href="#analysis.physics.pdf_models.RooWorkspaceMixin.PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.RooWorkspaceMixin.get_observables">
+<code class="descname">get_observables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#RooWorkspaceMixin.get_observables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.RooWorkspaceMixin.get_observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the generic RooRealVars with objects from the RooWorkspace.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.pdf_models.RooWorkspaceMixin.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/pdf_models.html#RooWorkspaceMixin.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.pdf_models.RooWorkspaceMixin.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the RooKeysPdf.</p>
+<p>Returns a copy of the RooKeysPdf from the RooWorkspace.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>ROOT.RooKeysPdf.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.toys.html" class="btn btn-neutral float-right" title="toys" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.physics.factory.html" class="btn btn-neutral" title="factory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

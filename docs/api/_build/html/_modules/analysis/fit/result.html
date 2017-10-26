@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.fit.result &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis.fit" href="../fit.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+          <li><a href="../fit.html">analysis.fit</a> &raquo;</li>
+        
+      <li>analysis.fit.result</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.fit.result</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   result.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   19.05.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Analyze and store fit results.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.config</span> <span class="k">import</span> <span class="n">load_config</span><span class="p">,</span> <span class="n">write_config</span><span class="p">,</span> <span class="n">ConfigError</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.root</span> <span class="k">import</span> <span class="n">iterate_roocollection</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.paths</span> <span class="k">import</span> <span class="n">get_fit_result_path</span>
+
+
+<span class="n">_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;_err_hesse&#39;</span><span class="p">,</span> <span class="s1">&#39;_err_plus&#39;</span><span class="p">,</span> <span class="s1">&#39;_err_minus&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ensure_initialized"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.ensure_initialized">[docs]</a><span class="k">def</span> <span class="nf">ensure_initialized</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make sure the fit result is initialized.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check result is empty. Raise otherwise.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_result</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">NotInitializedError</span><span class="p">(</span><span class="s2">&quot;Trying to export a non-initialized fit result&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="ensure_non_initialized"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.ensure_non_initialized">[docs]</a><span class="k">def</span> <span class="nf">ensure_non_initialized</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make sure the fit result is not initialized.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check result is non empty. Raise otherwise.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_result</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">AlreadyInitializedError</span><span class="p">(</span><span class="s2">&quot;Trying to overwrite an initialized fit result&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="FitResult"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult">[docs]</a><span class="k">class</span> <span class="nc">FitResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Manager for fit results.</span>
+
+<span class="sd">    Transforms `RooFitResult`s into something easier to manage and</span>
+<span class="sd">    allows to save them into YAML format.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize internal variables.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="FitResult.get_result"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.get_result">[docs]</a>    <span class="k">def</span> <span class="nf">get_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the full fit result information.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            dict: Full fit result information.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span></div>
+
+<div class="viewcode-block" id="FitResult.from_roofit"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.from_roofit">[docs]</a>    <span class="nd">@ensure_non_initialized</span>
+    <span class="k">def</span> <span class="nf">from_roofit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roofit_result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load the `RooFitResult` into the internal format.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            roofit_result (`ROOT.RooFitResult`): Fit result.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            self</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            AlreadyInitializedError: If the FitResult had already been initialized.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Fit parameters</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;const-parameters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">fit_par</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="n">fit_par</span><span class="o">.</span><span class="n">getVal</span><span class="p">())</span>
+                                                 <span class="k">for</span> <span class="n">fit_par</span>
+                                                 <span class="ow">in</span> <span class="n">iterate_roocollection</span><span class="p">(</span><span class="n">roofit_result</span><span class="o">.</span><span class="n">constPars</span><span class="p">()))</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">fit_par</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="p">(</span><span class="n">fit_par</span><span class="o">.</span><span class="n">getVal</span><span class="p">(),</span>
+                                                                    <span class="n">fit_par</span><span class="o">.</span><span class="n">getError</span><span class="p">(),</span>
+                                                                    <span class="n">fit_par</span><span class="o">.</span><span class="n">getErrorLo</span><span class="p">(),</span> <span class="n">fit_par</span><span class="o">.</span><span class="n">getErrorHi</span><span class="p">()))</span>
+                                               <span class="k">for</span> <span class="n">fit_par</span>
+                                               <span class="ow">in</span> <span class="n">iterate_roocollection</span><span class="p">(</span><span class="n">roofit_result</span><span class="o">.</span><span class="n">floatParsFinal</span><span class="p">()))</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;fit-parameters-initial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">fit_par</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="n">fit_par</span><span class="o">.</span><span class="n">getVal</span><span class="p">())</span>
+                                                       <span class="k">for</span> <span class="n">fit_par</span>
+                                                       <span class="ow">in</span> <span class="n">iterate_roocollection</span><span class="p">(</span><span class="n">roofit_result</span><span class="o">.</span><span class="n">floatParsInit</span><span class="p">()))</span>
+        <span class="c1"># Covariance matrix</span>
+        <span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">roofit_result</span><span class="o">.</span><span class="n">covarianceMatrix</span><span class="p">()</span>
+        <span class="n">cov_matrix</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;quality&#39;</span><span class="p">:</span> <span class="n">roofit_result</span><span class="o">.</span><span class="n">covQual</span><span class="p">(),</span>
+                      <span class="s1">&#39;matrix&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="n">covariance_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span>
+                                            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="o">.</span><span class="n">GetNcols</span><span class="p">())]</span>
+                                           <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="o">.</span><span class="n">GetNrows</span><span class="p">())])}</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cov_matrix</span>
+        <span class="c1"># Status</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">roofit_result</span><span class="o">.</span><span class="n">statusLabelHistory</span><span class="p">(</span><span class="n">cycle</span><span class="p">),</span> <span class="n">roofit_result</span><span class="o">.</span><span class="n">statusCodeHistory</span><span class="p">(</span><span class="n">cycle</span><span class="p">))</span>
+                                       <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">roofit_result</span><span class="o">.</span><span class="n">numStatusHistory</span><span class="p">()))</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;edm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">roofit_result</span><span class="o">.</span><span class="n">edm</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="FitResult.from_yaml"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.from_yaml">[docs]</a>    <span class="nd">@ensure_non_initialized</span>
+    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yaml_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize from a YAML dictionary.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            yaml_dict (dict, OrderedDict): YAML information to load.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            self</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: If any of the FitResult data is missing from the YAML dictionary.</span>
+<span class="sd">            AlreadyInitializedError: If the FitResult had already been initialized.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">yaml_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">issuperset</span><span class="p">({</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;fit-parameters-initial&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;const-parameters&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;covariance-matrix&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;status&#39;</span><span class="p">}):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing keys in YAML input&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">issuperset</span><span class="p">({</span><span class="s1">&#39;quality&#39;</span><span class="p">,</span> <span class="s1">&#39;matrix&#39;</span><span class="p">}):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing keys in covariance matrix in YAML input&quot;</span><span class="p">)</span>
+        <span class="c1"># Build matrix</span>
+        <span class="n">yaml_dict</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">]),</span>
+                                                                       <span class="nb">len</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">])))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="n">yaml_dict</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="FitResult.from_yaml_file"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.from_yaml_file">[docs]</a>    <span class="nd">@ensure_non_initialized</span>
+    <span class="k">def</span> <span class="nf">from_yaml_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize from a YAML file.</span>
+
+<span class="sd">        File name is determined by get_fit_result_path.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            name (str): Name of the fit result.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            self</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            OSError: If the file cannot be found.</span>
+<span class="sd">            KeyError: If any of the FitResult data is missing from the input file.</span>
+<span class="sd">            AlreadyInitializedError: If the FitResult had already been initialized.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">load_config</span><span class="p">(</span><span class="n">get_fit_result_path</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                                            <span class="n">validate</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;fit-parameters-initial&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;const-parameters&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;covariance-matrix/quality&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;covariance-matrix/matrix&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;status&#39;</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="n">ConfigError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing keys in input file -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">missing_keys</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="FitResult.to_yaml"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.to_yaml">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">to_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert fit result to YAML format.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            str: Output dictionary in YAML format.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If the fit result has not been initialized.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">getA1</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="FitResult.to_yaml_file"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.to_yaml_file">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">to_yaml_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert fit result to YAML format.</span>
+
+<span class="sd">        File name is determined by get_fit_result_path.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            name (str): Name of the fit result.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            str: Output file name.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If the fit result has not been initialized.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">get_fit_result_path</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">write_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(),</span> <span class="n">file_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_name</span></div>
+
+<div class="viewcode-block" id="FitResult.to_plain_dict"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.to_plain_dict">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">to_plain_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip_cov</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert fit result into a pandas-friendly format.</span>
+
+<span class="sd">        Blablabla</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            skip_cov (bool, optional): Skip the covariance matrix. Defaults to True.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            pandas.DataFrame</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pandas_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">param_name</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">:</span> <span class="n">val</span>
+                       <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                       <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">_SUFFIXES</span><span class="p">)}</span>
+        <span class="n">pandas_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">param_name</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">val</span>
+                            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;const-parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="n">pandas_dict</span><span class="p">[</span><span class="s1">&#39;status_migrad&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;MIGRAD&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pandas_dict</span><span class="p">[</span><span class="s1">&#39;status_hesse&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HESSE&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pandas_dict</span><span class="p">[</span><span class="s1">&#39;status_minos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;MINOS&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pandas_dict</span><span class="p">[</span><span class="s1">&#39;cov_quality&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;quality&#39;</span><span class="p">]</span>
+        <span class="n">pandas_dict</span><span class="p">[</span><span class="s1">&#39;edm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;edm&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_cov</span><span class="p">:</span>
+            <span class="n">pandas_dict</span><span class="p">[</span><span class="s1">&#39;cov_matrix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">getA1</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">pandas_dict</span></div>
+
+<div class="viewcode-block" id="FitResult.get_fit_parameter"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.get_fit_parameter">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">get_fit_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the fit parameter and its errors.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            name (str): Name of the fit parameter.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple (float): Parameter value, Hesse error and upper and lower Minos errors.</span>
+<span class="sd">                If the two latter have not been calculated, they are 0.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: If the parameter is unknown.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="FitResult.get_const_parameter"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.get_const_parameter">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">get_const_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the const parameter.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            name (str): Name of the fit parameter.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            float: Parameter value.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: If the parameter is unknown.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;const-parameters&#39;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="FitResult.get_fit_parameters"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.get_fit_parameters">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the full list of fit parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            OrderedDict: Parameters as keys and their values and errors as values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="FitResult.get_covariance_matrix"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.get_covariance_matrix">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">get_covariance_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the fit covariance matrix.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `numpy.matrix`: Covariance matrix.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If the FitResult has not been initialized.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="FitResult.get_edm"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.get_edm">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">get_edm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the fit EDM.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            float</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;edm&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="FitResult.has_converged"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.has_converged">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">has_converged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine wether the fit has converged properly.</span>
+
+<span class="sd">        All steps have to have converged and the covariance matrix quality needs to be</span>
+<span class="sd">        good.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">status</span> <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;quality&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span></div>
+
+<div class="viewcode-block" id="FitResult.generate_random_pars"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.FitResult.generate_random_pars">[docs]</a>    <span class="nd">@ensure_initialized</span>
+    <span class="k">def</span> <span class="nf">generate_random_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_const</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate random variation of the fit parameters.</span>
+
+<span class="sd">        Use a multivariate Gaussian according to the covariance matrix.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            include_const (bool, optional): Return constant parameters? Defaults to False.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            OrderedDict</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=E1101</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">([</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                                                                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;fit-parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;covariance-matrix&#39;</span><span class="p">][</span><span class="s1">&#39;matrix&#39;</span><span class="p">])))</span>
+        <span class="k">if</span> <span class="n">include_const</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="p">[</span><span class="s1">&#39;const-parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">output</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="k">return</span> <span class="n">output</span></div></div>
+
+
+<div class="viewcode-block" id="AlreadyInitializedError"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.AlreadyInitializedError">[docs]</a><span class="k">class</span> <span class="nc">AlreadyInitializedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used when the internal fit result has already been initialized.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NotInitializedError"><a class="viewcode-back" href="../../../analysis.fit.result.html#analysis.fit.result.NotInitializedError">[docs]</a><span class="k">class</span> <span class="nc">NotInitializedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Use when the FitResult has not been initialized.&quot;&quot;&quot;</span></div>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

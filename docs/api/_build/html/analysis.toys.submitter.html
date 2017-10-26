@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>submitter &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="toys" href="analysis.toys.html"/>
+        <link rel="next" title="tools" href="analysis.toys.tools.html"/>
+        <link rel="prev" title="submit_toys" href="analysis.toys.submit_toys.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.toys.html">toys</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.fit_toys.html">fit_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.generate_toys.html">generate_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.submit_toys.html">submit_toys</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">submitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.tools.html">tools</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.toys.html">toys</a> &raquo;</li>
+        
+      <li>submitter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.toys.submitter.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.toys.submitter">
+<span id="submitter"></span><h1>submitter<a class="headerlink" href="#module-analysis.toys.submitter" title="Permalink to this headline">¶</a></h1>
+<p>Toy submitter base class.</p>
+<dl class="class">
+<dt id="analysis.toys.submitter.ToySubmitter">
+<em class="property">class </em><code class="descclassname">analysis.toys.submitter.</code><code class="descname">ToySubmitter</code><span class="sig-paren">(</span><em>config_files</em>, <em>link_from</em>, <em>extend</em>, <em>overwrite</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/submitter.html#ToySubmitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Manage toy job submission.</p>
+<p>This class must be inherited and the mandatory attributes need to be defined.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><p class="first">TOY_PATH_GETTER` (Callable): Function to get the output path of the toy.
+TOY_CONFIG_PATH_GETTER (Callable): Function to get the output path of the</p>
+<blockquote>
+<div>toy configuration.</div></blockquote>
+<dl class="docutils">
+<dt>NTOYS_KEY (str): Key in the configuration that can be used to extract the</dt>
+<dd>total number of toys to run.</dd>
+<dt>NTOYS_PER_JOB_KEY (str): Key in the configuration that can be used to extract</dt>
+<dd>the number of toys per job.</dd>
+<dt>VALIDATION (dict, optional): Pairs of key, message to validate the input</dt>
+<dd>configuration. If the key is not present, KeyError is raised and the
+message logged.</dd>
+</dl>
+<p class="last">ALLOWED_CONFIG_DIFFS (list(str), optional):</p>
+</dd>
+</dl>
+<p>Configure the toy submitter.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>config_files (list[str]): Configuration files.
+link_from (str): Storage to link from.
+extend (bool): Extend the production?
+overwrite (bool): Overwrite an existing production?</dd>
+<dt>Raise:</dt>
+<dd><dl class="first docutils">
+<dt>NotImplementedError: If some of the mandatory attributes are not</dt>
+<dd>set.</dd>
+<dt>OSError: If there is a problem with the configuration file, either in</dt>
+<dd>loading or validation.</dd>
+</dl>
+<p class="last">ValueError: If conflicting options are passed.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.toys.submitter.ToySubmitter.ALLOWED_CONFIG_DIFFS">
+<code class="descname">ALLOWED_CONFIG_DIFFS</code><em class="property"> = []</em><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.ALLOWED_CONFIG_DIFFS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submitter.ToySubmitter.NTOYS_KEY">
+<code class="descname">NTOYS_KEY</code><em class="property"> = None</em><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.NTOYS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submitter.ToySubmitter.NTOYS_PER_JOB_KEY">
+<code class="descname">NTOYS_PER_JOB_KEY</code><em class="property"> = None</em><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.NTOYS_PER_JOB_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submitter.ToySubmitter.TOY_CONFIG_PATH_GETTER">
+<code class="descname">TOY_CONFIG_PATH_GETTER</code><em class="property"> = None</em><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.TOY_CONFIG_PATH_GETTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submitter.ToySubmitter.TOY_PATH_GETTER">
+<code class="descname">TOY_PATH_GETTER</code><em class="property"> = None</em><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.TOY_PATH_GETTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submitter.ToySubmitter.VALIDATION">
+<code class="descname">VALIDATION</code><em class="property"> = {}</em><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.toys.submitter.ToySubmitter.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>script_to_run</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/submitter.html#ToySubmitter.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.submitter.ToySubmitter.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the script.</p>
+<p>If the output exists and no extension or overwrite has been configured, nothing
+is done.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>script_to_run (str): Script to run in the cluster.</dd>
+<dt>Raise:</dt>
+<dd>AssertionError: If the qsub command cannot be found.
+AttributeError: If non-matching configuration file was found.
+OSError: If there is a problem preparing the output path.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.toys.tools.html" class="btn btn-neutral float-right" title="tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.toys.submit_toys.html" class="btn btn-neutral" title="submit_toys" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

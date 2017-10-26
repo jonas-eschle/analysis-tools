@@ -1,0 +1,1256 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.physics.factory &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis.physics" href="../physics.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+          <li><a href="../physics.html">analysis.physics</a> &raquo;</li>
+        
+      <li>analysis.physics.factory</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.physics.factory</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   factory.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   15.04.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Physics factory classes.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">import</span> <span class="nn">ROOT</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.config</span> <span class="k">import</span> <span class="n">configure_parameter</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.root</span> <span class="k">import</span> <span class="n">execute_and_return_self</span><span class="p">,</span> <span class="n">list_to_rooargset</span><span class="p">,</span> <span class="n">list_to_rooarglist</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.physics.factory&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># The base class</span>
+<div class="viewcode-block" id="BaseFactory"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory">[docs]</a><span class="k">class</span> <span class="nc">BaseFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Physics analysis factory.</span>
+
+<span class="sd">    Implements the basic skeleton.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">OBSERVABLES</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="n">PARAMETERS</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">MANDATORY_PARAMETERS</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">PARAMETER_DEFAULTS</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the internal object cache.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            **config (dict): Configuration of the factory.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: When parameters or observables are missingo or there is an</span>
+<span class="sd">                inconsistency in the configuration.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=C0103</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span><span class="p">,</span> <span class="n">OrderedDict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">obs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">obs</span><span class="p">)</span> <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">MANDATORY_PARAMETERS</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Instantiating Factory with no parameters&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MANDATORY_PARAMETERS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span><span class="p">)</span>
+        <span class="c1"># Initialize objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span> <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">set</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;constraints&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_category</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Initialize parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">param</span><span class="p">:</span> <span class="n">param</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameter-names&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="c1"># Update observable names</span>
+        <span class="k">for</span> <span class="n">obs_name</span><span class="p">,</span> <span class="n">new_obs_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;observable-names&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_observable</span><span class="p">(</span><span class="n">obs_name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">new_obs_name</span><span class="p">)</span>
+        <span class="c1"># Set the parameter dictionary</span>
+        <span class="n">param_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETER_DEFAULTS</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">param_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="n">OrderedDict</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="c1"># First parameters</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">for</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">param_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping parameter </span><span class="si">%s</span><span class="s2"> because it was specified in the constructor&quot;</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">param_dict</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span>  <span class="c1"># Constructor parameters have priority</span>
+                <span class="k">if</span> <span class="n">constraint</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+        <span class="c1"># Now, build parameters</span>
+        <span class="n">missing_parameters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parameter_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="p">:</span>
+                <span class="n">missing_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_parameter</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">,</span>
+                                   <span class="n">param_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">),</span>
+                                   <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="k">if</span> <span class="n">missing_parameters</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Missing parameters -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_parameter</span>
+                                                                      <span class="k">for</span> <span class="n">missing_parameter</span> <span class="ow">in</span>
+                                                                      <span class="n">missing_parameters</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">param_dict</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trying to set unsupported params in config. I stored them but they can cause problems -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                         <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">param_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_val</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_parameter</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_val</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseFactory.get_config"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_children"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_constraints"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">get_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">child_constraints</span> <span class="o">=</span> <span class="n">list_to_rooargset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">tmp_constraints</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">get_constraints</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">tmp_constraints</span><span class="p">:</span>
+                <span class="n">child_constraints</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgSet</span><span class="p">(</span><span class="n">child_constraints</span><span class="p">,</span> <span class="n">child</span><span class="o">.</span><span class="n">get_constraints</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">child_constraints</span></div>
+
+    <span class="k">def</span> <span class="nf">_find_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find object here or in children. Priority is here.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">child</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">child</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="BaseFactory.get"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get object from the ROOT workspace.</span>
+
+<span class="sd">        If the object is not there and `default` is given, it is added</span>
+<span class="sd">        and returned.</span>
+
+<span class="sd">        We look in children too.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            key (str): Object identifier.</span>
+<span class="sd">            default (any): The value to return if *key* is not found. Default is None.</span>
+<span class="sd">            recursive (bool): If True, the object is searched recursively</span>
+<span class="sd">            including its children with a stop-if-found rule.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            object: Object in the workspace.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: if `key` is not in the internal workspace and no `default`</span>
+<span class="sd">                is given.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">recursive</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_object</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span> <span class="k">if</span> <span class="n">obj</span> <span class="k">else</span> <span class="n">default</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get object from internal ROOT workspace.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            key (str): Object identifier.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            object: Object in the workspace.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: if `key` is not in the internal workspace.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BaseFactory.set"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">object_</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set an object in the internal ROOT workspace.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            key (str): Object identifier.</span>
+<span class="sd">            object_ (object): Object to store.</span>
+<span class="sd">            overwrite (bool, optional): Replace the existing object?</span>
+<span class="sd">                Defaults to False.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            object: The object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">overwrite</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">object_</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">object_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get object from internal ROOT workspace.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            key (str): Object identifier.</span>
+<span class="sd">            object_ (object): Object to store.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">object_</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if an object is in the internal ROOT workspace.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            key (str): Object identifier.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: Wether the object is in the workspace.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span>
+
+    <span class="k">def</span> <span class="nf">_create_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">parameter_value</span><span class="p">,</span> <span class="n">external_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>  <span class="c1"># It&#39;s a parameter with a constraint</span>
+            <span class="n">parameter_value</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">parameter_value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">,</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">TObject</span><span class="p">):</span>  <span class="c1"># It&#39;s an already built parameter</span>
+            <span class="k">if</span> <span class="n">parameter_value</span><span class="o">.</span><span class="n">getStringAttribute</span><span class="p">(</span><span class="s1">&#39;tempName&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span><span class="p">:</span>
+                <span class="n">parameter_value</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">))</span>
+                <span class="n">parameter_value</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">))</span>
+                <span class="n">parameter_value</span><span class="o">.</span><span class="n">setStringAttribute</span><span class="p">(</span><span class="s1">&#39;tempName&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_value</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span>
+            <span class="n">constraint</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># String specification</span>
+            <span class="n">parameter_value</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">configure_parameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">),</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">),</span>
+                                                              <span class="n">parameter_value</span><span class="p">,</span>
+                                                              <span class="n">external_vars</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">constraint</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">,</span>
+                        <span class="n">execute_and_return_self</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">,</span>
+                                                <span class="s1">&#39;setStringAttribute&#39;</span><span class="p">,</span>
+                                                <span class="s1">&#39;originalName&#39;</span><span class="p">,</span>
+                                                <span class="n">parameter_name</span><span class="p">))</span>
+
+<div class="viewcode-block" id="BaseFactory.get_parameter_name"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_parameter_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the name of the parameter according to the configuration.</span>
+
+<span class="sd">        Defaults to the same name if no parameter naming has been given.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param_id</span><span class="p">,</span> <span class="n">param_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseFactory.set_parameter_names"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.set_parameter_names">[docs]</a>    <span class="k">def</span> <span class="nf">set_parameter_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set parameter name conversion.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            name_dict (dict): (name -&gt; new name) pairs.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: True only if all requested renaming operations have been</span>
+<span class="sd">                performed.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            KeyError: If some of the parameter names are unknown.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">name_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="s1">&#39;Fraction&#39;</span><span class="p">])):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Bad renaming scheme!&quot;</span><span class="p">)</span>
+        <span class="n">all_good</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Requesting a parameter name change -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">name_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">base_name</span><span class="p">,</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="n">name_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">base_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">base_name</span><span class="p">]</span><span class="o">.</span><span class="n">getStringAttribute</span><span class="p">(</span><span class="s1">&#39;shared&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span><span class="p">:</span>
+                    <span class="n">all_good</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">continue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">base_name</span><span class="p">]</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">base_name</span><span class="p">]</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span><span class="p">[</span><span class="n">base_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+        <span class="k">return</span> <span class="n">all_good</span></div>
+
+    <span class="k">def</span> <span class="nf">_add_superscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">superscript</span><span class="p">,</span> <span class="n">old_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">subscript_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\^{(.*?)}&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">sub_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">match</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">superscript</span><span class="p">:</span> <span class="s1">&#39;^{{</span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">old_first</span> \
+            <span class="k">else</span> <span class="k">lambda</span> <span class="n">match</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">superscript</span><span class="p">:</span> <span class="s1">&#39;^{{</span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">subscript_match</span><span class="p">:</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\^{(.*?)}&#39;</span><span class="p">,</span>
+                              <span class="n">sub_func</span><span class="p">,</span>
+                              <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">^{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">superscript</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_name</span>
+
+<div class="viewcode-block" id="BaseFactory.rename_children_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.rename_children_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">rename_children_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">naming_scheme</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">naming_scheme</span><span class="p">:</span>
+            <span class="n">naming_scheme</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">viewitems</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">factory</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">naming_scheme</span><span class="p">):</span>
+            <span class="c1"># Recursively rename children</span>
+            <span class="n">factory</span><span class="o">.</span><span class="n">rename_children_parameters</span><span class="p">((</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">child_name</span><span class="p">),</span> <span class="n">child</span><span class="p">)</span>
+                                               <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="n">parameters_to_set</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">param_id</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">PARAMETERS</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="s1">&#39;Fraction&#39;</span><span class="p">]:</span>
+                <span class="n">parameters_to_set</span><span class="p">[</span><span class="n">param_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_superscript</span><span class="p">(</span><span class="n">factory</span><span class="o">.</span><span class="n">get_parameter_name</span><span class="p">(</span><span class="n">param_id</span><span class="p">),</span>
+                                                                    <span class="n">label</span><span class="p">)</span>
+            <span class="n">factory</span><span class="o">.</span><span class="n">set_parameter_names</span><span class="p">(</span><span class="n">parameters_to_set</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics PDF.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotImplementedError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_to_be_extended</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Requested non-extended PDF, &quot;</span>
+                             <span class="s2">&quot;but the factory needs to be extended&quot;</span><span class="p">)</span>
+        <span class="n">pdf_name</span> <span class="o">=</span> <span class="s1">&#39;pdf_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pdf_name</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">pdf_name</span> <span class="ow">in</span> <span class="bp">self</span> \
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">pdf_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unbound_pdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_unbound_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_unbound_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics PDF.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotImplementedError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_extended_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_extended_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_extended_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">yield_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an extended physics PDF.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `ROOT.RooExtendPdf`.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the yield had not been configured previously</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Configure yield</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_extended</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">yield_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Yield value not given -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_yield_var</span><span class="p">(</span><span class="n">yield_val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">yield_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Specified yield value but it&#39;s already defined. Ignoring.&quot;</span><span class="p">)</span>
+        <span class="c1"># Avoid name clashes</span>
+        <span class="n">pdf_name</span> <span class="o">=</span> <span class="s1">&#39;pdfext_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pdf_name</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">pdf_name</span> <span class="ow">in</span> <span class="bp">self</span> \
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">pdf_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unbound_extended_pdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_unbound_extended_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_unbound_extended_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_extended_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an extedned physics PDF.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseFactory.is_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.is_extended">[docs]</a>    <span class="k">def</span> <span class="nf">is_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Yield&#39;</span> <span class="ow">in</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="BaseFactory.has_to_be_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.has_to_be_extended">[docs]</a>    <span class="k">def</span> <span class="nf">has_to_be_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_observables"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_observables">[docs]</a>    <span class="k">def</span> <span class="nf">get_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics observables.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">obs_id</span><span class="p">)</span>
+                      <span class="k">if</span> <span class="n">obs_id</span> <span class="ow">in</span> <span class="bp">self</span>
+                      <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">obs_id</span><span class="p">,</span> <span class="n">execute_and_return_self</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">(</span><span class="n">obs_name</span><span class="p">,</span> <span class="n">obs_title</span><span class="p">,</span>
+                                                                                    <span class="n">obs_min</span><span class="p">,</span> <span class="n">obs_max</span><span class="p">,</span>
+                                                                                    <span class="n">unit</span><span class="p">),</span>
+                                                                    <span class="s1">&#39;setStringAttribute&#39;</span><span class="p">,</span>
+                                                                    <span class="s1">&#39;originalName&#39;</span><span class="p">,</span>
+                                                                    <span class="n">obs_id</span><span class="p">)))</span>
+                     <span class="k">for</span> <span class="n">obs_id</span><span class="p">,</span> <span class="p">(</span><span class="n">obs_name</span><span class="p">,</span> <span class="n">obs_title</span><span class="p">,</span> <span class="n">obs_min</span><span class="p">,</span> <span class="n">obs_max</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+                     <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="BaseFactory.set_observable"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.set_observable">[docs]</a>    <span class="k">def</span> <span class="nf">set_observable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            If `obs` is given, the other parameters are ignored.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">obs_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unknown observable -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obs_id</span><span class="p">))</span>
+        <span class="n">new_config</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span><span class="p">[</span><span class="n">obs_id</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">obs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">obs_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span>
+            <span class="n">new_config</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="n">obs</span><span class="o">.</span><span class="n">GetTitle</span><span class="p">(),</span> <span class="n">obs</span><span class="o">.</span><span class="n">getMin</span><span class="p">(),</span> <span class="n">obs</span><span class="o">.</span><span class="n">getMax</span><span class="p">(),</span> <span class="n">obs</span><span class="o">.</span><span class="n">getUnit</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">new_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+                <span class="k">if</span> <span class="n">obs_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">obs_id</span><span class="p">]</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+                <span class="n">new_config</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
+                <span class="k">if</span> <span class="n">obs_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">obs_id</span><span class="p">]</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">limits</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span> <span class="o">=</span> <span class="n">limits</span>
+                    <span class="n">range_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="n">range_name</span><span class="p">,</span> <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span> <span class="o">=</span> <span class="n">limits</span>
+                <span class="n">new_config</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_</span>
+                <span class="n">new_config</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_</span>
+                <span class="k">if</span> <span class="n">obs_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">obs_id</span><span class="p">]</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="n">range_name</span><span class="p">,</span> <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">units</span><span class="p">:</span>
+                <span class="n">new_config</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">units</span>
+                <span class="k">if</span> <span class="n">obs_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="n">obs_id</span><span class="p">]</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">OBSERVABLES</span><span class="p">[</span><span class="n">obs_id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_config</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_fit_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_fit_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF fit parameters.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotImplementedError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_gen_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_gen_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_gen_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all the necessary generation parameters.</span>
+
+<span class="sd">        Returns the fit parameters by default.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple[`ROOT.RooRealVar`]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_yield_var"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_yield_var">[docs]</a>    <span class="k">def</span> <span class="nf">get_yield_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseFactory.set_yield_var"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.set_yield_var">[docs]</a>    <span class="k">def</span> <span class="nf">set_yield_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yield_</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_category_var"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_category_var">[docs]</a>    <span class="k">def</span> <span class="nf">get_category_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span></div>
+
+<div class="viewcode-block" id="BaseFactory.get_category_vars"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.get_category_vars">[docs]</a>    <span class="k">def</span> <span class="nf">get_category_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="p">,</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooSuperCategory</span><span class="p">):</span>
+            <span class="n">cats</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">cat_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="o">.</span><span class="n">serverIterator</span><span class="p">()</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">cat</span> <span class="o">=</span> <span class="n">cat_iter</span><span class="o">.</span><span class="n">Next</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">cat</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">cat</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+                    <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="n">cat</span><span class="p">)</span>
+                <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cats</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="p">,)</span></div>
+
+<div class="viewcode-block" id="BaseFactory.is_simultaneous"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.is_simultaneous">[docs]</a>    <span class="k">def</span> <span class="nf">is_simultaneous</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+    <span class="c1"># pylint: disable=R0201</span>
+<div class="viewcode-block" id="BaseFactory.transform_dataset"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.BaseFactory.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transform dataset according to the factory configuration.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            It&#39;s recommended to pass a copy since the dataset is modified</span>
+<span class="sd">            in place.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            dataset (pandas.DataFrame): Data frame to fold.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `pandas.DataFrame`: Input dataset with the transformation applied.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">dataset</span></div></div>
+
+
+<span class="c1"># Single model Factory</span>
+<div class="viewcode-block" id="PhysicsFactory"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory">[docs]</a><span class="k">class</span> <span class="nc">PhysicsFactory</span><span class="p">(</span><span class="n">BaseFactory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Physics analysis factory.</span>
+
+<span class="sd">    Implements the basic skeleton for single models.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PhysicsFactory</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+        <span class="c1"># Configure yields</span>
+        <span class="k">if</span> <span class="s1">&#39;yield&#39;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_yield_var</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;yield&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="PhysicsFactory.get_unbound_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory.get_unbound_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics PDF.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotImplementedError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PhysicsFactory.get_unbound_extended_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory.get_unbound_extended_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_extended_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an extended physics PDF.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `ROOT.RooExtendPdf`.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the yield had not been configured previously</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooExtendPdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                                 <span class="n">title</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">get_pdf</span><span class="p">(</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">{noext}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">{noext}</span><span class="s1">&#39;</span><span class="p">),</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="PhysicsFactory.has_to_be_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory.has_to_be_extended">[docs]</a>    <span class="k">def</span> <span class="nf">has_to_be_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="PhysicsFactory.get_fit_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory.get_fit_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF fit parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple[`ROOT.RooRealVar`]: Parameters as defined by the `PARAMETERS` attribute.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARAMETERS</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="n">extended</span> <span class="ow">and</span> <span class="s1">&#39;Yield&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PhysicsFactory.get_gen_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory.get_gen_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_gen_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all the necessary generation parameters.</span>
+
+<span class="sd">        Returns the fit parameters by default.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple[`ROOT.RooRealVar`]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fit_parameters</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PhysicsFactory.set_yield_var"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.PhysicsFactory.set_yield_var">[docs]</a>    <span class="k">def</span> <span class="nf">set_yield_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yield_</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;Yield&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_parameter</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="n">yield_</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yield_</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="n">yield_</span> <span class="o">=</span> <span class="n">yield_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">],</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yield_</span><span class="p">,</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setVal</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">getVal</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">GetName</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">GetTitle</span><span class="p">())</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yield_</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setVal</span><span class="p">(</span><span class="n">yield_</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Trying to set a yield that cannot be overriden&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Product Physics Factory</span>
+<div class="viewcode-block" id="ProductPhysicsFactory"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory">[docs]</a><span class="k">class</span> <span class="nc">ProductPhysicsFactory</span><span class="p">(</span><span class="n">BaseFactory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;RooProdPdf of different observables.&quot;&quot;&quot;</span>
+
+    <span class="n">PARAMETERS</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># No extra parameters here</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factories</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize.</span>
+
+<span class="sd">        In this case, the children are a map of observable -&gt; Factory.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ProductPhysicsFactory</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">({},</span> <span class="n">parameters</span><span class="p">)</span>
+        <span class="c1"># Set children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">factories</span>
+        <span class="c1"># Configure yields</span>
+        <span class="k">if</span> <span class="s1">&#39;yield&#39;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_yield_var</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;yield&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.get_unbound_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.get_unbound_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get unbound PDF.&quot;&quot;&quot;</span>
+        <span class="n">pdfs</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">observable</span><span class="p">,</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_superscript</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">observable</span><span class="p">)</span>
+            <span class="n">pdfs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">factory</span><span class="o">.</span><span class="n">get_pdf</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooProdPdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">pdfs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.get_unbound_extended_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.get_unbound_extended_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_extended_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">yield_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an extended physics PDF.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `ROOT.RooExtendPdf`.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: If the yield had not been configured previously</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Return the extended PDF</span>
+        <span class="k">return</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooExtendPdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                                 <span class="n">title</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">get_pdf</span><span class="p">(</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">{noext}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">{noext}</span><span class="s1">&#39;</span><span class="p">),</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.has_to_be_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.has_to_be_extended">[docs]</a>    <span class="k">def</span> <span class="nf">has_to_be_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.get_observables"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.get_observables">[docs]</a>    <span class="k">def</span> <span class="nf">get_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics observables.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Observables in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">obs</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_observables</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.set_observable"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.set_observable">[docs]</a>    <span class="k">def</span> <span class="nf">set_observable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">has_changed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">set_observable</span><span class="p">(</span><span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+                <span class="n">has_changed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_changed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unknown observable -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obs_id</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.get_gen_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.get_gen_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_gen_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF generation parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Generation parameters in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_gen_parameters</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.get_fit_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.get_fit_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF fit parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Fit parameters in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_fit_parameters</span><span class="p">(</span><span class="n">extended</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.set_yield_var"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.set_yield_var">[docs]</a>    <span class="k">def</span> <span class="nf">set_yield_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yield_</span><span class="p">):</span>
+        <span class="n">constraint</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yield_</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">yield_</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">yield_</span>
+        <span class="k">if</span> <span class="s1">&#39;Yield&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yield_</span>
+            <span class="k">if</span> <span class="n">constraint</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">],</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setVal</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">getVal</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">GetName</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">GetTitle</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Trying to set a yield that cannot be overriden&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProductPhysicsFactory.transform_dataset"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.ProductPhysicsFactory.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transform dataset according to the factory configuration.</span>
+
+<span class="sd">        The transformations of the children are applied in sequence.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            dataset (pandas.DataFrame): Data frame to fold.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `pandas.DataFrame`: Input dataset with the transformation applied.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">transform_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataset</span></div></div>
+
+
+<span class="c1"># Sum physics factory</span>
+<div class="viewcode-block" id="SumPhysicsFactory"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory">[docs]</a><span class="k">class</span> <span class="nc">SumPhysicsFactory</span><span class="p">(</span><span class="n">BaseFactory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;RooProdPdf of different observables.&quot;&quot;&quot;</span>
+
+    <span class="n">PARAMETERS</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># No extra parameters here</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factories</span><span class="p">,</span> <span class="n">children_yields</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize.</span>
+
+<span class="sd">        In this case, the children are a map of PDF name -&gt; Factory.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: When the observables of the factories are incompatible.</span>
+<span class="sd">            KeyError: On configuration error.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check observable compatibility</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="nb">tuple</span><span class="p">([</span><span class="n">obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span> <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_observables</span><span class="p">()])</span>
+                <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="n">factories</span><span class="o">.</span><span class="n">values</span><span class="p">()})</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Incompatible observables&quot;</span><span class="p">)</span>
+        <span class="c1"># Check children yields type</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">children_yields</span><span class="p">,</span> <span class="n">OrderedDict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;children_yields must be an ordered dictionary&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SumPhysicsFactory</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">({},</span> <span class="n">parameters</span><span class="p">)</span>
+        <span class="c1"># Set children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">factories</span>
+        <span class="c1"># Set observables</span>
+        <span class="n">observables</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="o">.</span><span class="n">getStringAttribute</span><span class="p">(</span><span class="s1">&#39;originalName&#39;</span><span class="p">):</span> <span class="n">obs</span>
+                       <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_observables</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">obs_name</span><span class="p">,</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">observables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">set_observable</span><span class="p">(</span><span class="n">obs_name</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">)</span>
+        <span class="c1"># Set yields</span>
+        <span class="n">yield_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">and</span> <span class="s1">&#39;yield&#39;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="n">yield_</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;yield&#39;</span><span class="p">)</span>
+        <span class="n">yield_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">child_yield</span> <span class="k">for</span> <span class="n">child_yield</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">children_yields</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">factories</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">children_yields</span><span class="p">):</span>  <span class="c1"># Extended</span>
+            <span class="k">if</span> <span class="n">yield_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Specified yield on a sum of RooExtendPdf&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooAddition</span><span class="p">(</span><span class="s2">&quot;Yield&quot;</span><span class="p">,</span> <span class="s2">&quot;Yield&quot;</span><span class="p">,</span> <span class="n">list_to_rooarglist</span><span class="p">(</span><span class="n">yield_values</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">constraint</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">children_yields</span><span class="o">.</span><span class="n">values</span><span class="p">()})</span>
+            <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">set_yield_var</span><span class="p">(</span><span class="n">children_yields</span><span class="p">[</span><span class="n">child_name</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">factories</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">children_yields</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Check order is correct</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">children_yields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;The last child should not be in `children_keys` to ensure consistency.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong PDF ordering&quot;</span><span class="p">)</span>
+            <span class="c1"># Store the fractions and propagate</span>
+            <span class="k">for</span> <span class="n">yield_val</span> <span class="ow">in</span> <span class="n">yield_values</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">yield_val</span><span class="o">.</span><span class="n">getVal</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Specified a fraction larger than 1 -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">yield_val</span><span class="o">.</span><span class="n">GetName</span><span class="p">()))</span>
+                <span class="c1"># Not very good heuristics</span>
+                <span class="k">if</span> <span class="n">yield_val</span><span class="o">.</span><span class="n">getStringAttribute</span><span class="p">(</span><span class="s1">&#39;shared&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;true&#39;</span><span class="p">:</span>
+                    <span class="n">yield_val</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="n">yield_val</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="s1">&#39;Fraction&#39;</span><span class="p">))</span>
+                    <span class="n">yield_val</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">yield_val</span><span class="o">.</span><span class="n">GetTitle</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="s1">&#39;Fraction&#39;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Fractions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yield_values</span>
+            <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">child_name</span> <span class="ow">in</span> <span class="n">children_yields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">child_yield</span><span class="p">,</span> <span class="n">child_constraint</span> <span class="o">=</span> <span class="n">children_yields</span><span class="p">[</span><span class="n">child_name</span><span class="p">]</span>
+                    <span class="n">child</span><span class="p">[</span><span class="s1">&#39;Fraction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">child_yield</span>
+                    <span class="n">child</span><span class="o">.</span><span class="n">_constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child_constraint</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Need no rename because RooFracRemainder needs a RooArgSet and there will be clashes</span>
+                    <span class="c1"># between vars named &#39;Fraction&#39;. It&#39;s stupid, since the name is not used after.</span>
+                    <span class="k">for</span> <span class="n">yield_num</span><span class="p">,</span> <span class="n">yield_val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">yield_values</span><span class="p">):</span>
+                        <span class="n">yield_val</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">yield_val</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="n">yield_num</span><span class="p">))</span>
+                    <span class="n">child</span><span class="p">[</span><span class="s1">&#39;Fraction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooFracRemainder</span><span class="p">(</span><span class="s2">&quot;Fraction&quot;</span><span class="p">,</span> <span class="s2">&quot;Fraction&quot;</span><span class="p">,</span> <span class="n">list_to_rooargset</span><span class="p">(</span><span class="n">yield_values</span><span class="p">))</span>
+                    <span class="n">child</span><span class="o">.</span><span class="n">_constraints</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">constraint</span>
+                                               <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">children_yields</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                                               <span class="k">if</span> <span class="n">constraint</span><span class="p">})</span>
+                    <span class="c1"># Put names back where they belong</span>
+                    <span class="k">for</span> <span class="n">yield_num</span><span class="p">,</span> <span class="n">yield_val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">yield_values</span><span class="p">):</span>
+                        <span class="n">yield_val</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">yield_val</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="c1"># Final rename</span>
+            <span class="k">if</span> <span class="n">yield_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_yield_var</span><span class="p">((</span><span class="n">yield_</span><span class="p">,</span> <span class="n">constraint</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Badly specified yields/fractions&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SumPhysicsFactory.get_unbound_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.get_unbound_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;Fractions&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Requested non-extended PDF on a RooAddPdf made of ExtendedPdf. &quot;</span>
+                           <span class="s2">&quot;Returning an extended PDF&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_extended_pdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="n">pdfs</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_superscript</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">child_name</span><span class="p">)</span>
+            <span class="n">pdfs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get_pdf</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooAddPdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span>
+                              <span class="n">pdfs</span><span class="p">,</span>
+                              <span class="n">list_to_rooarglist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Fractions&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.get_unbound_extended_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.get_unbound_extended_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_extended_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;Fractions&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="c1"># Create non-extended PDF and extend</span>
+            <span class="k">return</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooExtendPdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                                     <span class="n">title</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">get_pdf</span><span class="p">(</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">{noext}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">{noext}</span><span class="s1">&#39;</span><span class="p">),</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pdfs</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgList</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_superscript</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">child_name</span><span class="p">)</span>
+                <span class="n">pdfs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get_extended_pdf</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooAddPdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">pdfs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.has_to_be_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.has_to_be_extended">[docs]</a>    <span class="k">def</span> <span class="nf">has_to_be_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Fractions&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.get_observables"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.get_observables">[docs]</a>    <span class="k">def</span> <span class="nf">get_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics observables.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Observables in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_observables</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.set_observable"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.set_observable">[docs]</a>    <span class="k">def</span> <span class="nf">set_observable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">child</span><span class="o">.</span><span class="n">set_observable</span><span class="p">(</span><span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.get_gen_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.get_gen_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_gen_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF generation parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Generation parameters in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_gen_parameters</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.get_fit_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.get_fit_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF fit parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Fit parameters in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_fit_parameters</span><span class="p">(</span><span class="n">extended</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.set_yield_var"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.set_yield_var">[docs]</a>    <span class="k">def</span> <span class="nf">set_yield_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yield_</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;Fractions&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Trying to set the yield of an Extended RooAddPdf. Ignoring.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;Yield&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+            <span class="n">yield_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_parameter</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="n">yield_</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;Yield&#39;</span> <span class="ow">in</span> <span class="n">child</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsistent state: trying to set the yield of an already configured Factory.&quot;</span><span class="p">)</span>
+                <span class="c1"># Again, not very good heuristics</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">set_yield_var</span><span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">RooProduct</span><span class="p">(</span><span class="n">child</span><span class="p">[</span><span class="s1">&#39;Fraction&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Fraction&#39;</span><span class="p">,</span> <span class="s1">&#39;Yield&#39;</span><span class="p">),</span>
+                                                    <span class="n">child</span><span class="p">[</span><span class="s1">&#39;Fraction&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">GetTitle</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Fraction&#39;</span><span class="p">,</span> <span class="s1">&#39;Yield&#39;</span><span class="p">),</span>
+                                                    <span class="n">list_to_rooarglist</span><span class="p">([</span><span class="n">yield_</span><span class="p">,</span> <span class="n">child</span><span class="p">[</span><span class="s1">&#39;Fraction&#39;</span><span class="p">]])))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">],</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yield_</span><span class="p">,</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setVal</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">getVal</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">GetName</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">yield_</span><span class="o">.</span><span class="n">GetTitle</span><span class="p">())</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yield_</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setVal</span><span class="p">(</span><span class="n">yield_</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Trying to set a yield that cannot be overriden&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SumPhysicsFactory.transform_dataset"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SumPhysicsFactory.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transform dataset according to the factory configuration.</span>
+
+<span class="sd">        Since all PDFs of the addition are supposed to need the same transformation,</span>
+<span class="sd">        the dataset is transformed according to the first one</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            dataset (pandas.DataFrame): Data frame to fold.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `pandas.DataFrame`: Input dataset with the transformation applied.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">transform_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Sum physics factory</span>
+<div class="viewcode-block" id="SimultaneousPhysicsFactory"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory">[docs]</a><span class="k">class</span> <span class="nc">SimultaneousPhysicsFactory</span><span class="p">(</span><span class="n">BaseFactory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Simultaneous fit factory.&quot;&quot;&quot;</span>
+
+    <span class="n">PARAMETERS</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factories</span><span class="p">,</span> <span class="n">category_var</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize.</span>
+
+<span class="sd">        The category var has the types already defined. `factories` keys are tuples</span>
+<span class="sd">        in the categories (or a string if there&#39;s only one)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check observable compatibility</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SimultaneousPhysicsFactory</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">({},</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_category</span> <span class="o">=</span> <span class="n">category_var</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">label</span><span class="p">):</span> <span class="n">factory</span>
+                          <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">factory</span> <span class="ow">in</span> <span class="n">factories</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.get_unbound_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.get_unbound_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="n">sim_pdf</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooSimultaneous</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_superscript</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">category</span><span class="p">)</span>
+            <span class="n">sim_pdf</span><span class="o">.</span><span class="n">addPdf</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get_pdf</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">),</span>
+                           <span class="s1">&#39;{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">category</span><span class="p">)</span>
+                           <span class="k">if</span> <span class="n">category</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                           <span class="k">else</span> <span class="n">category</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sim_pdf</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.get_unbound_extended_pdf"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.get_unbound_extended_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">get_unbound_extended_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="n">sim_pdf</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooSimultaneous</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="p">)</span>
+        <span class="n">yields</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_superscript</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">category</span><span class="p">)</span>
+            <span class="n">sim_pdf</span><span class="o">.</span><span class="n">addPdf</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get_extended_pdf</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">),</span>
+                           <span class="s1">&#39;{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">category</span><span class="p">)</span>
+                           <span class="k">if</span> <span class="n">category</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                           <span class="k">else</span> <span class="n">category</span><span class="p">)</span>
+            <span class="n">yields</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get_yield_var</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">[</span><span class="s1">&#39;Yield&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooAddition</span><span class="p">(</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="s1">&#39;Yield&#39;</span><span class="p">,</span> <span class="n">yields</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sim_pdf</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.is_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.is_extended">[docs]</a>    <span class="k">def</span> <span class="nf">is_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">children_are_extended</span> <span class="o">=</span> <span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">is_extended</span><span class="p">()</span>
+                                 <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">children_are_extended</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">children_are_extended</span><span class="p">):</span>
+            <span class="c1"># Mix of children, a bit inconsistent</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsistent children state&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.has_to_be_extended"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.has_to_be_extended">[docs]</a>    <span class="k">def</span> <span class="nf">has_to_be_extended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">has_to_be_extended</span><span class="p">()</span>
+                   <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.get_observables"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.get_observables">[docs]</a>    <span class="k">def</span> <span class="nf">get_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the physics observables.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Observables in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">obs_list</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">child_obs</span> <span class="ow">in</span> <span class="n">child</span><span class="o">.</span><span class="n">get_observables</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">child_obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objects</span><span class="p">:</span>
+                    <span class="n">obs_list</span><span class="p">[</span><span class="n">child_obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">()]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">child_obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">(),</span> <span class="n">child_obs</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">child_obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obs_list</span><span class="p">:</span>
+                    <span class="n">obs_list</span><span class="p">[</span><span class="n">child_obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">()]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">child_obs</span><span class="o">.</span><span class="n">GetName</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">obs_list</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.set_observable"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.set_observable">[docs]</a>    <span class="k">def</span> <span class="nf">set_observable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">has_changed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">set_observable</span><span class="p">(</span><span class="n">obs_id</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+                <span class="n">has_changed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_changed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unknown observable -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obs_id</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.get_gen_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.get_gen_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_gen_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF generation parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Generation parameters in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_gen_parameters</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.get_fit_parameters"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.get_fit_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the PDF fit parameters.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Fit parameters in factory order.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            NotInitializedError: If `__call__` has not been called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">param</span>
+                     <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_fit_parameters</span><span class="p">(</span><span class="n">extended</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SimultaneousPhysicsFactory.transform_dataset"><a class="viewcode-back" href="../../../analysis.physics.factory.html#analysis.physics.factory.SimultaneousPhysicsFactory.transform_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">transform_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transform dataset according to the factory configuration.</span>
+
+<span class="sd">        The category nane is used as column name to determine each of the</span>
+<span class="sd">        samples to transform.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            For the category, a column named after the category variable is searched</span>
+<span class="sd">            for. If not found, the &#39;category&#39; column is used.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            dataset (pandas.DataFrame): Data frame to fold.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            `pandas.DataFrame`: Input dataset with the transformation applied.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            ValueError: When the dataset contains categories that have not been configured</span>
+<span class="sd">                in the class.</span>
+<span class="sd">            KeyError: If the category is not found in the dataset.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cat_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cat_var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">cat_var</span> <span class="o">=</span> <span class="s1">&#39;category&#39;</span>
+            <span class="k">if</span> <span class="n">cat_var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Category var not found in dataset -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="o">.</span><span class="n">GetName</span><span class="p">()))</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">cat_var</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="c1"># A simple check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dataset contains categories not defined in the SimultaneousPhysicsFactory&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dataset</span><span class="p">[</span><span class="n">cat_var</span><span class="p">]</span> <span class="o">==</span> <span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">category</span><span class="p">]</span> \
+                <span class="o">.</span><span class="n">transform_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="n">dataset</span><span class="p">[</span><span class="n">cat_var</span><span class="p">]</span> <span class="o">==</span> <span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">dataset</span></div></div>
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

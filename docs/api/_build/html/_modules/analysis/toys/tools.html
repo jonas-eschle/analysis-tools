@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.toys.tools &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis" href="../../analysis.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+      <li>analysis.toys.tools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.toys.tools</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   tools.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   14.03.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Common tools for managing toys.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">contextlib2</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.paths</span> <span class="k">import</span> <span class="n">get_toy_fit_path</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.toys.tools&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load_toy_fits"><a class="viewcode-back" href="../../../analysis.toys.tools.html#analysis.toys.tools.load_toy_fits">[docs]</a><span class="k">def</span> <span class="nf">load_toy_fits</span><span class="p">(</span><span class="o">*</span><span class="n">toy_list</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load toy fit results.</span>
+
+<span class="sd">    If several files are given, all the tables are merged.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The HDFStores are opened and closed. A copy of the data frames</span>
+<span class="sd">        is returned.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        *toy_list (list): List of toy names to load.</span>
+<span class="sd">        **kwargs (dict): Extra options:</span>
+<span class="sd">            + `index` (bool, optional): Index the data frame? Defaults</span>
+<span class="sd">            to `True`.</span>
+<span class="sd">            + `fail_on_incompatible` (bool, optional): Fail when incompatible</span>
+<span class="sd">            data frames are found? Defaults to `True`.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        `pandas.DataFrame`: Merged data frame.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        OSError: If some of the toys do not exist.</span>
+<span class="sd">        KeyError: If the data frames from the different stores are not compatible</span>
+<span class="sd">            and `fail_on_incompatible` is set.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check that toys exist</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">get_toy_fit_path</span><span class="p">(</span><span class="n">toy_name</span><span class="p">))</span> <span class="k">for</span> <span class="n">toy_name</span> <span class="ow">in</span> <span class="n">toy_list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot load all toys&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">contextlib2</span><span class="o">.</span><span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">toy_stack</span><span class="p">:</span>
+        <span class="n">fit_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">toy_stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">get_toy_fit_path</span><span class="p">(</span><span class="n">toy_name</span><span class="p">)))[</span><span class="s1">&#39;fit_results&#39;</span><span class="p">]</span>
+                       <span class="k">for</span> <span class="n">toy_name</span> <span class="ow">in</span> <span class="n">toy_list</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">fit_result</span><span class="o">.</span><span class="n">columns</span> <span class="o">==</span> <span class="n">fit_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">fit_result</span> <span class="ow">in</span> <span class="n">fit_results</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fail_on_incompatible&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Incompatible toy fits!&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Found incompatible data frames&#39;</span><span class="p">)</span>
+        <span class="n">merged_result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">fit_results</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">merged_result</span><span class="o">.</span><span class="n">columns</span>
+                   <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;model_name&#39;</span><span class="p">,</span> <span class="s1">&#39;fit_strategy&#39;</span><span class="p">],</span>
+                           <span class="s1">&#39;_</span><span class="si">{gen}</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">col</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;N^&#39;</span><span class="p">),</span>
+                           <span class="s1">&#39;_</span><span class="si">{nominal}</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">))]</span>
+        <span class="n">merged_result</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">merged_result</span></div>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

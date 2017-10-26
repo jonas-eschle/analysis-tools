@@ -1,0 +1,649 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.utils.config &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis" href="../../analysis.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+      <li>analysis.utils.config</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.utils.config</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   config.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   13.01.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Configuration files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">string</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">yamlordereddictloader</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.utils.config&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load_config"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.load_config">[docs]</a><span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="o">*</span><span class="n">file_names</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load configuration from YAML files.</span>
+
+<span class="sd">    If more than one is specified, they are loaded in the order given</span>
+<span class="sd">    in the function call. Therefore, the latter will override the former</span>
+<span class="sd">    if key overlap exists.</span>
+<span class="sd">    Currently supported options are:</span>
+<span class="sd">        - `root` (str), which determines the node that is considered as root.</span>
+<span class="sd">        - `validate` (list), which gets a list of keys to check. If one of these</span>
+<span class="sd">            keys is not present, `config.ConfigError` is raised.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        *file_names (list[str]): Files to load.</span>
+<span class="sd">        **options (dict): Configuration options. See above for supported</span>
+<span class="sd">            options.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        dict: Configuration.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        OSError: If some file does not exist.</span>
+<span class="sd">        ConfigError: If key loading or validation fail.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unfolded_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot find config file -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">input_obj</span><span class="p">:</span>
+                <span class="n">unfolded_data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">unfold_config</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span>
+                                                             <span class="n">Loader</span><span class="o">=</span><span class="n">yamlordereddictloader</span><span class="o">.</span><span class="n">Loader</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">ParserError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">fold_config</span><span class="p">(</span><span class="n">unfolded_data</span><span class="p">,</span> <span class="n">OrderedDict</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Loaded configuration -&gt; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;root&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">data_root</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;root&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">data_root</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s2">&quot;Root node not found in dataset -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">data_root</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data_root</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;validate&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">missing_keys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[:</span><span class="n">entry_num</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+                     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">unfolded_data</span>
+                     <span class="k">for</span> <span class="n">entry_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)))]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Validating against the following keys -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                     <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_keys</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;validate&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_keys</span><span class="p">:</span>
+                <span class="n">missing_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">missing_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s2">&quot;Failed validation: </span><span class="si">{}</span><span class="s2"> are missing&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_keys</span><span class="p">)),</span>
+                              <span class="n">missing_keys</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="write_config"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.write_config">[docs]</a><span class="k">def</span> <span class="nf">write_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write configuration to file.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        config (dict): Configuration file.</span>
+<span class="sd">        file_name (str): Output file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">represent_ordereddict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">flow_style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump an OrderedDict in YAML in the proper order.</span>
+
+<span class="sd">        Modified from `yaml.representer.represent_mapping`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="sa">u</span><span class="s1">&#39;tag:yaml.org,2002:map&#39;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">representer</span><span class="o">.</span><span class="n">MappingNode</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">flow_style</span><span class="o">=</span><span class="n">flow_style</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alias_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">represented_objects</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">alias_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="n">best_style</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">item_key</span><span class="p">,</span> <span class="n">item_value</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
+            <span class="n">node_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">represent_data</span><span class="p">(</span><span class="n">item_key</span><span class="p">)</span>
+            <span class="n">node_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">represent_data</span><span class="p">(</span><span class="n">item_value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">node_key</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">representer</span><span class="o">.</span><span class="n">ScalarNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node_key</span><span class="o">.</span><span class="n">style</span><span class="p">):</span>
+                <span class="n">best_style</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">node_value</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">representer</span><span class="o">.</span><span class="n">ScalarNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node_value</span><span class="o">.</span><span class="n">style</span><span class="p">):</span>
+                <span class="n">best_style</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">node_key</span><span class="p">,</span> <span class="n">node_value</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">flow_style</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_flow_style</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">flow_style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_flow_style</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">flow_style</span> <span class="o">=</span> <span class="n">best_style</span>
+        <span class="k">return</span> <span class="n">node</span>
+
+    <span class="c1"># Configure Dumper</span>
+    <span class="n">yaml</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">,</span> <span class="n">represent_ordereddict</span><span class="p">)</span>
+    <span class="c1"># Dump</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file</span><span class="p">:</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config</span><span class="p">,</span>
+                  <span class="n">output_file</span><span class="p">,</span>
+                  <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">allow_unicode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compare_configs"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.compare_configs">[docs]</a><span class="k">def</span> <span class="nf">compare_configs</span><span class="p">(</span><span class="n">config1</span><span class="p">,</span> <span class="n">config2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compare two configuration files.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        config1 (dict): First configuration.</span>
+<span class="sd">        config2 (dict): Second configuration</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        set: Keys that are different between the two configs,</span>
+<span class="sd">            taking into account the values and the fact they are</span>
+<span class="sd">            present in only one or the other.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">_</span>
+            <span class="ow">in</span> <span class="nb">set</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">unfold_config</span><span class="p">(</span><span class="n">config1</span><span class="p">)),</span>
+                                        <span class="nb">set</span><span class="p">(</span><span class="n">unfold_config</span><span class="p">(</span><span class="n">config2</span><span class="p">)))}</span></div>
+
+
+<span class="c1"># Helpers</span>
+<div class="viewcode-block" id="unfold_config"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.unfold_config">[docs]</a><span class="k">def</span> <span class="nf">unfold_config</span><span class="p">(</span><span class="n">dictionary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a dictionary to a list of key, value pairs.</span>
+
+<span class="sd">    Unfolding is done a la viewitems, but recursively.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        dictionary (dict): Dictionary to update.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        set: Unfolded dictionary.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">viewitems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">sub_key</span><span class="p">,</span> <span class="n">sub_val</span> <span class="ow">in</span> <span class="n">unfold_config</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                <span class="c1"># convert non-hashable values to hashable (approximately)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub_val</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">sub_val</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sub_val</span><span class="p">)</span>
+                <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">sub_key</span><span class="p">),</span> <span class="n">sub_val</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">output_list</span></div>
+
+
+<div class="viewcode-block" id="fold_config"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.fold_config">[docs]</a><span class="k">def</span> <span class="nf">fold_config</span><span class="p">(</span><span class="n">unfolded_data</span><span class="p">,</span> <span class="n">dict_class</span><span class="o">=</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert an unfolded dictionary (a la viewitems) back to a dictionary.</span>
+
+<span class="sd">    Tuples are converted to lists. This reflects the inverted behaviour</span>
+<span class="sd">    to :py:func:`unfold_config`.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        If a key is specified more than once, the latest value is taken.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        unfolded_data (iterable): Data to fold</span>
+<span class="sd">        dict_class (class): Dictionary-like class used to fold the configuration.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        dict: Folded configuration.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_dict</span> <span class="o">=</span> <span class="n">dict_class</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">unfolded_data</span><span class="p">:</span>
+        <span class="c1"># convert tuples back to list</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">current_level</span> <span class="o">=</span> <span class="n">output_dict</span>
+        <span class="k">for</span> <span class="n">sub_key</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">previous_level</span> <span class="o">=</span> <span class="n">current_level</span>
+            <span class="k">if</span> <span class="n">sub_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_level</span><span class="p">:</span>
+                <span class="n">current_level</span><span class="p">[</span><span class="n">sub_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_class</span><span class="p">()</span>
+            <span class="n">current_level</span> <span class="o">=</span> <span class="n">current_level</span><span class="p">[</span><span class="n">sub_key</span><span class="p">]</span>
+        <span class="c1"># pylint: disable=W0631</span>
+        <span class="n">previous_level</span><span class="p">[</span><span class="n">sub_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">output_dict</span></div>
+
+
+<span class="c1"># Interpretation</span>
+<div class="viewcode-block" id="configure_parameter"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.configure_parameter">[docs]</a><span class="k">def</span> <span class="nf">configure_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">parameter_config</span><span class="p">,</span> <span class="n">external_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Configure a parameter according to a configuration string.</span>
+
+<span class="sd">    The configuration string consists in two parts. The first one</span>
+<span class="sd">    consists in a letter that indicates the &quot;action&quot; to apply on the parameter,</span>
+<span class="sd">    followed by the configuration of that action. There are several possibilities:</span>
+<span class="sd">        * &#39;VAR&#39; (or nothing) is used for parameters without constraints. If one configuration</span>
+<span class="sd">        element is given, the parameter doesn&#39;t have limits. If three are given, the last two</span>
+<span class="sd">        specify the low and upper limits. Parameter is set to not constant.</span>
+<span class="sd">        * &#39;CONST&#39; indicates a constant parameter. The following argument indicates</span>
+<span class="sd">        at which value to fix it.</span>
+<span class="sd">        * &#39;GAUSS&#39; is used for a Gaussian-constrained parameter. The arguments of that</span>
+<span class="sd">        Gaussian, ie, its mean and sigma, have to be given after the letter.</span>
+<span class="sd">        * &#39;SHIFT&#39; is used to perform a constant shift to a variable. The first value must be a</span>
+<span class="sd">            shared variable, the second can be a number or a shared variable.</span>
+<span class="sd">        * &#39;SCALE&#39; is used to perform a constant scaling to a variable. The first value must be a</span>
+<span class="sd">            shared variable, the second can be a number or a shared variable.</span>
+<span class="sd">        * &#39;BLIND&#39; covers the actual parameter by altering its value in an unknown way. The first</span>
+<span class="sd">          value must be a shared variable whereas the following are a string and two floats.</span>
+<span class="sd">          They represent a randomization string, a mean and a width (both used for the</span>
+<span class="sd">          randomization of the value as well).</span>
+
+<span class="sd">    In addition, wherever a variable value is expected one can use a &#39;fit_name:var_name&#39; specification to</span>
+<span class="sd">    load the value from a fit result. In the case of &#39;GAUSS&#39;, if no sigma is given, the Hesse error</span>
+<span class="sd">    of the fit is taken as width of the Gaussian.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name (str): Name of the parameter.</span>
+<span class="sd">        title (str): Title of the parameter.</span>
+<span class="sd">        parameter_config (str): Parameter configuration.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        tuple (ROOT.RooRealVar, ROOT.RooGaussian): Parameter and external constraint</span>
+<span class="sd">            to apply to it (if requested by the configuration). If no constraint has been</span>
+<span class="sd">            required, None is returned.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        KeyError: If the specified action is unknown.</span>
+<span class="sd">        ValueError: If the action is badly configured.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">ROOT</span>
+
+    <span class="k">if</span> <span class="n">external_vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">external_vars</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">constraint</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Do something with it</span>
+    <span class="n">action_params</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parameter_config</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;VAR&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">action_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isalpha</span><span class="p">()</span> <span class="k">else</span> <span class="n">action_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;VAR&#39;</span><span class="p">,</span> <span class="s1">&#39;CONST&#39;</span><span class="p">,</span> <span class="s1">&#39;GAUSS&#39;</span><span class="p">):</span>
+        <span class="c1"># Take numerical value or load from file</span>
+        <span class="n">value_error</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">action_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># We want to load a fit result</span>
+            <span class="kn">from</span> <span class="nn">analysis.fit.result</span> <span class="k">import</span> <span class="n">FitResult</span>
+            <span class="n">fit_name</span><span class="p">,</span> <span class="n">var_name</span> <span class="o">=</span> <span class="n">action_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">FitResult</span><span class="p">()</span><span class="o">.</span><span class="n">from_yaml_file</span><span class="p">(</span><span class="n">fit_name</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">value_error</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_fit_parameter</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_const_parameter</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">action_params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;error, action params[0]&quot;</span><span class="p">,</span> <span class="n">action_params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">parameter</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooRealVar</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;VAR&#39;</span><span class="p">:</span>  <span class="c1"># Free parameter, we specify its initial value</span>
+            <span class="n">parameter</span><span class="o">.</span><span class="n">setConstant</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_params</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">=</span> <span class="n">action_params</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrongly specified var (need to give 1 or 3 arguments) &quot;</span>
+                                     <span class="s2">&quot;-&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action_params</span><span class="p">))</span>
+                <span class="n">parameter</span><span class="o">.</span><span class="n">setMin</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">min_val</span><span class="p">))</span>
+                <span class="n">parameter</span><span class="o">.</span><span class="n">setMax</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">max_val</span><span class="p">))</span>
+                <span class="n">parameter</span><span class="o">.</span><span class="n">setConstant</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;CONST&#39;</span><span class="p">:</span>  <span class="c1"># Fixed parameter</span>
+            <span class="n">parameter</span><span class="o">.</span><span class="n">setConstant</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;GAUSS&#39;</span><span class="p">:</span>  <span class="c1"># Gaussian constraint</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">value_error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">value_error</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">action_params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrongly specified Gaussian constraint -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action_params</span><span class="p">))</span>
+            <span class="n">constraint</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooGaussian</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;Constraint&#39;</span><span class="p">,</span>
+                                          <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;Constraint&#39;</span><span class="p">,</span>
+                                          <span class="n">parameter</span><span class="p">,</span>
+                                          <span class="n">ROOT</span><span class="o">.</span><span class="n">RooFit</span><span class="o">.</span><span class="n">RooConst</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+                                          <span class="n">ROOT</span><span class="o">.</span><span class="n">RooFit</span><span class="o">.</span><span class="n">RooConst</span><span class="p">(</span><span class="n">value_error</span><span class="p">))</span>
+            <span class="n">parameter</span><span class="o">.</span><span class="n">setConstant</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;SHIFT&#39;</span><span class="p">,</span> <span class="s1">&#39;SCALE&#39;</span><span class="p">,</span> <span class="s1">&#39;BLIND&#39;</span><span class="p">):</span>
+        <span class="c1"># SHIFT @var val</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;BLIND&#39;</span><span class="p">:</span>
+                <span class="n">ref_var</span><span class="p">,</span> <span class="n">blind_str</span><span class="p">,</span> <span class="n">blind_central</span><span class="p">,</span> <span class="n">blind_sigma</span> <span class="o">=</span> <span class="n">action_params</span>
+                <span class="n">second_var</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ref_var</span><span class="p">,</span> <span class="n">second_var</span> <span class="o">=</span> <span class="n">action_params</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong number of arguments for </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">action_params</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ref_var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+                <span class="n">ref_var</span> <span class="o">=</span> <span class="n">ref_var</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The first value for a </span><span class="si">{}</span><span class="s2"> must be a reference.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
+            <span class="n">ref_var</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">external_vars</span><span class="p">[</span><span class="n">ref_var</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">second_var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+                <span class="n">second_var</span> <span class="o">=</span> <span class="n">second_var</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">second_var</span><span class="p">,</span> <span class="n">const</span> <span class="o">=</span> <span class="n">external_vars</span><span class="p">[</span><span class="n">second_var</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint</span><span class="p">:</span>
+                    <span class="n">constraint</span> <span class="o">=</span> <span class="n">const</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Two constrained variables in SHIFT or SCALE are not allowed&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">second_var</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">analysis.fit.result</span> <span class="k">import</span> <span class="n">FitResult</span>
+                <span class="n">fit_name</span><span class="p">,</span> <span class="n">var_name</span> <span class="o">=</span> <span class="n">second_var</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">FitResult</span><span class="p">()</span><span class="o">.</span><span class="n">from_yaml_file</span><span class="p">(</span><span class="n">fit_name</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_fit_parameter</span><span class="p">(</span><span class="n">var_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_const_parameter</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="n">second_var</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooFit</span><span class="o">.</span><span class="n">RooConst</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;SHIFT&#39;</span><span class="p">,</span> <span class="s1">&#39;SCALE&#39;</span><span class="p">):</span>
+                    <span class="n">second_var</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooFit</span><span class="o">.</span><span class="n">RooConst</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">second_var</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing parameter definition -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;SHIFT&#39;</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooAddition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgList</span><span class="p">(</span><span class="n">ref_var</span><span class="p">,</span> <span class="n">second_var</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;SCALE&#39;</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooProduct</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooArgList</span><span class="p">(</span><span class="n">ref_var</span><span class="p">,</span> <span class="n">second_var</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;BLIND&#39;</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">RooUnblindPrecision</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_blind&quot;</span><span class="p">,</span> <span class="n">title</span> <span class="o">+</span> <span class="s2">&quot;_blind&quot;</span><span class="p">,</span> <span class="n">blind_str</span><span class="p">,</span>
+                                                 <span class="nb">float</span><span class="p">(</span><span class="n">blind_central</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">blind_sigma</span><span class="p">),</span> <span class="n">ref_var</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Unknown action -&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">constraint</span></div>
+
+
+<div class="viewcode-block" id="get_shared_vars"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.get_shared_vars">[docs]</a><span class="k">def</span> <span class="nf">get_shared_vars</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">external_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Configure shared variables for a given configuration.</span>
+
+<span class="sd">    Shared variables are marked with the @-sign and configured with a string such as:</span>
+
+<span class="sd">        @id/name/title/config</span>
+
+<span class="sd">    where config follows the conventions of `configure_parameter`. In further occurences,</span>
+<span class="sd">    `@id` is enough.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        config (OrderedDict): Variable configuration from which to extract the</span>
+<span class="sd">            shared variables.</span>
+<span class="sd">        external_vars (dict, optional): Externally defined variables, which take precedence</span>
+<span class="sd">            over the configuration. Defaults to None.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        dict: Shared parameters build in the same parameter hierachy as the model they</span>
+<span class="sd">            are included in.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        ValueError: If one of the parameters is badly configured.</span>
+<span class="sd">        KeyError: If a parameter is refered to but never configured.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create shared vars</span>
+    <span class="n">parameter_configs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">config_element</span><span class="p">,</span> <span class="n">config_value</span><span class="p">)</span>
+                                    <span class="k">for</span> <span class="n">config_element</span><span class="p">,</span> <span class="n">config_value</span> <span class="ow">in</span> <span class="n">unfold_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+                                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;@&#39;</span> <span class="ow">in</span> <span class="n">config_value</span><span class="p">)</span>
+    <span class="c1"># First build the shared var</span>
+    <span class="n">refs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">external_vars</span> <span class="k">else</span> <span class="n">external_vars</span>
+    <span class="c1"># Build shared parameters</span>
+    <span class="k">for</span> <span class="n">config_element</span><span class="p">,</span> <span class="n">config_value</span> <span class="ow">in</span> <span class="n">parameter_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">config_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">split_element</span> <span class="o">=</span> <span class="n">config_value</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split_element</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">ref_name</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">var_title</span><span class="p">,</span> <span class="n">var_config</span> <span class="o">=</span> <span class="n">split_element</span>
+            <span class="k">if</span> <span class="n">ref_name</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shared parameter defined twice -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ref_name</span><span class="p">))</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">configure_parameter</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_title</span><span class="p">,</span> <span class="n">var_config</span><span class="p">,</span> <span class="n">refs</span><span class="p">)</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">setStringAttribute</span><span class="p">(</span><span class="s1">&#39;shared&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
+            <span class="n">refs</span><span class="p">[</span><span class="n">ref_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">split_element</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Badly configured shared parameter -&gt; </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_element</span><span class="p">,</span>
+                                                                                  <span class="n">config_value</span><span class="p">))</span>
+    <span class="c1"># Now replace the refs by the shared variables in a recursive defaultdict</span>
+    <span class="n">recurse_dict</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">recurse_dict</span><span class="p">)</span>
+    <span class="n">new_config</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">config_element</span><span class="p">,</span> <span class="n">ref_val</span> <span class="ow">in</span> <span class="n">parameter_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">ref_val</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+            <span class="n">new_config</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">config_element</span><span class="p">,</span>
+                               <span class="n">refs</span><span class="p">[</span><span class="n">ref_val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]]))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Composite parameter definition, such as SHIFT</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">15</span><span class="p">))</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">constraint</span> <span class="o">=</span> <span class="n">configure_parameter</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">ref_val</span><span class="p">,</span> <span class="n">refs</span><span class="p">)</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">setStringAttribute</span><span class="p">(</span><span class="s1">&#39;tempName&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
+            <span class="n">new_config</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">config_element</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">fold_config</span><span class="p">(</span><span class="n">new_config</span><span class="p">,</span> <span class="n">recurse_dict</span><span class="p">)</span></div>
+
+
+<span class="c1"># Exceptions</span>
+<div class="viewcode-block" id="ConfigError"><a class="viewcode-back" href="../../../analysis.utils.config.html#analysis.utils.config.ConfigError">[docs]</a><span class="k">class</span> <span class="nc">ConfigError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Error in loading configuration file.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">missing_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_keys</span> <span class="o">=</span> <span class="n">missing_keys</span> <span class="k">if</span> <span class="n">missing_keys</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConfigError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

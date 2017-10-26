@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>submit_toys &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="toys" href="analysis.toys.html"/>
+        <link rel="next" title="submitter" href="analysis.toys.submitter.html"/>
+        <link rel="prev" title="generate_toys" href="analysis.toys.generate_toys.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.toys.html">toys</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.fit_toys.html">fit_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.generate_toys.html">generate_toys</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">submit_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.submitter.html">submitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.tools.html">tools</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.toys.html">toys</a> &raquo;</li>
+        
+      <li>submit_toys</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.toys.submit_toys.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.toys.submit_toys">
+<span id="submit-toys"></span><h1>submit_toys<a class="headerlink" href="#module-analysis.toys.submit_toys" title="Permalink to this headline">¶</a></h1>
+<p>Submission of toys to the cluster.</p>
+<p>This submission is forced to happen through a config file in YAML format
+to ensure reproducibility.</p>
+<dl class="docutils">
+<dt>Mandatory configuration keys are:</dt>
+<dd><ul class="first last simple">
+<li>name: Name of the job</li>
+</ul>
+</dd>
+<dt>Then, according to the type of job, there’s a few extra mandatory keys:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>Fitting toys:</dt>
+<dd><ul class="first last">
+<li>fit/nfits: Total number of fits to perform.</li>
+<li>fit/nfits-per-job: Number of fits produced per job.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Generation toys:</dt>
+<dd><ul class="first last">
+<li>gen/nevents: Total number of events to produce.</li>
+<li>gen/nevents-per-job: Number of events produced per job.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Optional configuration keys:</dt>
+<dd><ul class="first last simple">
+<li>batch/runtime: In the HH:MM:SS format. Defaults to 08:00:00.</li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="analysis.toys.submit_toys.FitSubmitter">
+<em class="property">class </em><code class="descclassname">analysis.toys.submit_toys.</code><code class="descname">FitSubmitter</code><span class="sig-paren">(</span><em>config_files</em>, <em>link_from</em>, <em>extend</em>, <em>overwrite</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/submit_toys.html#FitSubmitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="analysis.toys.submitter.html#analysis.toys.submitter.ToySubmitter" title="analysis.toys.submitter.ToySubmitter"><code class="xref py py-class docutils literal"><span class="pre">analysis.toys.submitter.ToySubmitter</span></code></a></p>
+<p>Specialization of ToySubmitter to submit the fitting of toys.</p>
+<p>Configure the toy submitter.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>config_files (list[str]): Configuration files.
+link_from (str): Storage to link from.
+extend (bool): Extend the production?
+overwrite (bool): Overwrite an existing production?</dd>
+<dt>Raise:</dt>
+<dd><dl class="first docutils">
+<dt>NotImplementedError: If some of the mandatory attributes are not</dt>
+<dd>set.</dd>
+<dt>OSError: If there is a problem with the configuration file, either in</dt>
+<dd>loading or validation.</dd>
+</dl>
+<p class="last">ValueError: If conflicting options are passed.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.FitSubmitter.ALLOWED_CONFIG_DIFFS">
+<code class="descname">ALLOWED_CONFIG_DIFFS</code><em class="property"> = ['gen/nevents', 'gen/nevents-per-job', 'batch/runtime']</em><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter.ALLOWED_CONFIG_DIFFS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.FitSubmitter.NTOYS_KEY">
+<code class="descname">NTOYS_KEY</code><em class="property"> = 'fit/nfits'</em><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter.NTOYS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.FitSubmitter.NTOYS_PER_JOB_KEY">
+<code class="descname">NTOYS_PER_JOB_KEY</code><em class="property"> = 'fit/nfits-per-job'</em><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter.NTOYS_PER_JOB_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.FitSubmitter.TOY_CONFIG_PATH_GETTER">
+<code class="descname">TOY_CONFIG_PATH_GETTER</code><em class="property"> = &lt;functools.partial object&gt;</em><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter.TOY_CONFIG_PATH_GETTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.FitSubmitter.TOY_PATH_GETTER">
+<code class="descname">TOY_PATH_GETTER</code><em class="property"> = &lt;functools.partial object&gt;</em><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter.TOY_PATH_GETTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.FitSubmitter.VALIDATION">
+<code class="descname">VALIDATION</code><em class="property"> = {'fit/nfits': 'Number of fits not specified!', 'data': 'No input data was specified in the config file!', 'name': 'No name was specified in the config file!'}</em><a class="headerlink" href="#analysis.toys.submit_toys.FitSubmitter.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter">
+<em class="property">class </em><code class="descclassname">analysis.toys.submit_toys.</code><code class="descname">GenerationSubmitter</code><span class="sig-paren">(</span><em>config_files</em>, <em>link_from</em>, <em>extend</em>, <em>overwrite</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/submit_toys.html#GenerationSubmitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="analysis.toys.submitter.html#analysis.toys.submitter.ToySubmitter" title="analysis.toys.submitter.ToySubmitter"><code class="xref py py-class docutils literal"><span class="pre">analysis.toys.submitter.ToySubmitter</span></code></a></p>
+<p>Specialization of ToySubmitter to submit generation of toys.</p>
+<p>Configure the toy submitter.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>config_files (list[str]): Configuration files.
+link_from (str): Storage to link from.
+extend (bool): Extend the production?
+overwrite (bool): Overwrite an existing production?</dd>
+<dt>Raise:</dt>
+<dd><dl class="first docutils">
+<dt>NotImplementedError: If some of the mandatory attributes are not</dt>
+<dd>set.</dd>
+<dt>OSError: If there is a problem with the configuration file, either in</dt>
+<dd>loading or validation.</dd>
+</dl>
+<p class="last">ValueError: If conflicting options are passed.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter.ALLOWED_CONFIG_DIFFS">
+<code class="descname">ALLOWED_CONFIG_DIFFS</code><em class="property"> = ['gen/nevents', 'gen/nevents-per-job', 'batch/runtime']</em><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter.ALLOWED_CONFIG_DIFFS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter.NTOYS_KEY">
+<code class="descname">NTOYS_KEY</code><em class="property"> = 'gen/nevents'</em><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter.NTOYS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter.NTOYS_PER_JOB_KEY">
+<code class="descname">NTOYS_PER_JOB_KEY</code><em class="property"> = 'gen/nevents-per-job'</em><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter.NTOYS_PER_JOB_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter.TOY_CONFIG_PATH_GETTER">
+<code class="descname">TOY_CONFIG_PATH_GETTER</code><em class="property"> = &lt;functools.partial object&gt;</em><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter.TOY_CONFIG_PATH_GETTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter.TOY_PATH_GETTER">
+<code class="descname">TOY_PATH_GETTER</code><em class="property"> = &lt;functools.partial object&gt;</em><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter.TOY_PATH_GETTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.toys.submit_toys.GenerationSubmitter.VALIDATION">
+<code class="descname">VALIDATION</code><em class="property"> = {'gen/nevents': 'Number of events not specified!', 'name': 'No name was specified in the config file!', 'gen-model': 'No pdfs were specified in the config file!'}</em><a class="headerlink" href="#analysis.toys.submit_toys.GenerationSubmitter.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.toys.submit_toys.main">
+<code class="descclassname">analysis.toys.submit_toys.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/submit_toys.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.submit_toys.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toy fitting submission application.</p>
+<p>Parses the command line, configures the toy fitters and submit the
+jobs, catching intermediate errors and transforming them to status codes.</p>
+<dl class="docutils">
+<dt>Status codes:</dt>
+<dd>0: All good.
+1: Error in the configuration files.
+2: Error in preparing the output folders.
+3: Conflicting options given.
+4: A non-matching configuration file was found in the output.
+5: The queue submission command cannot be found.
+128: Uncaught error. An exception is logged.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.toys.submit_toys.process_scan_val">
+<code class="descclassname">analysis.toys.submit_toys.</code><code class="descname">process_scan_val</code><span class="sig-paren">(</span><em>value</em>, <em>other_values=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/submit_toys.html#process_scan_val"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.submit_toys.process_scan_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process the string of a scan specification.</p>
+<dl class="docutils">
+<dt>Several structures are allowed:</dt>
+<dd><ul class="first simple">
+<li><cite>VALUES X …</cite>: Explicitly give values. Every value that follows the <cite>V</cite> is</li>
+</ul>
+<p>taken.
+- <cite>RANGE Min Max Step</cite>: Range. Values can be floats, unlike python’s <cite>range</cite>.
+- <cite>INTERPOLATE value</cite>: Use the value of other variables to interpolate the list.
+For example:</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">`</span>
+<span class="pre">sigma:</span> <span class="pre">VALUES</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span>
+<span class="pre">sigmafile:</span> <span class="pre">INTERPOLATE</span> <span class="pre">file_{sigma}</span>
+<span class="pre">`</span></code></div></blockquote>
+<p>would generate the list <cite>[file_1, file_2 file_3]</cite> for <cite>sigmafile</cite>. The only limitation
+of this interpolation is that the interpolating variable needs to be defined before the
+interpolation.</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><cite>SCALE var value</cite> can be used to perform an interpolation with a product. For example:</dt>
+<dd><code class="docutils literal"><span class="pre">`</span>
+<span class="pre">sigma:</span> <span class="pre">VALUES</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span>
+<span class="pre">sigma_bkg:</span> <span class="pre">SCALE</span> <span class="pre">sigma</span> <span class="pre">2</span>
+<span class="pre">`</span></code></dd>
+</dl>
+</li>
+</ul>
+<p class="last">would generate the values <cite>[2, 4, 6]</cite> for <cite>sigma_bkg</cite>. The only limitation of this
+interpolation is that the interpolating variable needs to be defined before the
+interpolation.</p>
+</dd>
+<dt>Arguments:</dt>
+<dd>value (str): String specification of the value to scan.
+other_values (dict, optional): Values to use for interpolation.</dd>
+<dt>Raise:</dt>
+<dd>ValueError: When the scan specification is not properly formed.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.toys.submitter.html" class="btn btn-neutral float-right" title="submitter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.toys.generate_toys.html" class="btn btn-neutral" title="generate_toys" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,529 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.toys.submit_toys &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis" href="../../analysis.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+      <li>analysis.toys.submit_toys</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.toys.submit_toys</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   submit_toys.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   13.03.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Submission of toys to the cluster.</span>
+
+<span class="sd">This submission is forced to happen through a config file in YAML format</span>
+<span class="sd">to ensure reproducibility.</span>
+
+<span class="sd">Mandatory configuration keys are:</span>
+<span class="sd">    - name: Name of the job</span>
+
+<span class="sd">Then, according to the type of job, there&#39;s a few extra mandatory keys:</span>
+<span class="sd">    - Fitting toys:</span>
+<span class="sd">        + fit/nfits: Total number of fits to perform.</span>
+<span class="sd">        + fit/nfits-per-job: Number of fits produced per job.</span>
+<span class="sd">    - Generation toys:</span>
+<span class="sd">        + gen/nevents: Total number of events to produce.</span>
+<span class="sd">        + gen/nevents-per-job: Number of events produced per job.</span>
+
+<span class="sd">Optional configuration keys:</span>
+<span class="sd">    - batch/runtime: In the HH:MM:SS format. Defaults to 08:00:00.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="kn">from</span> <span class="nn">analysis</span> <span class="k">import</span> <span class="n">get_global_var</span>
+<span class="kn">import</span> <span class="nn">analysis.utils.paths</span> <span class="k">as</span> <span class="nn">_paths</span>
+<span class="kn">import</span> <span class="nn">analysis.utils.config</span> <span class="k">as</span> <span class="nn">_config</span>
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">analysis.toys.submitter</span> <span class="k">import</span> <span class="n">ToySubmitter</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.toys.submit&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># Submitter classes</span>
+<span class="c1"># pylint: disable=too-few-public-methods</span>
+<div class="viewcode-block" id="FitSubmitter"><a class="viewcode-back" href="../../../analysis.toys.submit_toys.html#analysis.toys.submit_toys.FitSubmitter">[docs]</a><span class="k">class</span> <span class="nc">FitSubmitter</span><span class="p">(</span><span class="n">ToySubmitter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specialization of ToySubmitter to submit the fitting of toys.&quot;&quot;&quot;</span>
+
+    <span class="n">VALIDATION</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s2">&quot;No name was specified in the config file!&quot;</span><span class="p">,</span>
+                  <span class="s1">&#39;fit/nfits&#39;</span><span class="p">:</span> <span class="s2">&quot;Number of fits not specified!&quot;</span><span class="p">,</span>
+                  <span class="c1"># &#39;fit/nfits-per-job&#39;: &quot;Number of fits per job not specified!&quot;,</span>
+                  <span class="c1"># &#39;fit-model&#39;: &quot;No pdfs were specified in the config file!&quot;,</span>
+                  <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s2">&quot;No input data was specified in the config file!&quot;</span><span class="p">}</span>
+    <span class="c1"># pylint: disable=E1101</span>
+    <span class="n">TOY_PATH_GETTER</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_paths</span><span class="o">.</span><span class="n">get_toy_fit_path</span><span class="p">)</span>
+    <span class="n">TOY_CONFIG_PATH_GETTER</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_paths</span><span class="o">.</span><span class="n">get_toy_fit_config_path</span><span class="p">)</span>
+    <span class="n">ALLOWED_CONFIG_DIFFS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gen/nevents&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;gen/nevents-per-job&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;batch/runtime&#39;</span><span class="p">]</span>
+    <span class="n">NTOYS_KEY</span> <span class="o">=</span> <span class="s1">&#39;fit/nfits&#39;</span>
+    <span class="n">NTOYS_PER_JOB_KEY</span> <span class="o">=</span> <span class="s1">&#39;fit/nfits-per-job&#39;</span></div>
+
+
+<span class="c1"># pylint: disable=too-few-public-methods</span>
+<div class="viewcode-block" id="GenerationSubmitter"><a class="viewcode-back" href="../../../analysis.toys.submit_toys.html#analysis.toys.submit_toys.GenerationSubmitter">[docs]</a><span class="k">class</span> <span class="nc">GenerationSubmitter</span><span class="p">(</span><span class="n">ToySubmitter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specialization of ToySubmitter to submit generation of toys.&quot;&quot;&quot;</span>
+
+    <span class="n">VALIDATION</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s2">&quot;No name was specified in the config file!&quot;</span><span class="p">,</span>
+                  <span class="s1">&#39;gen/nevents&#39;</span><span class="p">:</span> <span class="s2">&quot;Number of events not specified!&quot;</span><span class="p">,</span>
+                  <span class="c1"># &#39;gen/nevents-per-job&#39;: &quot;Number of events per job not specified!&quot;,</span>
+                  <span class="s1">&#39;gen-model&#39;</span><span class="p">:</span> <span class="s2">&quot;No pdfs were specified in the config file!&quot;</span><span class="p">}</span>
+    <span class="c1"># pylint: disable=E1101</span>
+    <span class="n">TOY_PATH_GETTER</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_paths</span><span class="o">.</span><span class="n">get_toy_path</span><span class="p">)</span>
+    <span class="n">TOY_CONFIG_PATH_GETTER</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">_paths</span><span class="o">.</span><span class="n">get_toy_config_path</span><span class="p">)</span>
+    <span class="n">ALLOWED_CONFIG_DIFFS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gen/nevents&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;gen/nevents-per-job&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;batch/runtime&#39;</span><span class="p">]</span>
+    <span class="n">NTOYS_KEY</span> <span class="o">=</span> <span class="s1">&#39;gen/nevents&#39;</span>
+    <span class="n">NTOYS_PER_JOB_KEY</span> <span class="o">=</span> <span class="s1">&#39;gen/nevents-per-job&#39;</span></div>
+
+
+<span class="n">TOY_TYPES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;gen&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">GenerationSubmitter</span><span class="p">,</span> <span class="s1">&#39;generate_toys.py&#39;</span><span class="p">),</span>
+             <span class="s1">&#39;fit&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">FitSubmitter</span><span class="p">,</span> <span class="s1">&#39;fit_toys.py&#39;</span><span class="p">)}</span>
+
+
+<span class="c1"># Scan function</span>
+<div class="viewcode-block" id="process_scan_val"><a class="viewcode-back" href="../../../analysis.toys.submit_toys.html#analysis.toys.submit_toys.process_scan_val">[docs]</a><span class="k">def</span> <span class="nf">process_scan_val</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">other_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process the string of a scan specification.</span>
+
+<span class="sd">    Several structures are allowed:</span>
+<span class="sd">        - `VALUES X ...`: Explicitly give values. Every value that follows the `V` is</span>
+<span class="sd">        taken.</span>
+<span class="sd">        - `RANGE Min Max Step`: Range. Values can be floats, unlike python&#39;s `range`.</span>
+<span class="sd">        - `INTERPOLATE value`: Use the value of other variables to interpolate the list.</span>
+<span class="sd">        For example:</span>
+<span class="sd">            ```</span>
+<span class="sd">            sigma: VALUES 1 2 3</span>
+<span class="sd">            sigmafile: INTERPOLATE file_{sigma}</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        would generate the list `[file_1, file_2 file_3]` for `sigmafile`. The only limitation</span>
+<span class="sd">        of this interpolation is that the interpolating variable needs to be defined before the</span>
+<span class="sd">        interpolation.</span>
+
+<span class="sd">        - `SCALE var value` can be used to perform an interpolation with a product. For example:</span>
+<span class="sd">            ```</span>
+<span class="sd">            sigma: VALUES 1 2 3</span>
+<span class="sd">            sigma_bkg: SCALE sigma 2</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        would generate the values `[2, 4, 6]` for `sigma_bkg`. The only limitation of this</span>
+<span class="sd">        interpolation is that the interpolating variable needs to be defined before the</span>
+<span class="sd">        interpolation.</span>
+
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        value (str): String specification of the value to scan.</span>
+<span class="sd">        other_values (dict, optional): Values to use for interpolation.</span>
+
+<span class="sd">    Raise:</span>
+<span class="sd">        ValueError: When the scan specification is not properly formed.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">split_value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">split_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;values&#39;</span><span class="p">:</span>  <span class="c1"># Values</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">split_value</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;range&#39;</span><span class="p">:</span>  <span class="c1"># Range</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="n">split_value</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Badly specified range&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># pylint: disable=W0106</span>
+            <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">(</span><span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="n">step</span><span class="p">)]</span>
+            <span class="n">num_func</span> <span class="o">=</span> <span class="nb">int</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">num_func</span> <span class="o">=</span> <span class="nb">float</span>
+        <span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_func</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">(</span><span class="n">min_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="n">step</span><span class="p">)]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">curr_val</span> <span class="o">=</span> <span class="n">min_</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">curr_val</span> <span class="o">&gt;=</span> <span class="n">max_</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_val</span><span class="p">)</span>
+            <span class="n">curr_val</span> <span class="o">+=</span> <span class="n">step</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">other_values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No values to interpolate&#39;</span><span class="p">)</span>
+        <span class="n">val_to_format</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">split_value</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">val_to_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">vals</span><span class="p">[</span><span class="n">val_num</span><span class="p">]</span>
+                                          <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">vals</span> <span class="ow">in</span> <span class="n">other_values</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+                  <span class="k">for</span> <span class="n">val_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">other_values</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;scale&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">other_values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No values to interpolate&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">var_name</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">split_value</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Badly specified scale&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other_values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown variable -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">))</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">var_val</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">var_val</span> <span class="ow">in</span> <span class="n">other_values</span><span class="p">[</span><span class="n">var_name</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown scan command -&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">values</span></div>
+
+
+<span class="c1"># Submit!</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../analysis.toys.submit_toys.html#analysis.toys.submit_toys.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Toy fitting submission application.</span>
+
+<span class="sd">    Parses the command line, configures the toy fitters and submit the</span>
+<span class="sd">    jobs, catching intermediate errors and transforming them to status codes.</span>
+
+<span class="sd">    Status codes:</span>
+<span class="sd">        0: All good.</span>
+<span class="sd">        1: Error in the configuration files.</span>
+<span class="sd">        2: Error in preparing the output folders.</span>
+<span class="sd">        3: Conflicting options given.</span>
+<span class="sd">        4: A non-matching configuration file was found in the output.</span>
+<span class="sd">        5: The queue submission command cannot be found.</span>
+<span class="sd">        128: Uncaught error. An exception is logged.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">list_</span><span class="p">,</span> <span class="n">typ_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Flatten a list.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">list_</span><span class="p">,</span> <span class="n">typ_</span><span class="p">))</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--link-from&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Folder to actually store the toy files&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--extend&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Extend previous production&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--overwrite&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Overwrite previous production&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Configuration file&quot;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">_config</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="c1"># Which type of toy are we running?</span>
+        <span class="n">script_to_run</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">submitter</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">toy_type</span><span class="p">,</span> <span class="p">(</span><span class="n">toy_class</span><span class="p">,</span> <span class="n">script_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">TOY_TYPES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">toy_type</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">script_to_run</span> <span class="o">=</span> <span class="n">script_name</span>
+                <span class="n">submitter</span> <span class="o">=</span> <span class="n">toy_class</span>
+        <span class="k">if</span> <span class="n">submitter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unknown job type&quot;</span><span class="p">)</span>
+        <span class="c1"># Is there something to scan?</span>
+        <span class="n">scan_config</span> <span class="o">=</span> <span class="s1">&#39;scan&#39;</span> <span class="ow">in</span> <span class="n">config</span>
+        <span class="k">if</span> <span class="n">scan_config</span><span class="p">:</span>
+            <span class="n">config_files</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">base_config</span> <span class="o">=</span> <span class="n">_config</span><span class="o">.</span><span class="n">unfold_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+            <span class="n">scan_groups</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">scan_group</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">]:</span>
+                <span class="n">scan_group_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val_str</span> <span class="ow">in</span> <span class="n">scan_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">scan_group_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">process_scan_val</span><span class="p">(</span><span class="n">val_str</span><span class="p">,</span> <span class="n">scan_group_dict</span><span class="p">)</span>
+                <span class="n">scan_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scan_group_dict</span><span class="p">)</span>
+            <span class="c1"># Check lengths</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">({</span><span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">scan_group</span><span class="o">.</span><span class="n">values</span><span class="p">()})</span> <span class="o">==</span> <span class="mi">1</span>
+                       <span class="k">for</span> <span class="n">scan_group</span> <span class="ow">in</span> <span class="n">scan_groups</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unmatched length in scan parameters&quot;</span><span class="p">)</span>
+            <span class="c1"># Build values to scan</span>
+            <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">scan_group</span><span class="o">.</span><span class="n">viewitems</span><span class="p">())</span> <span class="k">for</span> <span class="n">scan_group</span> <span class="ow">in</span> <span class="n">scan_groups</span><span class="p">])</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">value_tuple</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">izip</span><span class="p">(</span><span class="o">*</span><span class="n">val</span><span class="p">))</span>
+                                                   <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]):</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">izip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">value_tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">())))</span>
+                <span class="n">temp_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base_config</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">temp_config</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">]</span>
+                <span class="n">temp_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">temp_config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Creating configuration </span><span class="si">%s</span><span class="s2"> for scan values -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                             <span class="n">temp_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                             <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+                <span class="c1"># Write temp_file</span>
+                <span class="n">file_</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">file_</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">_config</span><span class="o">.</span><span class="n">write_config</span><span class="p">(</span><span class="n">_config</span><span class="o">.</span><span class="n">fold_config</span><span class="p">(</span><span class="n">temp_config</span><span class="o">.</span><span class="n">viewitems</span><span class="p">()),</span>
+                                     <span class="n">file_name</span><span class="p">)</span>
+                <span class="n">config_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config_files</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">config</span>
+    <span class="c1"># pylint: disable=W0702</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Bad configuration given&quot;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">script_to_run</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">get_global_var</span><span class="p">(</span><span class="s1">&#39;BASE_PATH&#39;</span><span class="p">),</span>
+                                     <span class="s1">&#39;toys&#39;</span><span class="p">,</span>
+                                     <span class="n">script_to_run</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">config_file</span> <span class="ow">in</span> <span class="n">config_files</span><span class="p">:</span>
+            <span class="n">submitter</span><span class="p">([</span><span class="n">config_file</span><span class="p">],</span>
+                      <span class="n">args</span><span class="o">.</span><span class="n">link_from</span><span class="p">,</span>
+                      <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">,</span>
+                      <span class="n">args</span><span class="o">.</span><span class="n">overwrite</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">script_to_run</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scan_config</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Bad configuration given&quot;</span><span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Conflicting options found&quot;</span><span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Mismatching configuration found&quot;</span><span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot find the queue submission command&quot;</span><span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="c1"># pylint: disable=W0703</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">128</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Uncaught exception -&gt; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">exit_status</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

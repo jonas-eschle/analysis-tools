@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>converters &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="data" href="analysis.data.html"/>
+        <link rel="next" title="hdf" href="analysis.data.hdf.html"/>
+        <link rel="prev" title="data" href="analysis.data.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.data.html">data</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">converters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.data.hdf.html">hdf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.data.loaders.html">loaders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.data.mergers.html">mergers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.toys.html">toys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.data.html">data</a> &raquo;</li>
+        
+      <li>converters</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.data.converters.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.data.converters">
+<span id="converters"></span><h1>converters<a class="headerlink" href="#module-analysis.data.converters" title="Permalink to this headline">¶</a></h1>
+<p>Convert from Pandas to ROOT.</p>
+<dl class="function">
+<dt id="analysis.data.converters.dataset_from_pandas">
+<code class="descclassname">analysis.data.converters.</code><code class="descname">dataset_from_pandas</code><span class="sig-paren">(</span><em>frame</em>, <em>name</em>, <em>title</em>, <em>var_list=None</em>, <em>weight_var=None</em>, <em>categories=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/data/converters.html#dataset_from_pandas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.data.converters.dataset_from_pandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build RooDataset from a Pandas DataFrame.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">frame (pandas.DataFrame): DataFrame to convert.
+name (str): RooDataSet name.
+title (str): RooDataSet title.
+var_list (list[str], optional): List of variables to add to the dataset.</p>
+<blockquote>
+<div>If not given, all variables are converted.</div></blockquote>
+<dl class="last docutils">
+<dt>weight_var (str, optional): Assign the given variable name as weight.</dt>
+<dd>Defaults to None.</dd>
+<dt>categories (list[<cite>ROOT.RooCategory</cite>], optional): Categories to separate the data in.</dt>
+<dd>Their name must correspond to a column in the <cite>frame</cite>.</dd>
+</dl>
+</dd>
+<dt>Return:</dt>
+<dd>ROOT.RooDataSet: Frame converted to dataset.</dd>
+<dt>Raise:</dt>
+<dd>KeyError: If the weight_var or the category is not present in <cite>frame</cite>.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.data.converters.pandas_from_dataset">
+<code class="descclassname">analysis.data.converters.</code><code class="descname">pandas_from_dataset</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/data/converters.html#pandas_from_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.data.converters.pandas_from_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create pandas DataFrame from a RooDataSet.</p>
+<p>Variable names are used as column names.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>dataset (<cite>ROOT.RooDataSet</cite>): Dataset to convert to pandas.</dd>
+<dt>Return:</dt>
+<dd><cite>pandas.DataFrame</cite></dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.data.hdf.html" class="btn btn-neutral float-right" title="hdf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.data.html" class="btn btn-neutral" title="data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

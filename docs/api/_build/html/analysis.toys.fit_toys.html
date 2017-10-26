@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fit_toys &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="toys" href="analysis.toys.html"/>
+        <link rel="next" title="generate_toys" href="analysis.toys.generate_toys.html"/>
+        <link rel="prev" title="toys" href="analysis.toys.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.toys.html">toys</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">fit_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.generate_toys.html">generate_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.submit_toys.html">submit_toys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.submitter.html">submitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.toys.tools.html">tools</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.toys.html">toys</a> &raquo;</li>
+        
+      <li>fit_toys</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.toys.fit_toys.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.toys.fit_toys">
+<span id="fit-toys"></span><h1>fit_toys<a class="headerlink" href="#module-analysis.toys.fit_toys" title="Permalink to this headline">¶</a></h1>
+<p>Fit toys generated by <cite>generate_toys.py</cite>.</p>
+<dl class="function">
+<dt id="analysis.toys.fit_toys.get_datasets">
+<code class="descclassname">analysis.toys.fit_toys.</code><code class="descname">get_datasets</code><span class="sig-paren">(</span><em>data_frames</em>, <em>acceptance</em>, <em>fit_models</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/fit_toys.html#get_datasets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.fit_toys.get_datasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the datasets from the input toys.</p>
+<p>If an acceptance is specified, events are selected using accept-reject.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><dl class="first docutils">
+<dt>data_frames (dict[tuple(pandas.DataFrame, int, str)]): Data frames with the requested</dt>
+<dd>number of events and the corresponding category.</dd>
+<dt>acceptance (analysis.efficiency.acceptance.Acceptance): Acceptance description.</dt>
+<dd>Can be None, in which case it is ignored.</dd>
+<dt>fit_models (dict): Fit models to use to transform datasets and (possibly) establish</dt>
+<dd>the data categories, with the name of the output as key.</dd>
+</dl>
+<p class="last">categories (dict, optional): Category of each data frame.</p>
+</dd>
+<dt>Return:</dt>
+<dd><dl class="first last docutils">
+<dt>tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the</dt>
+<dd>combination of the several input sources with the transformations applied,
+and number of generated events per data sample.</dd>
+</dl>
+</dd>
+<dt>Raise:</dt>
+<dd>KeyError: If there is information missing from the data configuration.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.toys.fit_toys.main">
+<code class="descclassname">analysis.toys.fit_toys.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/fit_toys.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.fit_toys.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toy fitting application.</p>
+<p>Parses the command line and fits the toys, catching intermediate
+errors and transforming them to status codes.</p>
+<dl class="docutils">
+<dt>Status codes:</dt>
+<dd>0: All good.
+1: Error in the configuration files.
+2: Files missing (configuration or toys).
+3: Error configuring physics factories.
+4: Error in the event generation. An exception is logged.
+5: Input data is inconsistent with previous fits.
+128: Uncaught error. An exception is logged.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.toys.fit_toys.run">
+<code class="descclassname">analysis.toys.fit_toys.</code><code class="descname">run</code><span class="sig-paren">(</span><em>config_files</em>, <em>link_from</em>, <em>verbose</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/toys/fit_toys.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.toys.fit_toys.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the script.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>config_files (list[str]): Path to the configuration files.
+link_from (str): Path to link the results from.
+verbose (bool): Give verbose output?</dd>
+<dt>Raise:</dt>
+<dd><dl class="first docutils">
+<dt>OSError: If there either the configuration file does not exist some</dt>
+<dd>of the input toys cannot be found.</dd>
+</dl>
+<p class="last">AttributeError: If the input data are incompatible with a previous fit.
+KeyError: If some configuration data are missing.
+ValueError: If there is any problem in configuring the PDF factories.
+RuntimeError: If there is a problem during the fitting.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.toys.generate_toys.html" class="btn btn-neutral float-right" title="generate_toys" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.toys.html" class="btn btn-neutral" title="toys" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

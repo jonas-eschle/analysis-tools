@@ -1,0 +1,856 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>factory &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="physics" href="analysis.physics.html"/>
+        <link rel="next" title="pdf_models" href="analysis.physics.pdf_models.html"/>
+        <link rel="prev" title="physics" href="analysis.physics.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.physics.html">physics</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.physics.pdf_models.html">pdf_models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.toys.html">toys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.physics.html">physics</a> &raquo;</li>
+        
+      <li>factory</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.physics.factory.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.physics.factory">
+<span id="factory"></span><h1>factory<a class="headerlink" href="#module-analysis.physics.factory" title="Permalink to this headline">¶</a></h1>
+<p>Physics factory classes.</p>
+<dl class="class">
+<dt id="analysis.physics.factory.BaseFactory">
+<em class="property">class </em><code class="descclassname">analysis.physics.factory.</code><code class="descname">BaseFactory</code><span class="sig-paren">(</span><em>config</em>, <em>parameters=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Physics analysis factory.</p>
+<p>Implements the basic skeleton.</p>
+<p>Initialize the internal object cache.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><a href="#id1"><span class="problematic" id="id2">**</span></a>config (dict): Configuration of the factory.</dd>
+<dt>Raise:</dt>
+<dd><dl class="first last docutils">
+<dt>KeyError: When parameters or observables are missingo or there is an</dt>
+<dd>inconsistency in the configuration.</dd>
+</dl>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.factory.BaseFactory.MANDATORY_PARAMETERS">
+<code class="descname">MANDATORY_PARAMETERS</code><em class="property"> = {}</em><a class="headerlink" href="#analysis.physics.factory.BaseFactory.MANDATORY_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.physics.factory.BaseFactory.OBSERVABLES">
+<code class="descname">OBSERVABLES</code><em class="property"> = OrderedDict()</em><a class="headerlink" href="#analysis.physics.factory.BaseFactory.OBSERVABLES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.physics.factory.BaseFactory.PARAMETERS">
+<code class="descname">PARAMETERS</code><em class="property"> = None</em><a class="headerlink" href="#analysis.physics.factory.BaseFactory.PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="analysis.physics.factory.BaseFactory.PARAMETER_DEFAULTS">
+<code class="descname">PARAMETER_DEFAULTS</code><em class="property"> = OrderedDict()</em><a class="headerlink" href="#analysis.physics.factory.BaseFactory.PARAMETER_DEFAULTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>key</em>, <em>default=None</em>, <em>recursive=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get object from the ROOT workspace.</p>
+<p>If the object is not there and <cite>default</cite> is given, it is added
+and returned.</p>
+<p>We look in children too.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>key (str): Object identifier.
+default (any): The value to return if <em>key</em> is not found. Default is None.
+recursive (bool): If True, the object is searched recursively
+including its children with a stop-if-found rule.</dd>
+<dt>Return:</dt>
+<dd>object: Object in the workspace.</dd>
+<dt>Raise:</dt>
+<dd><dl class="first last docutils">
+<dt>KeyError: if <cite>key</cite> is not in the internal workspace and no <cite>default</cite></dt>
+<dd>is given.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_category_var">
+<code class="descname">get_category_var</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_category_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_category_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_category_vars">
+<code class="descname">get_category_vars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_category_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_category_vars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_children">
+<code class="descname">get_children</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_children"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_children" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_config">
+<code class="descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_constraints">
+<code class="descname">get_constraints</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_extended_pdf">
+<code class="descname">get_extended_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em>, <em>yield_val=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_extended_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_extended_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an extended physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd><cite>ROOT.RooExtendPdf</cite>.</dd>
+<dt>Raise:</dt>
+<dd>ValueError: If the yield had not been configured previously</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_fit_parameters">
+<code class="descname">get_fit_parameters</code><span class="sig-paren">(</span><em>extended=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_fit_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF fit parameters.</p>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>NotImplementedError</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_gen_parameters">
+<code class="descname">get_gen_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_gen_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_gen_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the necessary generation parameters.</p>
+<p>Returns the fit parameters by default.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple[<cite>ROOT.RooRealVar</cite>]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_observables">
+<code class="descname">get_observables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_observables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics observables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_parameter_name">
+<code class="descname">get_parameter_name</code><span class="sig-paren">(</span><em>param_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_parameter_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_parameter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of the parameter according to the configuration.</p>
+<p>Defaults to the same name if no parameter naming has been given.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_pdf">
+<code class="descname">get_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>NotImplementedError</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_unbound_extended_pdf">
+<code class="descname">get_unbound_extended_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_unbound_extended_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_unbound_extended_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an extedned physics PDF.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>NotImplementedError</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.get_yield_var">
+<code class="descname">get_yield_var</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.get_yield_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.get_yield_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.has_to_be_extended">
+<code class="descname">has_to_be_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.has_to_be_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.has_to_be_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.is_extended">
+<code class="descname">is_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.is_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.is_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.is_simultaneous">
+<code class="descname">is_simultaneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.is_simultaneous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.is_simultaneous" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.rename_children_parameters">
+<code class="descname">rename_children_parameters</code><span class="sig-paren">(</span><em>naming_scheme=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.rename_children_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.rename_children_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>key</em>, <em>object_</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set an object in the internal ROOT workspace.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">key (str): Object identifier.
+<a href="#id3"><span class="problematic" id="id4">object_</span></a> (object): Object to store.
+overwrite (bool, optional): Replace the existing object?</p>
+<blockquote class="last">
+<div>Defaults to False.</div></blockquote>
+</dd>
+<dt>Return:</dt>
+<dd>object: The object.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.set_observable">
+<code class="descname">set_observable</code><span class="sig-paren">(</span><em>obs_id</em>, <em>obs=None</em>, <em>name=None</em>, <em>title=None</em>, <em>limits=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.set_observable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.set_observable" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Note:</dt>
+<dd>If <cite>obs</cite> is given, the other parameters are ignored.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.set_parameter_names">
+<code class="descname">set_parameter_names</code><span class="sig-paren">(</span><em>name_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.set_parameter_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.set_parameter_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set parameter name conversion.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>name_dict (dict): (name -&gt; new name) pairs.</dd>
+<dt>Return:</dt>
+<dd><dl class="first last docutils">
+<dt>bool: True only if all requested renaming operations have been</dt>
+<dd>performed.</dd>
+</dl>
+</dd>
+<dt>Raise:</dt>
+<dd>KeyError: If some of the parameter names are unknown.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.set_yield_var">
+<code class="descname">set_yield_var</code><span class="sig-paren">(</span><em>yield_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.set_yield_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.set_yield_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.BaseFactory.transform_dataset">
+<code class="descname">transform_dataset</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#BaseFactory.transform_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.BaseFactory.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform dataset according to the factory configuration.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>It’s recommended to pass a copy since the dataset is modified
+in place.</dd>
+<dt>Arguments:</dt>
+<dd>dataset (pandas.DataFrame): Data frame to fold.</dd>
+<dt>Return:</dt>
+<dd><cite>pandas.DataFrame</cite>: Input dataset with the transformation applied.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.factory.PhysicsFactory">
+<em class="property">class </em><code class="descclassname">analysis.physics.factory.</code><code class="descname">PhysicsFactory</code><span class="sig-paren">(</span><em>config</em>, <em>parameters=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#analysis.physics.factory.BaseFactory" title="analysis.physics.factory.BaseFactory"><code class="xref py py-class docutils literal"><span class="pre">analysis.physics.factory.BaseFactory</span></code></a></p>
+<p>Physics analysis factory.</p>
+<p>Implements the basic skeleton for single models.</p>
+<dl class="method">
+<dt id="analysis.physics.factory.PhysicsFactory.get_fit_parameters">
+<code class="descname">get_fit_parameters</code><span class="sig-paren">(</span><em>extended=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory.get_fit_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF fit parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple[<cite>ROOT.RooRealVar</cite>]: Parameters as defined by the <cite>PARAMETERS</cite> attribute.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.PhysicsFactory.get_gen_parameters">
+<code class="descname">get_gen_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory.get_gen_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory.get_gen_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the necessary generation parameters.</p>
+<p>Returns the fit parameters by default.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple[<cite>ROOT.RooRealVar</cite>]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.PhysicsFactory.get_unbound_extended_pdf">
+<code class="descname">get_unbound_extended_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory.get_unbound_extended_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory.get_unbound_extended_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an extended physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd><cite>ROOT.RooExtendPdf</cite>.</dd>
+<dt>Raise:</dt>
+<dd>ValueError: If the yield had not been configured previously</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.PhysicsFactory.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics PDF.</p>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>NotImplementedError</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.PhysicsFactory.has_to_be_extended">
+<code class="descname">has_to_be_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory.has_to_be_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory.has_to_be_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.PhysicsFactory.set_yield_var">
+<code class="descname">set_yield_var</code><span class="sig-paren">(</span><em>yield_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#PhysicsFactory.set_yield_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.PhysicsFactory.set_yield_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.factory.ProductPhysicsFactory">
+<em class="property">class </em><code class="descclassname">analysis.physics.factory.</code><code class="descname">ProductPhysicsFactory</code><span class="sig-paren">(</span><em>factories</em>, <em>parameters=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#analysis.physics.factory.BaseFactory" title="analysis.physics.factory.BaseFactory"><code class="xref py py-class docutils literal"><span class="pre">analysis.physics.factory.BaseFactory</span></code></a></p>
+<p>RooProdPdf of different observables.</p>
+<p>Initialize.</p>
+<p>In this case, the children are a map of observable -&gt; Factory.</p>
+<dl class="attribute">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.PARAMETERS">
+<code class="descname">PARAMETERS</code><em class="property"> = []</em><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.get_fit_parameters">
+<code class="descname">get_fit_parameters</code><span class="sig-paren">(</span><em>extended=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.get_fit_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF fit parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Fit parameters in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.get_gen_parameters">
+<code class="descname">get_gen_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.get_gen_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.get_gen_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF generation parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Generation parameters in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.get_observables">
+<code class="descname">get_observables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.get_observables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.get_observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics observables.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Observables in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.get_unbound_extended_pdf">
+<code class="descname">get_unbound_extended_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em>, <em>yield_val=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.get_unbound_extended_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.get_unbound_extended_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an extended physics PDF.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd><cite>ROOT.RooExtendPdf</cite>.</dd>
+<dt>Raise:</dt>
+<dd>ValueError: If the yield had not been configured previously</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get unbound PDF.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.has_to_be_extended">
+<code class="descname">has_to_be_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.has_to_be_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.has_to_be_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.set_observable">
+<code class="descname">set_observable</code><span class="sig-paren">(</span><em>obs_id</em>, <em>obs=None</em>, <em>name=None</em>, <em>title=None</em>, <em>limits=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.set_observable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.set_observable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.set_yield_var">
+<code class="descname">set_yield_var</code><span class="sig-paren">(</span><em>yield_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.set_yield_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.set_yield_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.ProductPhysicsFactory.transform_dataset">
+<code class="descname">transform_dataset</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#ProductPhysicsFactory.transform_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.ProductPhysicsFactory.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform dataset according to the factory configuration.</p>
+<p>The transformations of the children are applied in sequence.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>dataset (pandas.DataFrame): Data frame to fold.</dd>
+<dt>Return:</dt>
+<dd><cite>pandas.DataFrame</cite>: Input dataset with the transformation applied.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory">
+<em class="property">class </em><code class="descclassname">analysis.physics.factory.</code><code class="descname">SimultaneousPhysicsFactory</code><span class="sig-paren">(</span><em>factories</em>, <em>category_var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#analysis.physics.factory.BaseFactory" title="analysis.physics.factory.BaseFactory"><code class="xref py py-class docutils literal"><span class="pre">analysis.physics.factory.BaseFactory</span></code></a></p>
+<p>Simultaneous fit factory.</p>
+<p>Initialize.</p>
+<p>The category var has the types already defined. <cite>factories</cite> keys are tuples
+in the categories (or a string if there’s only one)</p>
+<dl class="attribute">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.PARAMETERS">
+<code class="descname">PARAMETERS</code><em class="property"> = []</em><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.get_fit_parameters">
+<code class="descname">get_fit_parameters</code><span class="sig-paren">(</span><em>extended=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.get_fit_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF fit parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Fit parameters in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.get_gen_parameters">
+<code class="descname">get_gen_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.get_gen_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.get_gen_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF generation parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Generation parameters in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.get_observables">
+<code class="descname">get_observables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.get_observables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.get_observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics observables.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Observables in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.get_unbound_extended_pdf">
+<code class="descname">get_unbound_extended_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.get_unbound_extended_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.get_unbound_extended_pdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.has_to_be_extended">
+<code class="descname">has_to_be_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.has_to_be_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.has_to_be_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.is_extended">
+<code class="descname">is_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.is_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.is_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.set_observable">
+<code class="descname">set_observable</code><span class="sig-paren">(</span><em>obs_id</em>, <em>obs=None</em>, <em>name=None</em>, <em>title=None</em>, <em>limits=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.set_observable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.set_observable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SimultaneousPhysicsFactory.transform_dataset">
+<code class="descname">transform_dataset</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SimultaneousPhysicsFactory.transform_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SimultaneousPhysicsFactory.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform dataset according to the factory configuration.</p>
+<p>The category nane is used as column name to determine each of the
+samples to transform.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For the category, a column named after the category variable is searched
+for. If not found, the ‘category’ column is used.</dd>
+<dt>Arguments:</dt>
+<dd>dataset (pandas.DataFrame): Data frame to fold.</dd>
+<dt>Return:</dt>
+<dd><cite>pandas.DataFrame</cite>: Input dataset with the transformation applied.</dd>
+<dt>Raise:</dt>
+<dd><dl class="first docutils">
+<dt>ValueError: When the dataset contains categories that have not been configured</dt>
+<dd>in the class.</dd>
+</dl>
+<p class="last">KeyError: If the category is not found in the dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="analysis.physics.factory.SumPhysicsFactory">
+<em class="property">class </em><code class="descclassname">analysis.physics.factory.</code><code class="descname">SumPhysicsFactory</code><span class="sig-paren">(</span><em>factories</em>, <em>children_yields</em>, <em>parameters=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#analysis.physics.factory.BaseFactory" title="analysis.physics.factory.BaseFactory"><code class="xref py py-class docutils literal"><span class="pre">analysis.physics.factory.BaseFactory</span></code></a></p>
+<p>RooProdPdf of different observables.</p>
+<p>Initialize.</p>
+<p>In this case, the children are a map of PDF name -&gt; Factory.</p>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>ValueError: When the observables of the factories are incompatible.
+KeyError: On configuration error.</dd>
+</dl>
+<dl class="attribute">
+<dt id="analysis.physics.factory.SumPhysicsFactory.PARAMETERS">
+<code class="descname">PARAMETERS</code><em class="property"> = []</em><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.get_fit_parameters">
+<code class="descname">get_fit_parameters</code><span class="sig-paren">(</span><em>extended=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.get_fit_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF fit parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Fit parameters in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.get_gen_parameters">
+<code class="descname">get_gen_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.get_gen_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.get_gen_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the PDF generation parameters.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Generation parameters in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.get_observables">
+<code class="descname">get_observables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.get_observables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.get_observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the physics observables.</p>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>tuple: Observables in factory order.</dd>
+<dt>Raise:</dt>
+<dd>NotInitializedError: If <cite>__call__</cite> has not been called.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.get_unbound_extended_pdf">
+<code class="descname">get_unbound_extended_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.get_unbound_extended_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.get_unbound_extended_pdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.get_unbound_pdf">
+<code class="descname">get_unbound_pdf</code><span class="sig-paren">(</span><em>name</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.get_unbound_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.get_unbound_pdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.has_to_be_extended">
+<code class="descname">has_to_be_extended</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.has_to_be_extended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.has_to_be_extended" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.set_observable">
+<code class="descname">set_observable</code><span class="sig-paren">(</span><em>obs_id</em>, <em>obs=None</em>, <em>name=None</em>, <em>title=None</em>, <em>limits=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.set_observable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.set_observable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.set_yield_var">
+<code class="descname">set_yield_var</code><span class="sig-paren">(</span><em>yield_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.set_yield_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.set_yield_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="analysis.physics.factory.SumPhysicsFactory.transform_dataset">
+<code class="descname">transform_dataset</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/physics/factory.html#SumPhysicsFactory.transform_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.physics.factory.SumPhysicsFactory.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform dataset according to the factory configuration.</p>
+<p>Since all PDFs of the addition are supposed to need the same transformation,
+the dataset is transformed according to the first one</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>dataset (pandas.DataFrame): Data frame to fold.</dd>
+<dt>Return:</dt>
+<dd><cite>pandas.DataFrame</cite>: Input dataset with the transformation applied.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.physics.pdf_models.html" class="btn btn-neutral float-right" title="pdf_models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.physics.html" class="btn btn-neutral" title="physics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

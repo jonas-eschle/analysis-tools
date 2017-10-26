@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.utils.fit &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis" href="../../analysis.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+      <li>analysis.utils.fit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.utils.fit</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   data.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   16.01.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Fit-related utils.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.utils.fit&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="fit_parameters_to_dict"><a class="viewcode-back" href="../../../analysis.utils.fit.html#analysis.utils.fit.fit_parameters_to_dict">[docs]</a><span class="k">def</span> <span class="nf">fit_parameters_to_dict</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract the important information of fit parameters.</span>
+
+<span class="sd">    This allows to store uncertainties in pandas dataframes.</span>
+
+<span class="sd">    For each parameter `par` in `parameters` the following entries are stored:</span>
+<span class="sd">        - `{par}`: value.</span>
+<span class="sd">        - `{par}_err_hesse`: parabolic error (`getError` method).</span>
+<span class="sd">        - `{par}_err_plus`: upper error (`getErrorHi`).</span>
+<span class="sd">        - `{par}_err_minus`: signed lower error (`getErrorLo`).</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        parameters (list[`ROOT.RooRealVar`]): Fit parameters</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        dict.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{(</span><span class="n">param</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">):</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">method</span><span class="p">)()</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameters</span>
+            <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">&#39;getValV&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;getError&#39;</span><span class="p">,</span> <span class="s1">&#39;_err_hesse&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;getErrorHi&#39;</span><span class="p">,</span> <span class="s1">&#39;_err_plus&#39;</span><span class="p">),</span>
+                                   <span class="p">(</span><span class="s1">&#39;getErrorLo&#39;</span><span class="p">,</span> <span class="s1">&#39;_err_minus&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">method</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="calculate_pulls"><a class="viewcode-back" href="../../../analysis.utils.fit.html#analysis.utils.fit.calculate_pulls">[docs]</a><span class="k">def</span> <span class="nf">calculate_pulls</span><span class="p">(</span><span class="n">fit_results</span><span class="p">,</span> <span class="n">gen_values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate pulls.</span>
+
+<span class="sd">    For each parameter `par`, the following information is obtained:</span>
+<span class="sd">        - `{par}_pull_diff`: fit - gen.</span>
+<span class="sd">        - `{par}_pull_hesse`: pull calculated with the Hesse error.</span>
+<span class="sd">        - `{par}_pull_minos`: pull calculated with the asymmetric Minos errors.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        fit_results (`pandas.DataFrame`): Frame containing fit values and errors.</span>
+<span class="sd">        gen_values (`pandas.DataFrame`): Frame containing generator values.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        pandas.DataFrame: Data frame containing pull information for all</span>
+<span class="sd">            fitted parameters.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pulls</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">fit_results</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="c1"># Horrible, need to improve this</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">param_name</span> <span class="o">==</span> <span class="s1">&#39;fit_status&#39;</span><span class="p">,</span>
+                <span class="n">param_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_err_hesse&#39;</span><span class="p">),</span>
+                <span class="n">param_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_err_plus&#39;</span><span class="p">),</span>
+                <span class="n">param_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_err_minus&#39;</span><span class="p">))):</span>
+            <span class="k">continue</span>
+        <span class="c1"># Calculate pulls only for matching parameters</span>
+        <span class="n">gen_name</span> <span class="o">=</span> <span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_</span><span class="si">{gen}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">gen_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gen_values</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_diff&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_results</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">-</span> <span class="n">gen_values</span><span class="p">[</span><span class="n">gen_name</span><span class="p">]</span>
+        <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_hesse&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_diff&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">fit_results</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_err_hesse&#39;</span><span class="p">]</span>
+        <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_minos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_diff&#39;</span><span class="p">]</span> <span class="o">/</span> \
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_err_plus&#39;</span><span class="p">]</span>
+        <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_minos&#39;</span><span class="p">][</span><span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_diff&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">pulls</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_pull_diff&#39;</span><span class="p">]</span> <span class="o">/</span> \
+            <span class="n">fit_results</span><span class="p">[</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39;_err_minus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">pulls</span></div>
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

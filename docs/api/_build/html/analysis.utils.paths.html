@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>paths &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="utils" href="analysis.utils.html"/>
+        <link rel="next" title="pdf" href="analysis.utils.pdf.html"/>
+        <link rel="prev" title="monitoring" href="analysis.utils.monitoring.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.efficiency.html">efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.toys.html">toys</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="analysis.utils.html">utils</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.fit.html">fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.iterators.html">iterators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.logging_color.html">logging_color</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.monitoring.html">monitoring</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.pdf.html">pdf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.utils.root.html">root</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+          <li><a href="analysis.utils.html">utils</a> &raquo;</li>
+        
+      <li>paths</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.utils.paths.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.utils.paths">
+<span id="paths"></span><h1>paths<a class="headerlink" href="#module-analysis.utils.paths" title="Permalink to this headline">¶</a></h1>
+<p>Manage paths.</p>
+<dl class="docutils">
+<dt>The structure is fixed:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>Toys:</dt>
+<dd><ul class="first last">
+<li>Generated data are stored in <cite>analysis/data/toys/gen</cite>.</li>
+<li>Toy results are stored in <cite>analysis/data/toys/results</cite>.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Logs are in <cite>analysis/data/logs</cite>.</li>
+</ul>
+</dd>
+</dl>
+<p>These may just be soft links, depending on how they have been run.</p>
+<dl class="function">
+<dt id="analysis.utils.paths.prepare_path">
+<code class="descclassname">analysis.utils.paths.</code><code class="descname">prepare_path</code><span class="sig-paren">(</span><em>name</em>, <em>path_func</em>, <em>link_from</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/utils/paths.html#prepare_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.utils.paths.prepare_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the folder structure for any output.</p>
+<p>The output file name is obtained from <cite>path_func</cite> and the possibility of
+having soft links is taken into account through the <cite>link_from</cite> argument.</p>
+<p>It takes the output file_name and builds all the folder structure from
+<cite>BASE_PATH</cite> until that file. If soft links have to be taken into account,
+the same relative path is built from the <cite>link_from</cite> folder.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">name (str): Name of the job. To be passed to <cite>path_func</cite>.
+path_func (Callable): Function to execute to get the path.
+link_from (str): Base directory for symlinking. If <cite>None</cite>, no symlinking</p>
+<blockquote>
+<div>is done.</div></blockquote>
+<p class="last"><a href="#id1"><span class="problematic" id="id2">*</span></a>args (list): Extra arguments for the <cite>path_func</cite>.
+<a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs (dict): Extra arguments for the <cite>path_func</cite>.</p>
+</dd>
+<dt>Return:</dt>
+<dd><dl class="first last docutils">
+<dt>tuple (bool, str, str): Need to do soft-linking, path of true output file,</dt>
+<dd>path of soft-link output.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.utils.paths.register_path">
+<code class="descclassname">analysis.utils.paths.</code><code class="descname">register_path</code><span class="sig-paren">(</span><em>path_type</em>, <em>parent_dirs</em>, <em>extension</em>, <em>name_transformation=&lt;function &lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/utils/paths.html#register_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.utils.paths.register_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register path function.</p>
+<p>This will create a function in the module namespace called <cite>get_{path_type}_path</cite>.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">path_type (str): Type of path to register. Defines the name of the registered function.
+parent_dirs (list): List of parent dirs (on top of BASE_PATH) of the path we want to register.
+extension (str): Extension of the file, including the dot. It can be left empty for directories.
+name_transformation (Callable, optional): Function to transform the name of the path</p>
+<blockquote class="last">
+<div><p>when calling the <cite>get_{path_type}_path</cite>. It needs to have three arguments: <cite>name</cite>,
+<cite>args</cite> and <cite>kwargs</cite>, which are passed when executing the <cite>get_{path_type}_path</cite> function.
+Defaults to the identity:</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">`</span>
+<span class="pre">lambda</span> <span class="pre">name,</span> <span class="pre">args,</span> <span class="pre">kwargs:</span> <span class="pre">name</span>
+<span class="pre">`</span></code></div></blockquote>
+</div></blockquote>
+</dd>
+<dt>Return:</dt>
+<dd>Callable: The created function.</dd>
+<dt>Raise:</dt>
+<dd>ValueError: If the signature of the <cite>name_transformation</cite> doesn’t match the specifications.
+KeyError: If the path has already been registered.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.utils.paths.work_on_file">
+<code class="descclassname">analysis.utils.paths.</code><code class="descname">work_on_file</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/utils/paths.html#work_on_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.utils.paths.work_on_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context manager for working on a file.</p>
+<p>The path is prepared (&#64;see <cite>prepare_path</cite>), taking into account possible links,
+and the context manager returns. On exit, the symlinking (if needed) is done.
+Additionally, it locks the file during the whole process.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">name (str): Name of the file. To be passed to <cite>path_func</cite>.
+path_func (Callable): Function to execute to get the path.
+link_from (str, optional): Base directory for symlinking. The default is <cite>None</cite>,</p>
+<blockquote class="last">
+<div>in which case no symlinking is done.</div></blockquote>
+</dd>
+<dt>Yields:</dt>
+<dd>str: Path ot the file.</dd>
+<dt>Raise:</dt>
+<dd>OSError: If there is a problem preparing the path.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.utils.pdf.html" class="btn btn-neutral float-right" title="pdf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.utils.monitoring.html" class="btn btn-neutral" title="monitoring" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

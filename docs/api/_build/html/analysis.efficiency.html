@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>efficiency &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="index.html"/>
+        <link rel="up" title="analysis package" href="analysis.html"/>
+        <link rel="next" title="acceptance" href="analysis.efficiency.acceptance.html"/>
+        <link rel="prev" title="mergers" href="analysis.data.mergers.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="analysis.html">analysis package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.batch.html">batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.data.html">data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">efficiency</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.efficiency.acceptance.html">acceptance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.efficiency.efficiency.html">efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.efficiency.legendre.html">legendre</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.efficiency.model_efficiency.html">model_efficiency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.mc.html">mc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.physics.html">physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.toys.html">toys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="analysis.html">analysis package</a> &raquo;</li>
+        
+      <li>efficiency</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.efficiency.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-analysis.efficiency">
+<span id="efficiency"></span><h1>efficiency<a class="headerlink" href="#module-analysis.efficiency" title="Permalink to this headline">¶</a></h1>
+<p>Efficiency classes and utilities.</p>
+<p>Note that the default efficiency models are not loaded into the global variables
+until this module is imported.</p>
+<dl class="function">
+<dt id="analysis.efficiency.get_acceptance">
+<code class="descclassname">analysis.efficiency.</code><code class="descname">get_acceptance</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/efficiency.html#get_acceptance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.efficiency.get_acceptance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an acceptance object.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><dl class="first last docutils">
+<dt>config (dict): Acceptance to load. Its keys are:</dt>
+<dd><ul class="first last simple">
+<li><cite>variables</cite> (list[str]): List of variable names.</li>
+<li><dl class="first docutils">
+<dt><cite>generation</cite> (dict): Generation configuration. It needs to have a <cite>name</cite> entry, which corresponds</dt>
+<dd>to the name of the generator efficiency. Any other key will be passed to <cite>get_efficiency</cite> as
+<cite>extra_parameters</cite></dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>reconstruction</cite> (dict): Reconstruction configuration. It needs to have a <cite>name</cite> entry, which corresponds</dt>
+<dd>to the name of the reconstruction efficiency. Any other key will be passed to <cite>get_efficiency</cite> as
+<cite>extra_parameters</cite></dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Return:</dt>
+<dd><cite>analysis.efficiency.acceptance.Acceptance</cite>: Acceptance object.</dd>
+<dt>Raise:</dt>
+<dd>analysis.utils.config.ConfigError: If the input config is missing keys.
+See <cite>analysis.utils.config.load_config</cite>.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.efficiency.get_efficiency_model">
+<code class="descclassname">analysis.efficiency.</code><code class="descname">get_efficiency_model</code><span class="sig-paren">(</span><em>efficiency_config</em>, <em>**extra_parameters</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/efficiency.html#get_efficiency_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.efficiency.get_efficiency_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get efficiency model class.</p>
+<p>User-defined models, stored in the <cite>EFFICIENCY_MODELS</cite> global variable,
+take precedence.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">efficiency_config (dict): Efficiency configuration.
+<a href="#id1"><span class="problematic" id="id2">**</span></a>extra_parameters (dict): Extra configuration parameters to override the entries</p>
+<blockquote class="last">
+<div>in the <cite>parameters</cite> node in <cite>efficiency_config</cite>.</div></blockquote>
+</dd>
+<dt>Return:</dt>
+<dd><cite>analysis.efficiency.efficiency.Efficiency</cite>: Efficiency object.</dd>
+<dt>Raise:</dt>
+<dd>KeyError: If there is a configuration error</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.efficiency.get_efficiency_model_class">
+<code class="descclassname">analysis.efficiency.</code><code class="descname">get_efficiency_model_class</code><span class="sig-paren">(</span><em>model_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/efficiency.html#get_efficiency_model_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.efficiency.get_efficiency_model_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the efficiency class.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>model_name (str): Name of the efficiency model class.</dd>
+<dt>Return:</dt>
+<dd><cite>Efficiency</cite>: Efficiency class, non-instantiated.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.efficiency.load_acceptance">
+<code class="descclassname">analysis.efficiency.</code><code class="descname">load_acceptance</code><span class="sig-paren">(</span><em>name</em>, <em>**extra_parameters</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/efficiency.html#load_acceptance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.efficiency.load_acceptance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an acceptance configuration file.</p>
+<p>The file path is determined from the <cite>name</cite> using the <cite>paths.get_acceptance_path</cite>
+function.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For the exact configuration, see <cite>get_acceptance</cite>.</dd>
+<dt>Arguments:</dt>
+<dd><p class="first">name (str): Name of the acceptance.
+<a href="#id3"><span class="problematic" id="id4">**</span></a>extra_parameters (dict): Extra configuration parameters to override the entries</p>
+<blockquote class="last">
+<div><p>in the <cite>parameters</cite> nodes from the <cite>generation</cite> and <cite>reconstruction</cite> efficiencies.
+As such, the extra parameters need to be placed under the <cite>generation</cite> or
+<cite>reconstruction</cite> keys. For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">load_acceptance</span><span class="p">(</span><span class="s1">&#39;Test&#39;</span><span class="p">,</span>
+<span class="go">                    reconstruction={&#39;rename-vars&#39;:{&#39;acc_q2&#39;:&#39;q2&#39;,</span>
+<span class="go">                                                   &#39;acc_cosThetaL&#39;:&#39;ctl&#39;}})</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+<dt>Return:</dt>
+<dd><cite>analysis.efficiency.Acceptance</cite>: Acceptance object.</dd>
+<dt>Raise:</dt>
+<dd>OSError: If the efficiecny file does not exist.
+analysis.utils.config.ConfigError: If there is a problem with the efficiency model.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.efficiency.load_efficiency_model">
+<code class="descclassname">analysis.efficiency.</code><code class="descname">load_efficiency_model</code><span class="sig-paren">(</span><em>model_name</em>, <em>**extra_parameters</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/efficiency.html#load_efficiency_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.efficiency.load_efficiency_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load efficiency from file.</p>
+<p>The file path is determined from the <cite>name</cite> using the <cite>paths.get_efficiency_path</cite>
+function.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">model_name (str): Name of the efficiency model.
+<a href="#id5"><span class="problematic" id="id6">**</span></a>extra_parameters (dict): Extra configuration parameters to override the entries</p>
+<blockquote class="last">
+<div>in the <cite>parameters</cite> node loaded from the efficiency file.</div></blockquote>
+</dd>
+<dt>Raise:</dt>
+<dd>OSError: If the efficiency file does not exist.
+analysis.utils.config.ConfigError: If there is a problem with the efficiency model.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="analysis.efficiency.register_efficiency_model">
+<code class="descclassname">analysis.efficiency.</code><code class="descname">register_efficiency_model</code><span class="sig-paren">(</span><em>model_name</em>, <em>model_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/analysis/efficiency.html#register_efficiency_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#analysis.efficiency.register_efficiency_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register an efficiency model.</p>
+<p>This model then becomes available to <cite>get_efficiency_model</cite> functions.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd>model_name (str): Name of the model.
+model_class (<cite>Efficiency</cite>): Efficiency model to register.</dd>
+<dt>Return:</dt>
+<dd>int: Number of registered efficiency models</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="analysis.efficiency.acceptance.html">acceptance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.efficiency.efficiency.html">efficiency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.efficiency.legendre.html">legendre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.efficiency.model_efficiency.html">model_efficiency</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.efficiency.acceptance.html" class="btn btn-neutral float-right" title="acceptance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.data.mergers.html" class="btn btn-neutral" title="mergers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

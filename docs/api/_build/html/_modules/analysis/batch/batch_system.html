@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>analysis.batch.batch_system &mdash; Analysis Tools 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Analysis Tools 2.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="analysis.batch" href="../batch.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Analysis Tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../analysis.html">analysis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Analysis Tools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../analysis.html">analysis</a> &raquo;</li>
+        
+          <li><a href="../batch.html">analysis.batch</a> &raquo;</li>
+        
+      <li>analysis.batch.batch_system</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for analysis.batch.batch_system</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># @file   batch_system.py</span>
+<span class="c1"># @author Albert Puig (albert.puig@cern.ch)</span>
+<span class="c1"># @date   31.05.2017</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Implementation of different batch systems.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">analysis.utils.logging_color</span> <span class="k">import</span> <span class="n">get_logger</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="s1">&#39;analysis.batch.batch_system&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="which"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.which">[docs]</a><span class="k">def</span> <span class="nf">which</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check the location of the given command.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        program (str): Command to check.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        str: Path of the program. Returns None if it cannot be found.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">is_exe</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if path is executable.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">program</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">is_exe</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">program</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+            <span class="n">exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">program</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_exe</span><span class="p">(</span><span class="n">exe_file</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">exe_file</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="BatchSystem"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.BatchSystem">[docs]</a><span class="k">class</span> <span class="nc">BatchSystem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Batch System base class.&quot;&quot;&quot;</span>
+
+    <span class="n">SUBMIT_COMMAND</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">DEFAULT_SCRIPT</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;#!</span><span class="si">{shell}</span><span class="s2"></span>
+<span class="s2">#####################################</span>
+<span class="si">{header}</span><span class="s2"></span>
+<span class="s2">#####################################</span>
+<span class="s2">echo &quot;------------------------------------------------------------------------&quot;</span>
+<span class="s2">echo &quot;Job started on&quot; `date`</span>
+<span class="s2">echo &quot;------------------------------------------------------------------------&quot;</span>
+<span class="s2">if [ -f $HOME/.localrc ]; then</span>
+<span class="s2">  source $HOME/.localrc</span>
+<span class="s2">fi</span>
+<span class="s2">cd </span><span class="si">{workdir}</span><span class="s2"></span>
+<span class="s2">echo $PWD</span>
+<span class="si">{script}</span><span class="s2"></span>
+<span class="s2">echo &quot;------------------------------------------------------------------------&quot;</span>
+<span class="s2">echo &quot;Job ended on&quot; `date`</span>
+<span class="s2">echo &quot;------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">DIRECTIVES</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">JOBID_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">JOBID_VARIABLE</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check that it has been properly subclassed.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUBMIT_COMMAND</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">JOBID_FORMAT</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">JOBID_VARIABLE</span>
+
+<div class="viewcode-block" id="BatchSystem.is_available"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.BatchSystem.is_available">[docs]</a>    <span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if the bacth system is available.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: If the batch system is available.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">which</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SUBMIT_COMMAND</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="BatchSystem.submit_job"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.BatchSystem.submit_job">[docs]</a>    <span class="k">def</span> <span class="nf">submit_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">log_file</span><span class="p">,</span> <span class="n">extra_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">batch_config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submit a job to the batch system.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            job_name (str): Job name.</span>
+<span class="sd">            script (str): Commands to run.</span>
+<span class="sd">            script_args (list): List of arguments passed to the script.</span>
+<span class="sd">            log_file (str): Logfile location.</span>
+<span class="sd">            extra_config (dict, optional): Extra configuration for &#39;script&#39;. Defaults</span>
+<span class="sd">                to `None`.</span>
+<span class="sd">            **batch_config (dict): Configuration of the batch system.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            str: Job ID</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">err_file</span> <span class="o">=</span> <span class="n">batch_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;errfile&#39;</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+        <span class="n">log_file</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">JOBID_FORMAT</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+        <span class="n">err_file</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">err_file</span><span class="p">)</span>
+        <span class="n">err_file</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">JOBID_FORMAT</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+        <span class="c1"># Build header</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span><span class="p">[</span><span class="s1">&#39;job-name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">job_name</span><span class="p">),</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span><span class="p">[</span><span class="s1">&#39;logfile&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">log_file</span><span class="p">),</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span><span class="p">[</span><span class="s1">&#39;errfile&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err_file</span><span class="p">),</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span><span class="p">[</span><span class="s1">&#39;runtime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;runtime&#39;</span><span class="p">,</span> <span class="s1">&#39;01:00:00&#39;</span><span class="p">))]</span>
+        <span class="k">if</span> <span class="n">log_file</span> <span class="o">==</span> <span class="n">err_file</span><span class="p">:</span>
+            <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span><span class="p">[</span><span class="s1">&#39;mergelogs&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">batch_option</span><span class="p">,</span> <span class="n">batch_value</span> <span class="ow">in</span> <span class="n">batch_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">directive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DIRECTIVES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">batch_option</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">directive</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ignoring directive </span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">batch_option</span><span class="p">,</span> <span class="n">batch_value</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">directive</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch_value</span><span class="p">))</span>
+        <span class="n">script_config</span> <span class="o">=</span> <span class="n">extra_config</span> <span class="k">if</span> <span class="n">extra_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">script_config</span><span class="p">[</span><span class="s1">&#39;workdir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">script_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;workdir&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+        <span class="n">script_config</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="n">script_config</span><span class="p">[</span><span class="s1">&#39;shell&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;shell&#39;</span><span class="p">,</span> <span class="s1">&#39;/bin/bash&#39;</span><span class="p">)</span>
+        <span class="n">script_config</span><span class="p">[</span><span class="s1">&#39;jobid_var&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">JOBID_VARIABLE</span>
+        <span class="c1"># Submit using stdin</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Submitting job&#39;</span><span class="p">)</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SUBMIT_COMMAND</span><span class="p">,</span>
+                                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                                <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+        <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">script</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">script_config</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">stdout</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+    <span class="c1"># pylint: disable=too-many-arguments</span>
+<div class="viewcode-block" id="BatchSystem.submit_script"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.BatchSystem.submit_script">[docs]</a>    <span class="k">def</span> <span class="nf">submit_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">cmd_script</span><span class="p">,</span> <span class="n">script_args</span><span class="p">,</span>
+                      <span class="n">log_file</span><span class="p">,</span> <span class="n">executable</span><span class="o">=</span><span class="s1">&#39;python&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">batch_config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submit a job to the batch system.</span>
+
+<span class="sd">        The submission script is input as stdin.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            job_name (str): Job name.</span>
+<span class="sd">            cmd_script (str): Script to run.</span>
+<span class="sd">            script_args (list): List of arguments passed to the script.</span>
+<span class="sd">            log_file (str): Logfile location.</span>
+<span class="sd">            executable (str, optional): Command to execute the script. Defaults to &#39;python&#39;.</span>
+<span class="sd">            **batch_config (dict): Configuration of the batch system.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            str: JobID.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">executable</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="k">if</span> <span class="n">executable</span> <span class="k">else</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                                <span class="n">cmd_script</span><span class="p">,</span>
+                                <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">script_args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span><span class="n">job_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_SCRIPT</span><span class="p">,</span> <span class="n">log_file</span><span class="p">,</span> <span class="n">extra_config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;script&#39;</span><span class="p">:</span> <span class="n">cmd</span><span class="p">},</span> <span class="o">**</span><span class="n">batch_config</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BatchSystem.get_job_id"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.BatchSystem.get_job_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_job_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the Job ID.</span>
+
+<span class="sd">        Only works if we are in the batch system.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            str: Job ID.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">JOBID_VARIABLE</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Torque"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.Torque">[docs]</a><span class="k">class</span> <span class="nc">Torque</span><span class="p">(</span><span class="n">BatchSystem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implement the Torque/PBS batch system.&quot;&quot;&quot;</span>
+
+    <span class="n">SUBMIT_COMMAND</span> <span class="o">=</span> <span class="s1">&#39;qsub&#39;</span>
+    <span class="n">DIRECTIVES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;job-name&#39;</span><span class="p">:</span> <span class="s1">&#39;#PBS -N </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;logfile&#39;</span><span class="p">:</span> <span class="s1">&#39;#PBS -o </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;errfile&#39;</span><span class="p">:</span> <span class="s1">&#39;#PBS -e </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;mergelogs&#39;</span><span class="p">:</span> <span class="s1">&#39;#PBS -j oe&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;runtime&#39;</span><span class="p">:</span> <span class="s1">&#39;#PBS -l cput=</span><span class="si">{0}</span><span class="se">\n</span><span class="s1">#PBS -l walltime=</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;memory&#39;</span><span class="p">:</span> <span class="s1">&#39;#PBS -l mem=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">}</span>
+    <span class="n">JOBID_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;_$</span><span class="si">{PBS_JOBID}</span><span class="s1">&#39;</span>
+    <span class="n">JOBID_VARIABLE</span> <span class="o">=</span> <span class="s1">&#39;PBS_JOBID&#39;</span></div>
+
+
+<div class="viewcode-block" id="Slurm"><a class="viewcode-back" href="../../../analysis.batch.batch_system.html#analysis.batch.batch_system.Slurm">[docs]</a><span class="k">class</span> <span class="nc">Slurm</span><span class="p">(</span><span class="n">BatchSystem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implement the Slurm batch system.&quot;&quot;&quot;</span>
+
+    <span class="n">SUBMIT_COMMAND</span> <span class="o">=</span> <span class="s1">&#39;sbatch&#39;</span>
+    <span class="n">DIRECTIVES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;job-name&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH -J </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;logfile&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH -o </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;errfile&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH -e </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;mergelogs&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;runtime&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH -t </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;memory&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH --mem=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;memory-per-cpu&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH --mem-per-cpu=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;queue&#39;</span><span class="p">:</span> <span class="s1">&#39;#SBATCH --partition=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">}</span>
+    <span class="n">JOBID_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;_%j&#39;</span>
+    <span class="n">JOBID_VARIABLE</span> <span class="o">=</span> <span class="s1">&#39;SLURM_JOB_ID&#39;</span></div>
+
+
+<span class="n">BATCH_SYSTEMS</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(((</span><span class="s1">&#39;slurm&#39;</span><span class="p">,</span> <span class="n">Slurm</span><span class="p">()),</span>
+                             <span class="p">(</span><span class="s1">&#39;torque&#39;</span><span class="p">,</span> <span class="n">Torque</span><span class="p">())))</span>
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Albert Piug.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
