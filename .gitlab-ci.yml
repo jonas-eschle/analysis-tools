@@ -8,7 +8,7 @@ test27:
   stage: test
   script:
 #   setup env
-    - yum install python-devel
+    - apt install -y python-dev
     - conda config --set always_yes yes --set changeps1 no
 #    - conda update conda
     - conda info -a
@@ -31,7 +31,7 @@ test36:
   stage: test
   script:
 #   setup env
-    - yum install python3-devel
+    - apt install -y python3-dev
     - conda config --set always_yes yes --set changeps1 no
 #    - conda update conda
     - conda info -a
