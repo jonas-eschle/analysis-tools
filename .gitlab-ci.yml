@@ -36,6 +36,7 @@ test36:
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
     - conda create -n test36 python=3.6 root=6 root-numpy
+    - source activate test36 && echo 'done'
 #    - conda install python=3.6 root=6 root-numpy
 #   install test utilities
     - conda install pytest coverage
