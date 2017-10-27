@@ -55,6 +55,8 @@ gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStand
 # Move output
 echo "Done"
 ls -ltr
+mkdir -p {output_path}
+mkdir -p {output_path_link}
 echo "Copying output to {output_path}"
 cp $seed-*.xgen {output_path}
 cp $seed-*-histos.root {output_path}
