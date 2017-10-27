@@ -20,8 +20,8 @@ test27:
 #   install test utilities
     - conda install pytest coverage
 #   install package
-#   HACK, psutil fails to build currently
-    - conda install psutil
+#   HACK, psutil and subprocess32 fail to build currently
+    - conda install psutil subprocess32
 #    - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
 #     run tests
@@ -49,7 +49,7 @@ test36:
     - conda install pytest coverage
 #   install package
 #   HACK, psutil fails to build currently
-    - conda install psutil
+    conda install psutil
 #    - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
 #    run tests
