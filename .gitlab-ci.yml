@@ -3,12 +3,13 @@ stages:
   - test
 
 test27:
-  image: continuumio/anaconda
+#  image: continuumio/anaconda
+  image: continuumio/miniconda:latest
   stage: test
   script:
 #   setup env
     - conda config --set always_yes yes --set changeps1 no
-    - conda update conda
+#    - conda update conda
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
@@ -24,12 +25,13 @@ test27:
 
 
 test36:
-  image: continuumio/anaconda3
+#  image: continuumio/anaconda3
+  image: continuumio/miniconda3:latest
   stage: test
   script:
 #   setup env
     - conda config --set always_yes yes --set changeps1 no
-    - conda update conda
+#    - conda update conda
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
