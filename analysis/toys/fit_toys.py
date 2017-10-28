@@ -300,7 +300,7 @@ def run(config_files, link_from, verbose):
             fit_res = fit_res.copy()
             fit_res['model_name'] = model_name
             fit_res['fit_strategy'] = fit_strategy
-            # pop covariance here, add to dict (?). Other informations?
+            # pop covariance here, add to dict (?). Conversion? Other informations?
             data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
