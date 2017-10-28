@@ -48,7 +48,7 @@ def load_toy_fits(*toy_list, **kwargs):
     if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toy_list):
         raise OSError("Cannot load all toys")
     with contextlib2.ExitStack() as toy_stack:
-        fit_results = [toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name)))['fit_results']
+        fit_results = [toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))['fit_results']
                        for toy_name in toy_list]
         if not all(all(fit_result.columns == fit_results[0].columns)
                    for fit_result in fit_results):
