@@ -170,6 +170,9 @@ def run(config_files, link_from):
             job_id = batch_system.submit_job('MC_%s' % evt_type, SCRIPT, log_file,
                                              extra_config=extra_config,
                                              **batch_config)
+            if 'submit error' in job_id:
+                logger.error(job_id)
+                raise Exception
             logger.debug("Submitted job -> %s", job_id)
         except Exception:
             logger.exception('Error submitting MC production job')
