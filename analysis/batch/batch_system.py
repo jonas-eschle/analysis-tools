@@ -125,6 +125,7 @@ echo "------------------------------------------------------------------------"
         script_config['jobid_var'] = self.JOBID_VARIABLE
         # Submit using stdin
         logger.debug('Submitting job')
+        #  logger.debug(script.format(**script_config))
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
