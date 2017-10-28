@@ -283,7 +283,7 @@ def run(config_files, link_from, verbose):
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
-                result = FitResult().from_roofit(fit_result).to_plain_dict()
+                result = FitResult().from_roofit(fit_result).to_plain_dict(skip_cov=False)
                 result['fitnum'] = fit_num
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
@@ -300,6 +300,7 @@ def run(config_files, link_from, verbose):
             fit_res = fit_res.copy()
             fit_res['model_name'] = model_name
             fit_res['fit_strategy'] = fit_strategy
+            # pop covariance here, add to dict (?). Other informations?
             data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
@@ -319,6 +320,8 @@ def run(config_files, link_from, verbose):
                 # Generator info
                 for key_name, gen_frame in gen_values_frame.items():
                     hdf_file.append(key_name, gen_frame)
+
+                # save cov matrix with for loop over job_id/fitnum
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
