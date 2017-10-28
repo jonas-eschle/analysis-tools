@@ -203,7 +203,7 @@ def run(config_files, link_from, verbose):
         with _paths.work_on_file(config['name'],
                                  _paths.get_toy_fit_path,
                                  config.get('link-from', None)) as toy_fit_file:
-            with pd.HDFStore(toy_fit_file, mode='w') as hdf_file:
+            with modify_hdf(toy_fit_file) as hdf_file:
                 logger.debug("Checking generator values")
                 test_gen = [('gen_{}'.format(data_source)) in hdf_file
                             for data_source in gen_values]
