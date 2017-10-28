@@ -395,7 +395,7 @@ def main():
         logger.error("Error in fitting events")
     except AttributeError as error:
         exit_status = 5
-        logger.error("Inconsistent input data -> %s" % error)
+        logger.error("Inconsistent input data -> %s", error)
     # pylint: disable=W0703
     except Exception as error:
         exit_status = 128
