@@ -116,8 +116,8 @@ class LegendreEfficiency(Efficiency):
                         var_name2: [min_var2, max_var2]},
              'symmetric-variables': [var_1]}
 
-        The range is used to rescale the data in the `fit` method. If it's not
-        given, it's assumed it is [-1, 1].
+        The range is used to rescale the data in the `fit` method. If no range
+        is given, the data is assumed to be already in the range [-1, 1].
 
         Arguments:
             var_list (list): List of observables to apply the efficiency to.
