@@ -31,7 +31,6 @@ from analysis.batch import get_job_id
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
-import analysis.utils.fit as _fit
 
 
 logger = get_logger('analysis.toys.fit')
@@ -103,6 +102,8 @@ def get_datasets(data_frames, acceptance, fit_models):
 
 def run(config_files, link_from, verbose):
     """Run the script.
+
+    Run a sample/fit sequence as many times as requested.
 
     Arguments:
         config_files (list[str]): Path to the configuration files.
