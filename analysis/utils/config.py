@@ -35,6 +35,13 @@ def load_config(*file_names, **options):
         - `validate` (list), which gets a list of keys to check. If one of these
             keys is not present, `config.ConfigError` is raised.
 
+    Additional, the `requires` key can be used to load other config files from the
+    config file. The value of this key can have two formats:
+        - `file_name:key` inserts the contents of `key` in `file_name` at the same
+            level as the `requires` entry.
+        - `path_func:name:key` inserts the contents `key` in the file obtained by the
+            `get_{path_func}_path(name)` call at the same level as the `requires` entry.
+
     Arguments:
         *file_names (list[str]): Files to load.
         **options (dict): Configuration options. See above for supported
@@ -58,7 +65,34 @@ def load_config(*file_names, **options):
                                                              Loader=yamlordereddictloader.Loader)))
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
-    data = fold_config(unfolded_data, OrderedDict)
+    # Load required data
+    unfolded_data_expanded = []
+    for key, val in unfolded_data:
+        if key.split('/')[-1] == 'requires':  # An input requirement has been made
+            split_val = val.split(":")
+            if len(split_val) == 2:  # file_name:key format
+                file_name, required_key = split_val
+            elif len(split_val) == 3:  # path_func:name:key format
+                path_name, name, required_key = split_val
+                import analysis.utils.paths as _paths
+                try:
+                    path_func = getattr(_paths, 'get_{}_path'.format(path_name))
+                except AttributeError:
+                    raise ConfigError("Unknown path getter type -> {}".format(path_name))
+                file_name = path_func(name)
+            else:
+                raise ConfigError("Malformed 'requires' key")
+            try:
+                root = key.rstrip('/requires')
+                for new_key, new_val in unfold_config(load_config(file_name, root=required_key)):
+                    unfolded_data_expanded.append(('{}/{}'.format(root, new_key), new_val))
+            except Exception:
+                logger.error("Error loadind required data in %s", required_key)
+                raise
+        else:
+            unfolded_data_expanded.append((key, val))
+    # Fold back
+    data = fold_config(unfolded_data_expanded, OrderedDict)
     logger.debug('Loaded configuration -> %s', data)
     if 'root' in options:
         data_root = options['root']
@@ -213,20 +247,20 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
     consists in a letter that indicates the "action" to apply on the parameter,
     followed by the configuration of that action. There are several possibilities:
         * 'VAR' (or nothing) is used for parameters without constraints. If one configuration
-        element is given, the parameter doesn't have limits. If three are given, the last two
-        specify the low and upper limits. Parameter is set to not constant.
+            element is given, the parameter doesn't have limits. If three are given, the last two
+            specify the low and upper limits. Parameter is set to not constant.
         * 'CONST' indicates a constant parameter. The following argument indicates
-        at which value to fix it.
+            at which value to fix it.
         * 'GAUSS' is used for a Gaussian-constrained parameter. The arguments of that
-        Gaussian, ie, its mean and sigma, have to be given after the letter.
+            Gaussian, ie, its mean and sigma, have to be given after the letter.
         * 'SHIFT' is used to perform a constant shift to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
         * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
         * 'BLIND' covers the actual parameter by altering its value in an unknown way. The first
-          value must be a shared variable whereas the following are a string and two floats.
-          They represent a randomization string, a mean and a width (both used for the
-          randomization of the value as well).
+            value must be a shared variable whereas the following are a string and two floats.
+            They represent a randomization string, a mean and a width (both used for the
+            randomization of the value as well).
 
     In addition, wherever a variable value is expected one can use a 'fit_name:var_name' specification to
     load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error
