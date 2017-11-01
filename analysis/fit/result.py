@@ -162,6 +162,19 @@ class FitResult(object):
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
         return self
 
+    @ensure_non_initialized
+    def from_hdf(self, name):  # TODO: which path func?
+        """Initialize from a hdf file.
+
+        Arguments:
+            name (str):
+
+        Return:
+            self
+        """
+
+        return self
+
     @ensure_initialized
     def to_yaml(self):
         """Convert fit result to YAML format.
