@@ -72,7 +72,7 @@ def generate(physics_factory, n_events):
             raise ValueError("Generation of a simultaneous requires a dictionary for the number of events.")
         output_dataset = None
         for label, n_events_label in n_events.items():
-            label_factory = physics_factory.get_children().get(label, None)  # None is default?
+            label_factory = physics_factory.get_children().get(label)
             if not label_factory:
                 raise KeyError("Unknown label -> %s" % label)
             label_df = generate_events(label_factory.get_pdf("GenPdf_%s" % label,
@@ -158,7 +158,7 @@ def run(config_files, link_from):
         logger.warning("Generating a RooAddPdf or a RooSimultaneous: "
                        "yields will be generated at a fixed value")
     try:
-        dataset = generate(physics, config['gen'].get('nevents-per-job', config['gen']['nevents']))  # DEFAULT
+        dataset = generate(physics, config['gen'].get('nevents-per-job', config['gen']['nevents']))
     except ValueError as error:
         logger.exception("Exception on generation")
         raise RuntimeError(str(error))

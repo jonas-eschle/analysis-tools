@@ -99,9 +99,9 @@ def get_data(data_config, **kwargs):
     for key in ('source', 'tree', 'output-format'):
         if key not in data_config:
             raise KeyError("Bad data configuration -> '%s' key is missing" % key)
-    source_name = data_config.pop('source')  # DEFAULT OK
+    source_name = data_config.pop('source')
     try:
-        source_type = data_config.pop('source-type', None)  # DEFAULT
+        source_type = data_config.pop('source-type', None)
         file_name = source_name if not source_type \
             else getattr(paths, 'get_%s_path' % source_type)(source_name)
         if not os.path.exists(file_name):

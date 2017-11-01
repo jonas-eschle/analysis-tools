@@ -136,7 +136,7 @@ def run(config_files, link_from, verbose):
     try:
         models = {model_name: config[model_name]
                   for model_name
-                  in config['fit'].get('models', ['model'])}  # DEFAULT
+                  in config['fit'].get('models', ['model'])}
     except KeyError as error:
         logger.error("Missing model configuration -> %s", str(error))
         raise KeyError("Missing model configuration")
@@ -275,8 +275,8 @@ def run(config_files, link_from, verbose):
                                      fit_strategy,
                                      dataset,
                                      verbose,
-                                     Extended=config['fit'].get('extended', True),  # DEFAULT
-                                     Minos=config['fit'].get('minos', True))  # DEFAULT
+                                     Extended=config['fit'].get('extended', False),
+                                     Minos=config['fit'].get('minos', False))
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
