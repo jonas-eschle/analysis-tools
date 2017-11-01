@@ -324,7 +324,7 @@ def run(config_files, link_from, verbose):
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
                 # Save covarinance matrix under 'covariance/jobid/fitnum
-                for cov_folder, cov_matrix in cov_matrices:
+                for cov_folder, cov_matrix in cov_matrices.items():
                     cov_path = os.path.join('covariance', cov_folder)
                     hdf_file.append(cov_path, cov_matrix)
                 # Generator info
