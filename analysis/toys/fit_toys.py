@@ -252,8 +252,8 @@ def run(config_files, link_from, verbose):
     initial_time = default_timer()
     for fit_num in range(nfits):
         # Logging
-        if (fit_num+1) % 20 == 0:
-            logger.info("  Fitting event %s/%s", fit_num+1, nfits)
+        if (fit_num + 1) % 20 == 0:
+            logger.info("  Fitting event %s/%s", fit_num + 1, nfits)
         # Get a compound dataset
         try:
             logger.debug("Sampling input data")
@@ -287,6 +287,7 @@ def run(config_files, link_from, verbose):
                 result_roofit = FitResult().from_roofit(fit_result)
                 result = result_roofit.to_plain_dict()
                 result['cov_matrix'] = result_roofit.get_covariance_matrix()
+                result['param_names'] = result_roofit.get_fit_parameters().keys()
                 result['fitnum'] = fit_num
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
@@ -306,7 +307,10 @@ def run(config_files, link_from, verbose):
             fit_res['fit_strategy'] = fit_strategy
 
             cov_folder = os.path.join(str(job_id), str(fit_res['fitnum']))
-            cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'))
+            param_names = fit_res.pop('param_names')
+            cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'),
+                                                    index=param_names,
+                                                    columns=param_names)
             data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
@@ -331,7 +335,6 @@ def run(config_files, link_from, verbose):
                 for key_name, gen_frame in gen_values_frame.items():
                     hdf_file.append(key_name, gen_frame)
 
-                # save cov matrix with for loop over job_id/fitnum
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
