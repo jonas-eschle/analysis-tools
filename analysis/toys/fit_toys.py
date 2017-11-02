@@ -41,6 +41,17 @@ def get_datasets(data_frames, acceptance, fit_models):
 
     If an acceptance is specified, events are selected using accept-reject.
 
+    Logic regarding the poisson variation of yields is as follows:
+        - If the fit model is extended, the yields of the individual data sets are
+            varied as randomly following a poisson distribution.
+        - If the fit model is not extended, the yields of the individual data set
+            are exactly the number of events given in the configuration.
+
+    Note:
+        Proper handling of poissonian variations is not fool proof. If datasets contain a
+        mixture of populations that have different yield parameters in the fit model, they
+        cannot be varied properly and therefore their pulls will be wrong.
+
     Arguments:
         data_frames (dict[tuple(pandas.DataFrame, int, str)]): Data frames with the requested
             number of events and the corresponding category.
@@ -63,11 +74,12 @@ def get_datasets(data_frames, acceptance, fit_models):
     sample_sizes = {}
     weight_var = None
     logger.debug("Sampling datasets -> %s", data_frames.keys())
+    is_extended = fit_models.values()[0].is_extended()
     for data_name, (data, n_events, category) in data_frames.items():
         if acceptance:
             data = acceptance.apply_accept_reject(data)
         # Do poisson if it is extended
-        sample_sizes[data_name] = poisson.rvs(n_events)
+        sample_sizes[data_name] = poisson.rvs(n_events) if is_extended else n_events
         # Extract suitable number of rows and transform them
         rows = data.sample(sample_sizes[data_name])
         # Add category column
@@ -196,8 +208,11 @@ def run(config_files, link_from, verbose):
                 raise KeyError("Missing model definition -> {}".format(model_name))
             fit_models[model_name] = configure_model(config[model_name])
     except KeyError:
-        logger.exception('Error loading model')
-        raise ValueError('Error loading model')
+        logger.exception("Error loading model")
+        raise ValueError("Error loading model")
+    if len(set(model.is_extended() for model in fit_models.values())) == 2:
+        logger.error("Mix of extended and non-extended models!")
+        raise ValueError("Error loading fit models")
     # Let's check these generator values against the output file
     try:
         gen_values_frame = {}
@@ -390,7 +405,7 @@ def main():
         logger.error(str(error))
     except ValueError:
         exit_status = 3
-        logger.exception("Problem configuring physics factories")
+        logger.error("Problem configuring physics factories")
     except RuntimeError as error:
         exit_status = 4
         logger.error("Error in fitting events")
