@@ -16,27 +16,30 @@ from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
 from analysis.utils.paths import get_fit_result_path
 
-
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
 
 def ensure_initialized(method):
     """Make sure the fit result is initialized."""
+
     def wrapper(self, *args, **kwargs):
         """Check result is empty. Raise otherwise."""
         if not self.get_result():
             raise NotInitializedError("Trying to export a non-initialized fit result")
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
 def ensure_non_initialized(method):
     """Make sure the fit result is not initialized."""
+
     def wrapper(self, *args, **kwargs):
         """Check result is non empty. Raise otherwise."""
         if self.get_result():
             raise AlreadyInitializedError("Trying to overwrite an initialized fit result")
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -82,22 +85,26 @@ class FitResult(object):
                                                  in iterate_roocollection(roofit_result.constPars()))
         result['fit-parameters'] = OrderedDict((fit_par.GetName(), (fit_par.getVal(),
                                                                     fit_par.getError(),
-                                                                    fit_par.getErrorLo(), fit_par.getErrorHi()))
+                                                                    fit_par.getErrorLo(),
+                                                                    fit_par.getErrorHi()))
                                                for fit_par
                                                in iterate_roocollection(roofit_result.floatParsFinal()))
         result['fit-parameters-initial'] = OrderedDict((fit_par.GetName(), fit_par.getVal())
                                                        for fit_par
-                                                       in iterate_roocollection(roofit_result.floatParsInit()))
+                                                       in
+                                                       iterate_roocollection(roofit_result.floatParsInit()))
         # Covariance matrix
         covariance_matrix = roofit_result.covarianceMatrix()
         cov_matrix = {'quality': roofit_result.covQual(),
                       'matrix': np.matrix([[covariance_matrix[row][col]
                                             for col in range(covariance_matrix.GetNcols())]
-                                           for row in range(covariance_matrix.GetNrows())])}
+                                           for row in range(covariance_matrix.GetNrows())])
+                      }
         result['covariance-matrix'] = cov_matrix
         # Status
-        result['status'] = OrderedDict((roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
-                                       for cycle in range(roofit_result.numStatusHistory()))
+        result['status'] = OrderedDict(
+                (roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
+                for cycle in range(roofit_result.numStatusHistory()))
         result['edm'] = roofit_result.edm()
         self._result = result
         return self
@@ -127,8 +134,8 @@ class FitResult(object):
             raise KeyError("Missing keys in covariance matrix in YAML input")
         # Build matrix
         yaml_dict['covariance-matrix']['matrix'] = np.asmatrix(
-            np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
-                                                                       len(yaml_dict['fit-parameters'])))
+                np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
+                                                                           len(yaml_dict['fit-parameters'])))
         self._result = yaml_dict
         return self
 
@@ -223,11 +230,11 @@ class FitResult(object):
             pandas.DataFrame
 
         """
-        pandas_dict = {param_name + suffix: val
-                       for param_name, param in self._result['fit-parameters'].items()
-                       for val, suffix in zip(param, _SUFFIXES)}
-        pandas_dict.update({param_name: val for param_name, val
-                            in self._result['const-parameters'].items()})
+        pandas_dict = OrderedDict(((param_name + suffix, val)
+                                   for param_name, param in self._result['fit-parameters'].items()
+                                   for val, suffix in zip(param, _SUFFIXES)))
+        pandas_dict.update(OrderedDict((param_name, val) for param_name, val
+                            in self._result['const-parameters'].items()))
         pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
@@ -312,7 +319,7 @@ class FitResult(object):
 
         """
         return not any(status for status in self._result['status'].values()) and \
-            self._result['covariance-matrix']['quality'] == 3
+               self._result['covariance-matrix']['quality'] == 3
 
     @ensure_initialized
     def generate_random_pars(self, include_const=False):
@@ -330,7 +337,8 @@ class FitResult(object):
         # pylint: disable=E1101
         output = OrderedDict(zip(self._result['fit-parameters'].keys(),
                                  np.random.multivariate_normal([param[0]
-                                                                for param in self._result['fit-parameters'].values()],
+                                                                for param in
+                                                                self._result['fit-parameters'].values()],
                                                                self._result['covariance-matrix']['matrix'])))
         if include_const:
             for name, param in self._result['const-parameters'].items():
