@@ -243,6 +243,9 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return sim_factory
 
     import analysis.physics.factory as factory
+
+    # copy: to not alter argument; shallow (not deep!): do not duplicate ROOT objects
+    config = config.copy()
     # Prepare shared variables
     if shared_vars is None:
         try:
