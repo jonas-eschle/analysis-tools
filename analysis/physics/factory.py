@@ -425,6 +425,26 @@ class BaseFactory(object):
     def set_yield_var(self, yield_):
         raise NotImplementedError()
 
+    def get_yield_vars(self):
+        """Recursively get the factory's yield variables.
+
+        Order is determined by child order.
+
+        Return:
+            list[`ROOT.RooRealVar`]
+
+        Raise:
+            ValueError: If the model is not extended.
+
+        """
+        if not self.is_extended():
+            raise ValueError("Non-extended model doesn't have yields")
+        yields = [self.get_yield_var()]
+        for child in self._children.values():
+            if child.is_extended():
+                yields.extend(child.get_yield_vars())
+        return yields
+
     def get_category_var(self):
         return self._category
 

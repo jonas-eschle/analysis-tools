@@ -75,11 +75,13 @@ def get_datasets(data_frames, acceptance, fit_models):
     weight_var = None
     logger.debug("Sampling datasets -> %s", data_frames.keys())
     is_extended = fit_models.values()[0].is_extended()
-    for data_name, (data, n_events, category) in data_frames.items():
+    for data_name, (data, n_events, do_poisson, category) in data_frames.items():
         if acceptance:
             data = acceptance.apply_accept_reject(data)
-        # Do poisson if it is extended
-        sample_sizes[data_name] = poisson.rvs(n_events) if is_extended else n_events
+        # Do poisson if it is extended and it has not been disabled
+        if do_poisson is None:
+            do_poisson = is_extended
+        sample_sizes[data_name] = poisson.rvs(n_events) if do_poisson else n_events
         # Extract suitable number of rows and transform them
         rows = data.sample(sample_sizes[data_name])
         # Add category column
@@ -190,6 +192,7 @@ def run(config_files, link_from, verbose):
                                    'output-format': 'pandas',
                                    'selection': data_source.get('selection', None)}),
                          data_source['nevents'],
+                         data_source.get('poisson', None),
                          data_source.get('category', None))
         # Generator values
         toy_info = get_data({'source': source_toy,
@@ -207,6 +210,10 @@ def run(config_files, link_from, verbose):
             if model_name not in config:
                 raise KeyError("Missing model definition -> {}".format(model_name))
             fit_models[model_name] = configure_model(config[model_name])
+            if any(yield_.isConstant() for yield_ in fit_models[model_name].get_yield_vars()):
+                logger.warning("Model %s has constant yields. "
+                               "Be careful when configuring the input data, you may need to disable poisson sampling",
+                               model_name)
     except KeyError:
         logger.exception("Error loading model")
         raise ValueError("Error loading model")
