@@ -91,8 +91,7 @@ class FitResult(object):
                                                in iterate_roocollection(roofit_result.floatParsFinal()))
         result['fit-parameters-initial'] = OrderedDict((fit_par.GetName(), fit_par.getVal())
                                                        for fit_par
-                                                       in
-                                                       iterate_roocollection(roofit_result.floatParsInit()))
+                                                       in iterate_roocollection(roofit_result.floatParsInit()))
         # Covariance matrix
         covariance_matrix = roofit_result.covarianceMatrix()
         cov_matrix = {'quality': roofit_result.covQual(),
@@ -102,9 +101,8 @@ class FitResult(object):
                       }
         result['covariance-matrix'] = cov_matrix
         # Status
-        result['status'] = OrderedDict(
-                (roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
-                for cycle in range(roofit_result.numStatusHistory()))
+        result['status'] = OrderedDict((roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
+                                       for cycle in range(roofit_result.numStatusHistory()))
         result['edm'] = roofit_result.edm()
         self._result = result
         return self
@@ -134,8 +132,8 @@ class FitResult(object):
             raise KeyError("Missing keys in covariance matrix in YAML input")
         # Build matrix
         yaml_dict['covariance-matrix']['matrix'] = np.asmatrix(
-                np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
-                                                                           len(yaml_dict['fit-parameters'])))
+            np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
+                                                                       len(yaml_dict['fit-parameters'])))
         self._result = yaml_dict
         return self
 
@@ -337,8 +335,7 @@ class FitResult(object):
         # pylint: disable=E1101
         output = OrderedDict(zip(self._result['fit-parameters'].keys(),
                                  np.random.multivariate_normal([param[0]
-                                                                for param in
-                                                                self._result['fit-parameters'].values()],
+                                                                for param in self._result['fit-parameters'].values()],
                                                                self._result['covariance-matrix']['matrix'])))
         if include_const:
             for name, param in self._result['const-parameters'].items():
