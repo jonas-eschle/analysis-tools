@@ -252,8 +252,8 @@ def run(config_files, link_from, verbose):
     initial_time = default_timer()
     for fit_num in range(nfits):
         # Logging
-        if (fit_num + 1) % 20 == 0:
-            logger.info("  Fitting event %s/%s", fit_num + 1, nfits)
+        if (fit_num+1) % 20 == 0:
+            logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Get a compound dataset
         try:
             logger.debug("Sampling input data")
