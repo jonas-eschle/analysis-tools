@@ -97,8 +97,7 @@ class FitResult(object):
         cov_matrix = {'quality': roofit_result.covQual(),
                       'matrix': np.matrix([[covariance_matrix[row][col]
                                             for col in range(covariance_matrix.GetNcols())]
-                                           for row in range(covariance_matrix.GetNrows())])
-                      }
+                                           for row in range(covariance_matrix.GetNrows())])}
         result['covariance-matrix'] = cov_matrix
         # Status
         result['status'] = OrderedDict((roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
@@ -176,6 +175,7 @@ class FitResult(object):
 
         Return:
             self
+
         """
 
         return self
