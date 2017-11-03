@@ -7,6 +7,7 @@
 # =============================================================================
 """Physics factory classes."""
 
+import os
 import re
 from collections import OrderedDict
 
@@ -226,6 +227,34 @@ class BaseFactory(object):
                                                 'setStringAttribute',
                                                 'originalName',
                                                 parameter_name))
+
+    def get_parameter(self, param_path):
+        """Recursively get a parameter.
+
+        Recursion can be specified using a path-like structure, eg,
+        `f.get_parameter('label1/signal/mass/mu')` is equivalent to
+        `f.get_children()['label1'].get_children()['signal'].get_children()['mass'].get('mu')`
+
+        Arguments:
+            param_path (str): Parameter identifier string.
+
+        Return:
+            `ROOT.RooRealVar` or `None`
+
+        Raise:
+            KeyError: If some part of the path does not exist.
+
+        """
+        path, param_name = os.path.split(param_path)
+        current_obj = self
+        try:
+            for path_element in path.split('/'):
+                current_obj = current_obj.get_children()[path_element]
+        except KeyError as error:
+            missing_key = error.args[0]
+            logger.error("Unknown child %s in path -> %s", missing_key, path.split(missing_key)[0])
+            raise
+        return current_obj.get(param_name)
 
     def get_parameter_name(self, param_id):
         """Get the name of the parameter according to the configuration.
