@@ -91,7 +91,8 @@ class FitResult(object):
                                                in iterate_roocollection(roofit_result.floatParsFinal()))
         result['fit-parameters-initial'] = OrderedDict((fit_par.GetName(), fit_par.getVal())
                                                        for fit_par
-                                                       in iterate_roocollection(roofit_result.floatParsInit()))
+                                                       in
+                                                       iterate_roocollection(roofit_result.floatParsInit()))
         # Covariance matrix
         covariance_matrix = roofit_result.covarianceMatrix()
         cov_matrix = {'quality': roofit_result.covQual(),
