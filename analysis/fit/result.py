@@ -174,7 +174,9 @@ class FitResult(object):
         """Initialize from a hdf file.
 
         Arguments:
-            name (str):
+            name (str): name of the hdf file
+            iloc (int): The Index based LOCation of the fit result, as
+                in :py:meth:`pd.DataFrame.iloc`
 
         Return:
             self
@@ -205,14 +207,25 @@ class FitResult(object):
         with pd.HDFStore(get_toy_fit_path(name), mode='r') as store:
             cov_matrix = store[cov_matrix_path]
 
-        # store results
-        self.from_plain_dict(plain_dict=fit_result, skip_cov=True)
+        # get toy specific values
+        seed = fit_result.pop('seed')
+        fit_strategy = fit_result.pop('fit_strategy')
+        model_name = fit_result.pop('model_name')
 
+        # store results
+        self.from_plain_dict(plain_dict=fit_result, skip_cov=True)  # skip as we have matrix, not A1
+
+        # store covariance matrix
         self._result['covariance-matrix']['matrix'] = cov_matrix
 
+        # store toy specific values
+        self._result['jobid'] = jobid
+        self._result['fitnum'] = fitnum
+        self._result['seed'] = seed
+        self._result['fit_strategy'] = fit_strategy
+        self._result['model_name'] = model_name
+
         self._result = result
-
-
 
         return self
 
@@ -238,14 +251,14 @@ class FitResult(object):
         # TODO: better extraction method?
         possible_params = list(plain_dict.keys())
         fit_parameters = OrderedDict()
-        n_suffixes = len(_SUFFIXES)
-        while len(possible_params) >= n_suffixes and all(isinstance(p, str) for p in possible_params[:n_suffixes]):
-            if n_suffixes == 0:
+        while (len(possible_params) >= len(_SUFFIXES) and
+                   all(isinstance(p, str) for p in possible_params[:len(_SUFFIXES)])):
+            if len(_SUFFIXES) == 0:
                 break
             param_name = possible_params[0][:max(len(possible_params[0]) - len(_SUFFIXES[0]), 0)]
             if all((param_name + suf == p for p, suf in zip(possible_params, _SUFFIXES))):
-                fit_parameters[param_name] = (plain_dict.pop(name) for name in possible_params[:n_suffixes])
-                possible_params = possible_params[n_suffixes:]
+                fit_parameters[param_name] = (plain_dict.pop(name) for name in possible_params[:len(_SUFFIXES)])
+                possible_params = possible_params[len(_SUFFIXES):]
         result['fit-parameters'] = fit_parameters
 
         n_const_params = result.index('status_migrad')  # TODO: better limit the const params
@@ -322,9 +335,11 @@ class FitResult(object):
             pandas.DataFrame
 
         """
+        # do NOT change order below
         pandas_dict = OrderedDict(((param_name + suffix, val)
                                    for param_name, param in self._result['fit-parameters'].items()
                                    for val, suffix in zip(param, _SUFFIXES)))
+        # do NOT change order below
         pandas_dict.update(OrderedDict((param_name, val) for param_name, val
                             in self._result['const-parameters'].items()))
         pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
