@@ -8,6 +8,7 @@
 """Physics utilities."""
 
 from collections import OrderedDict
+import copy
 import traceback
 
 import ROOT
@@ -16,6 +17,8 @@ from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 from analysis.utils.config import get_shared_vars, configure_parameter, ConfigError
 
+
+__copy_config_locked = 0
 
 logger = get_logger('analysis.physics')
 # logger.setLevel(10)
@@ -246,6 +249,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
 
     # copy: to not alter argument; shallow (not deep!): do not duplicate ROOT objects
     config = config.copy()
+    global __copy_config_locked
+
+    # lock down config (intentionally not "threadsafe"! substitution of asyncio)
+    initial_config = None
+    __copy_config_locked += 1
+    if __copy_config_locked == 1:
+        initial_config = copy.deepcopy(config)
+
     # Prepare shared variables
     if shared_vars is None:
         try:
@@ -253,18 +264,19 @@ def configure_model(config, shared_vars=None, external_vars=None):
         except (ValueError, KeyError) as error:
             raise ConfigError(error)
     # Let's find out what is this
+    new_factory = None
     if 'categories' in config:
-        return configure_simul_factory(config, shared_vars)
+        new_factory = configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
             if isinstance(config.values()[0].get('pdf', None), str):
                 shared = {'pdf': shared_vars}
-                return configure_prod_factory({'pdf': config}, shared)
+                new_factory = configure_prod_factory({'pdf': config}, shared)
             else:
-                return configure_sum_factory(config, shared_vars)
+                new_factory = configure_sum_factory(config, shared_vars)
         else:
             if len(config['pdf']) > 1:
-                return configure_prod_factory(config, shared_vars)
+                new_factory = configure_prod_factory(config, shared_vars)
             else:
                 pdf_obs = config['pdf'].keys()[0]
                 pdf_config = config['pdf'].values()[0]
@@ -276,8 +288,16 @@ def configure_model(config, shared_vars=None, external_vars=None):
                     sh_vars['parameters'].update(shared_vars['parameters'])
                 else:
                     sh_vars['parameters'] = shared_vars['parameters']
-                return configure_factory(pdf_obs, pdf_config, sh_vars)
-    raise RuntimeError()
+                new_factory = configure_factory(pdf_obs, pdf_config, sh_vars)
+
+    __copy_config_locked -= 1
+    if initial_config:
+        new_factory.set_initial_config(config)  # Dummy method
+
+    if new_factory is None:
+        raise RuntimeError()
+
+    return new_factory
 
 
 # EOF
