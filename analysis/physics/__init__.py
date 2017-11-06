@@ -205,7 +205,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                 if 'yield' in config:
                     yield_ = config.pop('yield')
                     if 'yield' not in shared_vars:
-                        parameters['yield'] = sanitize_parameter(config.pop('yield'), 'Yield', 'Yield')
+                        parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
                 # if 'yield' in parameters:
                 #     parameters['yield'][0].setStringAttribute('shared', 'true')
             return factory.SumPhysicsFactory(factories, yields, parameters)
