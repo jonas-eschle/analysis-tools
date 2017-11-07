@@ -22,6 +22,7 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
+from analysis.utils.random import get_urandom_int
 from analysis.data.hdf import modify_hdf
 from analysis.physics import configure_model
 from analysis.efficiency import get_acceptance
@@ -86,11 +87,6 @@ def run(config_files, link_from, verbose):
     except KeyError:
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
-    # Fit strategies
-    fit_strategies = config['fit'].get('strategies', ['simple'])  # unused
-    if not fit_strategies:
-        logger.error("Empty fit strategies were specified in the config file!")
-        raise KeyError()
     # Some info
     nfits = config['fit'].get('nfits-per-job', config['fit']['nfits'])
     logger.info("Doing %s generate/fit sequences", nfits)
@@ -114,14 +110,6 @@ def run(config_files, link_from, verbose):
     systematic = get_systematic(config['syst'])(model=fit_model, config=config['syst'])
     # Set seed
     job_id = get_job_id()
-    if job_id:
-        seed = int(job_id.split('.')[0])
-    else:
-        import random
-        job_id = 'local'
-        seed = random.randint(0, 100000)
-    np.random.seed(seed=seed)
-    ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Start looping
     fit_results = defaultdict(list)
     logger.info("Starting sampling-fit loop (print frequency is 20)")
@@ -132,6 +120,9 @@ def run(config_files, link_from, verbose):
         if (fit_num+1) % 20 == 0:
             logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Generate a dataset
+        seed = get_urandom_int(8)
+        np.random.seed(seed=seed)
+        ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
             dataset = systematic.get_dataset(acceptance)
             fit_result = fit(fit_model,
@@ -149,6 +140,7 @@ def run(config_files, link_from, verbose):
         # Now results are in fit_parameters
         result = FitResult().from_roofit(fit_result).to_plain_dict()
         result['fitnum'] = fit_num
+        result['seed'] = seed
         fit_results[fit_num].append(result)
         _root.destruct_object(fit_result)
         _root.destruct_object(dataset)
@@ -159,8 +151,7 @@ def run(config_files, link_from, verbose):
     logger.info("Saving to disk")
     data_frame = pd.DataFrame(fit_results)
     fit_result_frame = pd.concat([data_frame,
-                                  pd.concat([pd.DataFrame({'seed': [seed],
-                                                           'jobid': [job_id]})]
+                                  pd.concat([pd.DataFrame({'jobid': [job_id]})]
                                             * data_frame.shape[0]).reset_index(drop=True)],
                                  axis=1)
     try:
