@@ -17,7 +17,7 @@ from analysis.data.mergers import merge_root
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 
-logger = get_logger('toys.systematics')
+logger = get_logger('analysis.toys.systematics')
 
 
 def register_systematic(name, syst_class):
@@ -108,7 +108,8 @@ class Systematic(object):
 
         """
         # TODO: Add weights, acceptance. If weights/acceptance, loop and generate one by one.
-        self.randomize()
+        if randomize:
+            self.randomize()
         if not acceptance:
             return merge_root([pdf.generate(list_to_rooargset(self._model.get_observables()))
                                for pdf in self._gen_pdfs],
@@ -188,7 +189,7 @@ class FixedParamsSyst(Systematic):
                 column = column+mat.shape[1]
             return output_mat
 
-        super(FixedParamsSyst, self).__init__(model, config)
+        super(FixedParamsSyst, self).__init__(model=model, config=config)
         cov_matrices = []
         central_values = []
         self._param_translation = OrderedDict()

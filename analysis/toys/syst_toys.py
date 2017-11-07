@@ -16,6 +16,7 @@ from collections import defaultdict
 from timeit import default_timer
 
 import pandas as pd
+import numpy as np
 
 import ROOT
 
@@ -38,7 +39,7 @@ logger = get_logger('analysis.toys.syst')
 def run(config_files, link_from, verbose):
     """Run the script.
 
-    Run a geneate/fit sequence as many times as requested.
+    Run a generate/fit sequence as many times as requested.
 
     Arguments:
         config_files (list[str]): Path to the configuration files.
@@ -57,7 +58,8 @@ def run(config_files, link_from, verbose):
         config = _config.load_config(*config_files,
                                      validate=['fit/nfits',
                                                'name',
-                                               'data'])
+                                               'data',
+                                               'syst'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
     except _config.ConfigError as error:
@@ -67,10 +69,12 @@ def run(config_files, link_from, verbose):
             logger.error("No name was specified in the config file!")
         if 'data' in error.missing_keys:
             logger.error("No input data specified in the config file!")
+        if 'syst' in error.missing_keys:
+            logger.error("No systematics configuration specified in config file!")
         raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
-    model_name = config['fit'].get('model', 'model')
+    model_name = config['fit'].get('model', 'model')  # TODO: 'model' returns name?
     try:
         model_config = config[model_name]
     except KeyError as error:
@@ -83,7 +87,7 @@ def run(config_files, link_from, verbose):
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
     # Fit strategies
-    fit_strategies = config['fit'].get('strategies', ['simple'])
+    fit_strategies = config['fit'].get('strategies', ['simple'])  # unused
     if not fit_strategies:
         logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()
@@ -107,7 +111,7 @@ def run(config_files, link_from, verbose):
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
     # Load systematic configuration
-    systematic = get_systematic(config['syst'])(fit_model, config['syst'])
+    systematic = get_systematic(config['syst'])(model=fit_model, config=config['syst'])
     # Set seed
     job_id = get_job_id()
     if job_id:
@@ -141,7 +145,7 @@ def run(config_files, link_from, verbose):
             raise RuntimeError()
         except Exception:
             logger.exception()
-            raise RuntimeError()
+            raise RuntimeError()  # TODO: provide more information?
         # Now results are in fit_parameters
         result = FitResult().from_roofit(fit_result).to_plain_dict()
         result['fitnum'] = fit_num
@@ -172,7 +176,7 @@ def run(config_files, link_from, verbose):
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
-    except OSError, excp:
+    except OSError as excp:
         logger.error(str(excp))
         raise
     except ValueError as error:
@@ -218,7 +222,7 @@ def main():
     except KeyError:
         exit_status = 1
         logger.exception("Bad configuration given")
-    except OSError, error:
+    except OSError as error:
         exit_status = 2
         logger.error(str(error))
     except ValueError:
