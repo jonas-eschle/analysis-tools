@@ -247,13 +247,14 @@ class BaseFactory(object):
         """
         path, param_name = os.path.split(param_path)
         current_obj = self
-        try:
-            for path_element in path.split('/'):
+
+        for path_element in path.split('/'):
+            try:
                 current_obj = current_obj.get_children()[path_element]
-        except KeyError as error:
-            missing_key = error.args[0]
-            logger.error("Unknown child %s in path -> %s", missing_key, path.split(missing_key)[0])
-            raise
+            except KeyError as error:
+
+                logger.error("Unknown child %s in path -> %s", path_element, path.split()[0])
+                raise
         return current_obj.get(param_name)
 
     def get_parameter_name(self, param_id):
@@ -472,7 +473,7 @@ class BaseFactory(object):
         for child in self._children.values():
             if child.is_extended():
                 yields.extend(child.get_yield_vars())
-        return yields
+        return yields  # TODO: may return dict with name?
 
     def get_category_var(self):
         return self._category

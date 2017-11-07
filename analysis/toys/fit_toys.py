@@ -53,13 +53,14 @@ def get_datasets(data_frames, acceptance, fit_models):
         cannot be varied properly and therefore their pulls will be wrong.
 
     Arguments:
-        data_frames (dict[tuple(pandas.DataFrame, int, str)]): Data frames with the requested
-            number of events and the corresponding category.
+        data_frames (dict[tuple(pandas.DataFrame, int, bool, str)]): Data frames with
+            - the requested number of events (int)
+            - a boolean telling whether to use poisson statistics (bool)
+            - the corresponding category (str)
         acceptance (analysis.efficiency.acceptance.Acceptance): Acceptance description.
             Can be None, in which case it is ignored.
         fit_models (dict): Fit models to use to transform datasets and (possibly) establish
             the data categories, with the name of the output as key.
-        categories (dict, optional): Category of each data frame.
 
     Return:
         tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the
@@ -83,7 +84,7 @@ def get_datasets(data_frames, acceptance, fit_models):
             do_poisson = is_extended
         sample_sizes[data_name] = poisson.rvs(n_events) if do_poisson else n_events
         # Extract suitable number of rows and transform them
-        rows = data.sample(sample_sizes[data_name])
+        rows = data.sample(sample_sizes[data_name])  # TODO: Weights support?
         # Add category column
         if category:
             # By default the label is stored in the 'category' column
