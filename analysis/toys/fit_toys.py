@@ -20,6 +20,7 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
+from analysis.utils.random import get_urandom_int
 from analysis.data import get_data
 from analysis.data.hdf import modify_hdf
 from analysis.data.converters import dataset_from_pandas
@@ -279,6 +280,9 @@ def run(config_files, link_from, verbose):
         if (fit_num+1) % 20 == 0:
             logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Get a compound dataset
+        seed = get_urandom_int(8)
+        np.random.seed(seed=seed)
+        ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
             logger.debug("Sampling input data")
             datasets, sample_sizes = get_datasets(data,
@@ -313,6 +317,7 @@ def run(config_files, link_from, verbose):
                 result['cov_matrix'] = result_roofit.get_covariance_matrix()
                 result['param_names'] = result_roofit.get_fit_parameters().keys()
                 result['fitnum'] = fit_num
+                result['seed'] = seed
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
             _root.destruct_object(dataset)
@@ -339,8 +344,7 @@ def run(config_files, link_from, verbose):
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
                                   data_frame,
-                                  pd.concat([pd.DataFrame({'seed': [seed],
-                                                           'jobid': [job_id]})]
+                                  pd.concat([pd.DataFrame({'jobid': [job_id]})]
                                             * data_frame.shape[0]).reset_index(drop=True)],
                                  axis=1)
     try:
