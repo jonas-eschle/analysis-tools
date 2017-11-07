@@ -12,7 +12,7 @@ from collections import OrderedDict
 import numpy as np
 
 from analysis.fit.result import FitResult
-from analysis.utils.root import list_to_rooargset
+from analysis.utils.root import list_to_rooargset, iterate_roocollection
 from analysis.data.mergers import merge_root
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
@@ -152,7 +152,7 @@ class FixedParamsSyst(Systematic):
         fit result to `model`.
 
             {'syst': [{'result': result_name,
-                       'param_names': {'fit_result_name': 'model/parameter_name',
+                       'param_names': {'fit_result_name': 'model_parameter_name',
                                        ...}},
                        ...]}
 
@@ -163,6 +163,7 @@ class FixedParamsSyst(Systematic):
 
         Raise:
             KeyError: If some systematic configuration parameter is missing.
+            RuntimeError: If the parameter names are badly specified.
             ValueError: If no yield is specified, either through the PDF model or the
                 configuration.
 
@@ -201,8 +202,30 @@ class FixedParamsSyst(Systematic):
         # Check that there is a correspondence between the fit result and parameters in the generation PDF
         self._cov_matrix = make_block(*cov_matrices)
         self._central_values = make_block(*central_values)
+        self._pdf_index = {}
+        for fit_param in self._param_translation.values():
+            found = False
+            for pdf_num, pdf in enumerate(self._gen_pdfs):
+                if fit_param in [var.GetName() for var in iterate_roocollection(pdf.getVariables())]:
+                    self._pdf_index[fit_param] = pdf_num
+                    found = True
+                    break
+            if not found:
+                raise RuntimeError("Cannot find parameter {} in the physics model".format(fit_param))
 
     def randomize(self):
-        pass
+        """Randomize the fit parameters according to the covariance matrix.
+
+        This function modifies the internal parameters of the generator PDF, so doesn't
+        return their values.
+
+        Return:
+            int: Number of randomized parameters.
+
+        """
+        random_values = np.random.multivariate_normal(self._central_values, self._cov_matrix)
+        for param_num, (param_name, pdf_index) in enumerate(self._pdf_index.items()):
+            self._gen_pdfs[pdf_index].getVariables[param_name].setVal(random_values[param_num])
+        return len(random_values)
 
 # EOF
