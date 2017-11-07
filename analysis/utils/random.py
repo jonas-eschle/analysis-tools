@@ -26,8 +26,8 @@ def get_urandom_int(length):
 
     """
     try:
-        rand_int = int.from_bytes(os.urandom(100), sys.byteorder)
+        rand_int = int.from_bytes(os.urandom(length), sys.byteorder)
     except AttributeError:  # py2
-        rand_int = int(os.urandom(10).encode('hex'), 16)
+        rand_int = int(os.urandom(length).encode('hex'), 16)
     return rand_int
 
