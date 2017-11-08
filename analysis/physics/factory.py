@@ -7,6 +7,7 @@
 # =============================================================================
 """Physics factory classes."""
 
+import copy
 import re
 from collections import OrderedDict
 
@@ -57,6 +58,7 @@ class BaseFactory(object):
         self._objects = {}
         self._children = OrderedDict()
         self._config = config
+        self._initial_config = None
         self._constraints = set() if parameters is None else set(parameters.get('constraints', []))
         self._category = None
         # Initialize parameters
@@ -288,6 +290,39 @@ class BaseFactory(object):
                 parameters_to_set[param_id] = self._add_superscript(factory.get_parameter_name(param_id),
                                                                     label)
             factory.set_parameter_names(parameters_to_set)
+
+    def set_initial_config(self, config):
+        """Store a deepcopy of the initial pdf configuration in yaml format.
+
+        Args:
+            config (OrderedDict): The initial config in the usual yaml format.
+
+        Raises:
+            TypeError: if config is of wrong type (not an OrderedDict).
+            ValueError: if config is an empty dictionary.
+        """
+        if not isinstance(config, OrderedDict):
+            raise TypeError("Config has to be an *OrderedDict* but is a {}".format(type(config)))
+        if config:
+            self._initial_config = copy.deepcopy(config)
+        else:
+            raise ValueError("Config is empy: {}".format(config))
+
+    def get_initial_config(self, deepcopy=False):
+        """Return the initial config in yaml format.
+
+        Args:
+            deepcopy (bool): If True, a deepcopy is created and returned. Otherwise, no copy at
+                all is made.
+
+        Returns:
+            OrderedDict: The initial configuration.
+
+        """
+        config = self._initial_config
+        if deepcopy:
+            config = copy.deepcopy(config)
+        return config
 
     def get_pdf(self, name, title):
         """Get the physics PDF.
