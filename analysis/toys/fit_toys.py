@@ -141,7 +141,7 @@ def run(config_files, link_from, verbose):
         logger.error("Missing model configuration -> %s", str(error))
         raise KeyError("Missing model configuration")
     if not models:
-        logger.error("No model was specified in the config file!")
+        logger.error("Empty list specified in the config file under 'fit/models'!")
         raise KeyError()
     fit_strategies = config['fit'].get('strategies', ['simple'])  # DEFAULT
     if not fit_strategies:
