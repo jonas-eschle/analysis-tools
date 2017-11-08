@@ -350,9 +350,9 @@ class LegendreEfficiency1D(Efficiency):
         self._coefficients = np.array(np.split(config['coefficients'],
                                                np.cumsum([config['pol-orders'][var_name]
                                                           for var_name in self.get_variables()])[:-1]))
-        self._covariance = np.reshape(config['covariance'],  # MISSING KEY
-                                      (sum(config['pol-orders'].values()),  # MISSING KEY
-                                       sum(config['pol-orders'].values())))  # MISSING KEY
+        self._covariance = np.reshape(config['covariance'],
+                                      (sum(config['pol-orders'].values()),
+                                       sum(config['pol-orders'].values())))
         for var_name in config.get('symmetric-variables', []):
             logger.debug("Symmetrizing legendre polynomial for variable %s", var_name)
             try:

@@ -176,7 +176,7 @@ def run(config_files, link_from, verbose):
                                    'tree': 'data',
                                    'output-format': 'pandas',
                                    'selection': data_source.get('selection')}),
-                         data_source['nevents'],  # explicit fail?
+                         data_source['nevents'],
                          data_source.get('category'))
         # Generator values
         toy_info = get_data({'source': source_toy,
