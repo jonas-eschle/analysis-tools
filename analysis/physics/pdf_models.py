@@ -199,7 +199,7 @@ class ArgusConvGaussPdfMixin(object):
 
         """
         super(ArgusConvGaussPdfMixin, self).__init__(config, parameters)
-        self._buffer_fraction = config.get('buffer_fraction', 1.0)  # DEFAULT
+        self._buffer_fraction = config.get('buffer_fraction', 1.0)
 
     def get_unbound_pdf(self, name, title):
         """Get the convolved PDF.

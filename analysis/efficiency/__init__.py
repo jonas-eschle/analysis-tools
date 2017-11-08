@@ -60,7 +60,7 @@ def get_efficiency_model_class(model_name):
         `Efficiency`: Efficiency class, non-instantiated.
 
     """
-    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower())  # DEFAULT
+    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower())
 
 
 def load_efficiency_model(model_name, **extra_parameters):

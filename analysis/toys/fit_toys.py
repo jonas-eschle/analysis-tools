@@ -143,7 +143,7 @@ def run(config_files, link_from, verbose):
     if not models:
         logger.error("Empty list specified in the config file under 'fit/models'!")
         raise KeyError()
-    fit_strategies = config['fit'].get('strategies', ['simple'])  # DEFAULT
+    fit_strategies = config['fit'].get('strategies', ['simple'])
     if not fit_strategies:
         logger.error("Empty fit strategies were specified in the config file!")
         raise KeyError()

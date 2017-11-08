@@ -414,7 +414,7 @@ class BaseFactory(object):
         raise NotImplementedError()
 
     def get_yield_var(self):
-        return self._objects.get('Yield')  # DEFAULT: should an Error be raised if Yield not there?
+        return self._objects.get('Yield')
 
     def set_yield_var(self, yield_):
         raise NotImplementedError()

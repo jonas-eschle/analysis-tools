@@ -215,9 +215,9 @@ class FitResult(object):
                        for val, suffix in zip(param, _SUFFIXES)}
         pandas_dict.update({param_name: val for param_name, val
                             in self._result['const-parameters'].items()})
-        pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)  # DEFAULT
-        pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)  # DEFAULT
-        pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)  # DEFAULT
+        pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
+        pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
+        pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
         pandas_dict['cov_quality'] = self._result['covariance-matrix']['quality']
         pandas_dict['edm'] = self._result['edm']
         if not skip_cov:

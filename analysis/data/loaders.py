@@ -160,7 +160,7 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     # Checks and variable preparation
     try:
         name = kwargs['name']
-        title = kwargs.get('title', name)  # DEFAULT OK
+        title = kwargs.get('title', name)
     except KeyError as error:
         raise KeyError("Missing configuration key -> %s" % error)
     # Check weights

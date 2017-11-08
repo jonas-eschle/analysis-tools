@@ -108,12 +108,12 @@ def get_data(data_config, **kwargs):
             raise OSError("Cannot find input file -> %s" % file_name)
     except AttributeError:
         raise AttributeError("Unknown source type -> %s" % source_type)
-    tree_name = data_config.pop('tree')  # DEFAULT OK
-    output_format = data_config.pop('output-format').lower()  # DEFAULT OK
+    tree_name = data_config.pop('tree')
+    output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches
     input_ext = os.path.splitext(file_name)[1]
     try:
-        input_type = data_config.get('input-type')  # DEFAULT
+        input_type = data_config.get('input-type')
         if not input_type:
             input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:
