@@ -9,6 +9,7 @@
 
 import argparse
 
+import numpy as np
 import pandas as pd
 import ROOT
 
@@ -39,10 +40,10 @@ def generate(physics_factory, n_events):
             observables, parameters and PDFs from.
         n_events (dict, int): Number of events to generate.
 
-    Returns:
+    Return:
         `pandas.DataFrame`: Generated events.
 
-    Raises:
+    Raise:
         ValueError: If the number of events to generate is not properly specified.
         KeyError: If an unknown simultaneous category label is requested.
 
@@ -57,7 +58,7 @@ def generate(physics_factory, n_events):
             obs_set (`ROOT.RooArgSet`): Observables to generate.
             n_events (int): Number of events to generate.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Generated events.
 
         """
@@ -74,9 +75,9 @@ def generate(physics_factory, n_events):
         for label, n_events_label in n_events.items():
             label_factory = physics_factory.get_children().get(label)
             if not label_factory:
-                raise KeyError("Unknown label -> %s" % label)
-            label_df = generate_events(label_factory.get_pdf("GenPdf_%s" % label,
-                                                             "GenPdf_%s" % label),
+                raise KeyError("Unknown label -> {}".format(label))
+            label_df = generate_events(label_factory.get_pdf("GenPdf_{}".format(label),
+                                                             "GenPdf_{}".format(label)),
                                        observables,
                                        n_events_label).assign(category=label)
             if output_dataset is None:
@@ -99,7 +100,7 @@ def run(config_files, link_from):
         config_files (list[str]): Path to the configuration files.
         link_from (str): Path to link the results from.
 
-    Raises:
+    Raise:
         KeyError: If some configuration data are missing.
         OSError: If there either the configuration file does not exist or if
             there is a problem preparing the output path.
@@ -114,8 +115,8 @@ def run(config_files, link_from):
                                        'name',
                                        'gen-model'])
     except OSError:
-        raise OSError("Cannot load configuration files: %s",
-                      config_files)
+        raise OSError("Cannot load configuration files: {}"
+                      .format(config_files))
     except ConfigError as error:
         if 'gen/nevents' in error.missing_keys:
             logger.error("Number of events not specified")
@@ -123,7 +124,7 @@ def run(config_files, link_from):
             logger.error("No name was specified in the config file!")
         if 'gen-model' in error.missing_keys:
             logger.error("No generation model were specified in the config file!")
-        raise KeyError("ConfigError raised -> %s" % error.missing_keys)
+        raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
@@ -144,13 +145,14 @@ def run(config_files, link_from):
         import random
         job_id = 'local'
         seed = random.randint(0, 100000)
+    np.random.seed(seed=seed)
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Generate
     try:
         physics = configure_model(config['gen-model'])
     except KeyError as error:
         logger.error("Cannot find physics factory")
-        raise ValueError('%s' % error)
+        raise ValueError('{}'.format(error))
     except ValueError:
         logger.error("Problem dealing with shared parameters")
         raise
@@ -174,8 +176,8 @@ def run(config_files, link_from):
     try:
         # Save
         with work_on_file(config['name'],
-                          config.get('link-from'),
-                          get_toy_path) as toy_file:
+                          path_func=get_toy_path,
+                          link_from=config.get('link-from')) as toy_file:
             with modify_hdf(toy_file) as hdf_file:
                 hdf_file.append('data', dataset.assign(jobid=job_id))
                 hdf_file.append('toy_info', pd.DataFrame(toy_info))

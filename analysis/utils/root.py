@@ -27,7 +27,7 @@ def load_library(name, lib_dirs=None, debug=False, force=False, use_mathmore=Fal
         use_mathmore (bool, optional): Load libMathMore before compiling. Defaults
             to False.
 
-    Returns:
+    Return:
         bool: Was the operation successful?
 
     """
@@ -90,7 +90,7 @@ def execute_and_return_self(obj, func, *args, **kwargs):
         func (callable): Method to execute.
         *args, **kwargs: Arguments of the method.
 
-    Returns:
+    Return:
         object: The input `obj`.
 
     """
@@ -107,7 +107,7 @@ def list_to_rooabscollection(iterable, collection_type):
         collection_type (ROOT.RooAbsCollection): Type of collection to
             convert to.
 
-    Returns:
+    Return:
         `collection_type`.
 
     """
@@ -124,7 +124,7 @@ def list_to_rooarglist(iterable):
     Arguments:
         iterable (iterable): Iterable to convert.
 
-    Returns:
+    Return:
         `ROOT.RooArgList`.
 
     """
@@ -137,11 +137,12 @@ def list_to_rooargset(iterable):
     Arguments:
         iterable (iterable): Iterable to convert.
 
-    Returns:
+    Return:
         `ROOT.RooArgSet`.
 
     """
     return list_to_rooabscollection(iterable, ROOT.RooArgSet)
+
 
 def iterate_roocollection(collection):
     """Iterate a RooAbsCollection object.
@@ -167,7 +168,7 @@ def rooargset_to_set(rooargset):
     Arguments:
         rooargset (ROOT.RooArgSet): RooArgSet to convert.
 
-    Returns:
+    Return:
         set
 
     """
@@ -180,7 +181,7 @@ def rooarglist_to_list(rooarglist):
     Arguments:
         rooarglist (ROOT.RooArgList): RooArgList to convert.
 
-    Returns:
+    Return:
         list
 
     """

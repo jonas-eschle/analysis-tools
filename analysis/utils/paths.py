@@ -38,18 +38,19 @@ def _get_path(dirs, extension, name_transformation, name, *args, **kwargs):
 
     Arguments:
         dirs (list): Parent directories of the object path.
-        extension (str): Extension of the file (including the dot).
+        extension (str): Extension of the file (including the dot). Can be empty for
+            directories.
         name_transformation (Callable, optional): Function to transform the name of the path.
         name (str): Name of the object.
         *args (list): Positional arguments to be passed to `name_transformation`.
         *kwargs (list): Keyword arguments to be passed to `name_transformation`.
 
-    Returns:
+    Return:
         str: Absolute path of the object.
 
     """
-    assert extension.startswith('.'), "Extension is expected to start with '.'. " \
-                                      "Given extension: {}".format(extension)
+    assert not extension or extension.startswith('.'), \
+        "Extension is expected to start with '.'. Given extension: {}".format(extension)
 
     path = os.path.join(*([get_global_var('BASE_PATH')] +
                           dirs + [name_transformation(name, args, kwargs)]))
@@ -70,7 +71,7 @@ def register_path(path_type,
     Arguments:
         path_type (str): Type of path to register. Defines the name of the registered function.
         parent_dirs (list): List of parent dirs (on top of BASE_PATH) of the path we want to register.
-        extension (str): Extension of the file, including the dot.
+        extension (str): Extension of the file, including the dot. It can be left empty for directories.
         name_transformation (Callable, optional): Function to transform the name of the path
             when calling the `get_{path_type}_path`. It needs to have three arguments: `name`,
             `args` and `kwargs`, which are passed when executing the `get_{path_type}_path` function.
@@ -80,38 +81,38 @@ def register_path(path_type,
                 lambda name, args, kwargs: name
                 ```
 
-    Returns:
+    Return:
         Callable: The created function.
 
-    Raises:
+    Raise:
         ValueError: If the signature of the `name_transformation` doesn't match the specifications.
         KeyError: If the path has already been registered.
 
     """
     # Checks
-    if not extension.startswith('.'):
+    if extension and not extension.startswith('.'):
         extension = '.' + extension
     if len(inspect.getargspec(name_transformation).args) != 3:
         raise ValueError("The name transformation function needs to have 3 arguments")
     # Register the partialled function in globals
     func_name = 'get_' + path_type + '_path'
     if func_name in globals():
-        raise KeyError("Path type already registered -> %s" % path_type)
+        raise KeyError("Path type already registered -> {}".format(path_type))
     logger.debug("Registering path %s", func_name)
     func = partial(_get_path, parent_dirs, extension, name_transformation)
     # Create the docstring
-    func.__doc__ = """Get the path for %s.
+    func.__doc__ = """Get the path for {}.
 
-    The file name is {BASE_PATH}/%s/{name}%s and its existence is
+    The file name is {{BASE_PATH}}/{}/{{name}}{} and its existence is
     not checked.
 
     Arguments:
         name (str): Name of the object.
 
-    Returns:
+    Return:
         str: Absolute path of the file.
 
-    """ % (path_type, os.sep.join(parent_dirs), extension)
+    """.format(path_type, os.sep.join(parent_dirs), extension)
     globals()['get_' + path_type + '_path'] = func
     return func
 
@@ -124,12 +125,9 @@ get_toy_fit_config_path = register_path('toy_fit_config', ['data_files', 'toys',
 get_log_path = register_path('log', ['data_files', 'logs'], 'log')
 get_efficiency_path = register_path('efficiency', ['data_files', 'efficiency'], 'yaml')
 get_acceptance_path = register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
-get_genlevel_mc_path = register_path('genlevel_mc', ['data_files', 'mc'], 'xgen',
-                                     lambda name, args, kwargs: os.path.join(str(kwargs['evt_type']),
-                                                                             name))
-get_genlevel_histos_path = register_path('genlevel_histos', ['data_files', 'mc'], 'root',
-                                         lambda name, args, kwargs: os.path.join(str(kwargs['evt_type']),
-                                                                                 name + '_histos'))
+get_genlevel_mc_path = register_path('genlevel_mc', ['data_files', 'mc'], '',
+                                     lambda name, args, kwargs:
+                                     os.path.join(str(kwargs['evt_type']), name))
 get_plot_style_path = register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
                                     lambda name, args, kwargs: 'matplotlib_' + name)
 get_fit_result_path = register_path('fit_result', ['data_files', 'fit'], 'yaml')
@@ -153,7 +151,7 @@ def prepare_path(name, path_func, link_from, *args, **kwargs):
         *args (list): Extra arguments for the `path_func`.
         **kwargs (dict): Extra arguments for the `path_func`.
 
-    Returns:
+    Return:
         tuple (bool, str, str): Need to do soft-linking, path of true output file,
             path of soft-link output.
 
@@ -164,13 +162,12 @@ def prepare_path(name, path_func, link_from, *args, **kwargs):
     if dest_base_dir != src_base_dir:
         do_link = True
         if not os.path.exists(src_base_dir):
-            raise OSError("Cannot find storage folder -> %s" % src_base_dir)
+            raise OSError("Cannot find storage folder -> {}".format(src_base_dir))
     dest_file_name = path_func(name, *args, **kwargs)
-    rel_file_name = os.path.relpath(dest_file_name,
-                                    dest_base_dir)
+    rel_file_name = os.path.relpath(dest_file_name, dest_base_dir)
     src_file_name = os.path.join(src_base_dir, rel_file_name)
     # Create dirs
-    rel_dir = os.path.dirname(rel_file_name)
+    rel_dir = rel_file_name if os.path.isdir(rel_file_name) else os.path.dirname(rel_file_name)
     for dir_ in (dest_base_dir, src_base_dir):
         if not os.path.exists(os.path.join(dir_, rel_dir)):
             os.makedirs(os.path.join(dir_, rel_dir))
@@ -194,7 +191,7 @@ def work_on_file(name, path_func, link_from=None):
     Yields:
         str: Path ot the file.
 
-    Raises:
+    Raise:
         OSError: If there is a problem preparing the path.
 
     """
@@ -220,16 +217,17 @@ def work_on_file(name, path_func, link_from=None):
                 os.symlink(src_file, dest_file)
 
     try:
-        do_link, src_file, dest_file = prepare_path(name, link_from, path_func)
+        do_link, src_file, dest_file = prepare_path(name=name, path_func=path_func,
+                                                    link_from=link_from)
     except OSError as error:
-        raise OSError("Error preparing path -> %s" % str(error))
+        raise OSError("Error preparing path -> {}".format(str(error)))
     lock_file = os.path.join(os.path.dirname(src_file),
-                             '.%s.lock' % os.path.split(src_file)[1])
+                             '.{}.lock'.format(os.path.split(src_file)[1]))
     with fasteners.InterProcessLock(lock_file):
-        logger.debug("Got lock!")
+        logger.debug("Got lock (file: {})!".format(lock_file))
         yield src_file
         if do_link:
             link_files((src_file, dest_file))
-        logger.debug('Releasing lock!')
+        logger.debug('Releasing lock (file: {})!'.format(lock_file))
 
 # EOF

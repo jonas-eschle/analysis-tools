@@ -16,27 +16,30 @@ from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
 from analysis.utils.paths import get_fit_result_path
 
-
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
 
 def ensure_initialized(method):
     """Make sure the fit result is initialized."""
+
     def wrapper(self, *args, **kwargs):
         """Check result is empty. Raise otherwise."""
         if not self.get_result():
             raise NotInitializedError("Trying to export a non-initialized fit result")
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
 def ensure_non_initialized(method):
     """Make sure the fit result is not initialized."""
+
     def wrapper(self, *args, **kwargs):
         """Check result is non empty. Raise otherwise."""
         if self.get_result():
             raise AlreadyInitializedError("Trying to overwrite an initialized fit result")
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -55,7 +58,7 @@ class FitResult(object):
     def get_result(self):
         """Get the full fit result information.
 
-        Returns:
+        Return:
             dict: Full fit result information.
 
         """
@@ -68,10 +71,10 @@ class FitResult(object):
         Arguments:
             roofit_result (`ROOT.RooFitResult`): Fit result.
 
-        Returns:
+        Return:
             self
 
-        Raises:
+        Raise:
             AlreadyInitializedError: If the FitResult had already been initialized.
 
         """
@@ -82,7 +85,8 @@ class FitResult(object):
                                                  in iterate_roocollection(roofit_result.constPars()))
         result['fit-parameters'] = OrderedDict((fit_par.GetName(), (fit_par.getVal(),
                                                                     fit_par.getError(),
-                                                                    fit_par.getErrorLo(), fit_par.getErrorHi()))
+                                                                    fit_par.getErrorLo(),
+                                                                    fit_par.getErrorHi()))
                                                for fit_par
                                                in iterate_roocollection(roofit_result.floatParsFinal()))
         result['fit-parameters-initial'] = OrderedDict((fit_par.GetName(), fit_par.getVal())
@@ -109,10 +113,10 @@ class FitResult(object):
         Arguments:
             yaml_dict (dict, OrderedDict): YAML information to load.
 
-        Returns:
+        Return:
             self
 
-        Raises:
+        Raise:
             KeyError: If any of the FitResult data is missing from the YAML dictionary.
             AlreadyInitializedError: If the FitResult had already been initialized.
 
@@ -141,10 +145,10 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit result.
 
-        Returns:
+        Return:
             self
 
-        Raises:
+        Raise:
             OSError: If the file cannot be found.
             KeyError: If any of the FitResult data is missing from the input file.
             AlreadyInitializedError: If the FitResult had already been initialized.
@@ -159,17 +163,31 @@ class FitResult(object):
                                                       'covariance-matrix/matrix',
                                                       'status')))
         except ConfigError as error:
-            raise KeyError("Missing keys in input file -> %s" % ','.join(error.missing_keys))
+            raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
+        return self
+
+    @ensure_non_initialized
+    def from_hdf(self, name):  # TODO: which path func?
+        """Initialize from a hdf file.
+
+        Arguments:
+            name (str):
+
+        Return:
+            self
+
+        """
+
         return self
 
     @ensure_initialized
     def to_yaml(self):
         """Convert fit result to YAML format.
 
-        Returns:
+        Return:
             str: Output dictionary in YAML format.
 
-        Raises:
+        Raise:
             NotInitializedError: If the fit result has not been initialized.
 
         """
@@ -186,10 +204,10 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit result.
 
-        Returns:
+        Return:
             str: Output file name.
 
-        Raises:
+        Raise:
             NotInitializedError: If the fit result has not been initialized.
 
         """
@@ -210,11 +228,11 @@ class FitResult(object):
             pandas.DataFrame
 
         """
-        pandas_dict = {param_name + suffix: val
-                       for param_name, param in self._result['fit-parameters'].items()
-                       for val, suffix in zip(param, _SUFFIXES)}
-        pandas_dict.update({param_name: val for param_name, val
-                            in self._result['const-parameters'].items()})
+        pandas_dict = OrderedDict(((param_name + suffix, val)
+                                   for param_name, param in self._result['fit-parameters'].items()
+                                   for val, suffix in zip(param, _SUFFIXES)))
+        pandas_dict.update(OrderedDict((param_name, val) for param_name, val
+                            in self._result['const-parameters'].items()))
         pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
@@ -231,11 +249,11 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit parameter.
 
-        Returns:
+        Return:
             tuple (float): Parameter value, Hesse error and upper and lower Minos errors.
                 If the two latter have not been calculated, they are 0.
 
-        Raises:
+        Raise:
             KeyError: If the parameter is unknown.
 
         """
@@ -248,10 +266,10 @@ class FitResult(object):
         Arguments:
             name (str): Name of the fit parameter.
 
-        Returns:
+        Return:
             float: Parameter value.
 
-        Raises:
+        Raise:
             KeyError: If the parameter is unknown.
 
         """
@@ -271,10 +289,10 @@ class FitResult(object):
     def get_covariance_matrix(self):
         """Get the fit covariance matrix.
 
-        Returns:
+        Return:
             `numpy.matrix`: Covariance matrix.
 
-        Raises:
+        Raise:
             NotInitializedError: If the FitResult has not been initialized.
 
         """
@@ -284,7 +302,7 @@ class FitResult(object):
     def get_edm(self):
         """Get the fit EDM.
 
-        Returns:
+        Return:
             float
 
         """
@@ -299,7 +317,7 @@ class FitResult(object):
 
         """
         return not any(status for status in self._result['status'].values()) and \
-            self._result['covariance-matrix']['quality'] == 3
+               self._result['covariance-matrix']['quality'] == 3
 
     @ensure_initialized
     def generate_random_pars(self, include_const=False):
@@ -310,7 +328,7 @@ class FitResult(object):
         Arguments:
             include_const (bool, optional): Return constant parameters? Defaults to False.
 
-        Returns:
+        Return:
             OrderedDict
 
         """

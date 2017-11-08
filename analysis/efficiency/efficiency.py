@@ -45,7 +45,7 @@ class Efficiency(object):
     def get_variables(self):
         """Get list of variables.
 
-        Returns:
+        Return:
             list: Variables in the correct order.
 
         """
@@ -54,7 +54,7 @@ class Efficiency(object):
     def get_variable_names(self):
         """Get variable names.
 
-        Returns:
+        Return:
             OrderedDict: Map efficiency var -> var name
 
         """
@@ -66,10 +66,10 @@ class Efficiency(object):
         Arguments:
             name_map (dict): Map old -> new variable names.
 
-        Returns:
+        Return:
             list: New variable list.
 
-        Raises:
+        Raise:
             KeyError: If one of the keys of the map is not found in the variable list.
 
         """
@@ -77,7 +77,7 @@ class Efficiency(object):
             try:
                 self._var_names[old_name] = new_name
             except ValueError:
-                raise KeyError("Cannot find variable name -> %s" % old_name)
+                raise KeyError("Cannot find variable name -> {}".format(old_name))
 
     def get_efficiency(self, data):
         """Get the efficiency for the given event or dataset.
@@ -85,10 +85,10 @@ class Efficiency(object):
         Arguments:
             data (`pandas.DataFrame` or Sequence): Data to calculate the efficiency of.
 
-        Returns:
+        Return:
             pandas.Series: Per-event efficiencies.
 
-        Raises:
+        Raise:
             ValueError: If the data format is not correct, eg, there is a variable mismatch.
 
         """
@@ -107,10 +107,10 @@ class Efficiency(object):
         Arguments:
             data (`pandas.DataFrame` or Sequence): Data to calculate the efficiency of.
 
-        Returns:
+        Return:
             pandas.Series: Per-event efficiencies.
 
-        Raises:
+        Raise:
             ValueError: If the data format is not correct, eg, there is a variable mismatch.
             KeyError: If there errors are not present and randomization cannot be applied.
 
@@ -148,10 +148,10 @@ class Efficiency(object):
         Arguments:
             data (`pandas.DataFrame` or Sequence): Data to calculate the efficiency errors of.
 
-        Returns:
+        Return:
             pandas.Series: Per-event efficiency errors.
 
-        Raises:
+        Raise:
             ValueError: If the data format is not correct, eg, there is a variable mismatch.
 
         """
@@ -185,10 +185,10 @@ class Efficiency(object):
                 is given, unity weights are used.
             labels (dict, optional): Label names for each variable.
 
-        Returns:
+        Return:
             dict: Variable -> plot mapping.
 
-        Raises:
+        Raise:
             ValueError: If the weight variable is not in `data`.
 
         """
@@ -198,7 +198,7 @@ class Efficiency(object):
             Arguments:
                 text (str): Text to escape.
 
-            Returns:
+            Return:
                 str: Escaped message.
 
             """
@@ -220,7 +220,7 @@ class Efficiency(object):
             return regex.sub(lambda match: conv[match.group()], text)
 
         if weight_var and weight_var not in data.columns:
-            raise ValueError("The weight variable is not find in the dataset -> %s", weight_var)
+            raise ValueError("The weight variable is not find in the dataset -> {}".format(weight_var))
         if labels is None:
             labels = {}
         figures = {}
@@ -245,10 +245,10 @@ class Efficiency(object):
             var_name (str): Variable to project.
             n_points (int): Number of points of the projection.
 
-        Returns:
+        Return:
             tuple (np.array): x and y coordinates of the projection.
 
-        Raises:
+        Raise:
             ValueError: If the requested variable is not modeled by the efficiency object.
 
         """
@@ -266,7 +266,7 @@ class Efficiency(object):
             **params (dict): Extra configuration parameters. Different for
                 each subclass.
 
-        Returns:
+        Return:
             `Efficiency`: New Efficiency object.
 
         """
@@ -280,13 +280,13 @@ class Efficiency(object):
             link_from (str, optional): Storage to link from. Defaults to
                 no link.
 
-        Returns:
+        Return:
             str: Path of the output file.
 
         """
         if not self.MODEL_NAME:
             raise NotImplementedError("Cannot save generic Efficiency")
-        with work_on_file(name, link_from, get_efficiency_path) as file_name:
+        with work_on_file(name, get_efficiency_path, link_from) as file_name:
             write_config({'model': self.MODEL_NAME,
                           'variables': self.get_variables(),
                           'parameters': self._config},

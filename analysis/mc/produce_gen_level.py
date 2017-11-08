@@ -51,16 +51,34 @@ Gauss().DatasetName = '$seed'" > $seedfile
 echo "Config file:"
 cat $seedfile
 # Run
-gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+if [ "{remove_detector}" == true ]; then
+    gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+else
+    gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+fi
 # Move output
-mv $seed-*.xgen {output_file}
-mv $seed-*-histos.root {output_histos}
+echo "Done"
+ls -ltr
+[ -d {output_path} ] || mkdir -p {output_path}
+[ -d {output_path_link} ] || mkdir -p {output_path_link}
+echo "Copying output to {output_path}"
+if [ "{remove_detector}" == true ]; then
+    cp $seed-*.xgen {output_path}
+else
+    cp $seed-*.sim {output_path}
+fi
+cp $seed-*-histos.root {output_path}
+output_gen_log={output_path_link}/${{seed}}_GeneratorLog.xml
+echo "Copying GeneratorLog.xml : ${{output_gen_log}}"
+cp GeneratorLog.xml ${{output_gen_log}}
+echo "Copying output histos"
+cp $seed-*-histos.root {output_path}
 ls -ltr
 # Do links
 if [ "{do_link}" == true ]; then
-    ln -sf {output_file} {output_file_link}
-    ln -sf {output_histos} {output_histos_link}
-if
+    echo "Links requested to {output_path_link}"
+    ln -sf {output_path}/$seed-* {output_path_link}/
+fi
 # Cleanup
 rm -rf {workdir}/$seed
 echo "------------------------------------------------------------------------"
@@ -76,10 +94,10 @@ def run(config_files, link_from):
         config_files (list[str]): Path to the configuration files.
         link_from (str): Path to link the results from.
 
-    Returns:
+    Return:
         int: Number of submitted jobs.
 
-    Raises:
+    Raise:
         OSError: If the configuration file does not exist.
         KeyError: If some configuration data are missing.
         ValueError: If no suitable batch backend is found.
@@ -106,34 +124,35 @@ def run(config_files, link_from):
         logger.error("YAML parsing error -> %s", error)
         raise
     # Locate decfile
+    evt_type = config['event-type']
     try:
-        evt_type = int(config['event-type'])
+        evt_type = int(evt_type)
     except ValueError:  # There's non-numerical chars, we assume it's a path
-        if not os.path.isabs(evt_type):
-            evt_type = os.path.abspath(evt_type)
-        decfile = evt_type
+        decfile = evt_type if os.path.isabs(evt_type) else os.path.abspath(evt_type)
+        evt_type = os.path.splitext(os.path.split(decfile)[1])[0]
     else:
         decfile = '$DECFILESROOT/options/{}.py'.format(evt_type)
     # Prepare job
-    _, _, log_file = _paths.prepare_path('mc/{}'.format(evt_type),
-                                         _paths.get_log_path,
-                                         None)  # No linking is done for logs
-    do_link, output_file, output_file_link = _paths.prepare_path('{}_$seed'.format(evt_type),
-                                                                 _paths.get_genlevel_mc_path,
-                                                                 link_from,
+    _, _, log_file = _paths.prepare_path(name='mc/{}'.format(evt_type),
+                                         path_func=_paths.get_log_path,
+                                         link_from=None)  # No linking is done for logs
+    do_link, output_path, output_path_link = _paths.prepare_path(name='',
+                                                                 path_func=_paths.get_genlevel_mc_path,
+                                                                 link_from=link_from,
                                                                  evt_type=evt_type)
-    _, output_histos, output_histos_link = _paths.prepare_path('{}_$seed'.format(evt_type),
-                                                               _paths.get_genlevel_histos_path,
-                                                               link_from,
-                                                               evt_type=evt_type)
     link_status = 'true' if do_link else 'false'
+    remove_detector = 'true' if config['prod'].get('remove-detector', True) else 'false'
     nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
+    logger.info("Generatic %s events of decfile -> %s", nevents, decfile)
+    logger.info("Output path: %s", output_path)
+    logger.info("Log file location: %s", log_file)
+    if do_link:
+        logger.info("Linking to %s", output_path_link)
     extra_config = {'workdir': '$TMPDIR',
                     'do_link': link_status,
-                    'output_file': output_file,
-                    'output_file_link': output_file_link,
-                    'output_histos': output_histos,
-                    'output_histos_link': output_histos_link,
+                    'remove_detector': remove_detector,
+                    'output_path': output_path,
+                    'output_path_link': output_path_link,
                     'decfile': decfile,
                     'n_events': nevents}
     # Prepare batch
@@ -151,6 +170,9 @@ def run(config_files, link_from):
             job_id = batch_system.submit_job('MC_%s' % evt_type, SCRIPT, log_file,
                                              extra_config=extra_config,
                                              **batch_config)
+            if 'submit error' in job_id:
+                logger.error(job_id)
+                raise Exception
             logger.debug("Submitted job -> %s", job_id)
         except Exception:
             logger.exception('Error submitting MC production job')

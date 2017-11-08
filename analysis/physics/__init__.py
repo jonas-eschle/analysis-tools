@@ -37,7 +37,7 @@ def register_physics_factories(observable, factories):
         observable (str): Observable name.
         factories (dict): Factory name -> factory class mapping.
 
-    Returns:
+    Return:
         int: Number of registered physics factories for the given observable.
 
     """
@@ -54,18 +54,18 @@ def get_physics_factory(observable, pdf_type):
         observable (str): Observable name.
         pdf_type (str): Type of the pdf.
 
-    Returns:
+    Return:
         `PhysicsFactory`: Requested PhysicsFactory.
 
-    Raises:
+    Raise:
         KeyError: If the type of factory is unknown.
 
     """
     factories = get_global_var('PHYSICS_FACTORIES')
     if observable not in factories:
-        raise KeyError("Unknown observable type -> %s" % observable)
+        raise KeyError("Unknown observable type -> {}".format(observable))
     if pdf_type not in factories[observable]:
-        raise KeyError("Unknown PDF type -> %s" % pdf_type)
+        raise KeyError("Unknown PDF type -> {}".format(pdf_type))
     return factories[observable][pdf_type]
 
 
@@ -73,7 +73,7 @@ def get_physics_factory(observable, pdf_type):
 def rename_on_recursion_end(func):
     """Perform a recursive rename at the end of the configuration recursion.
 
-    Raises:
+    Raise:
         RuntimeError: If the wrapped function doesn't return a physics
             factory.
 
@@ -81,7 +81,7 @@ def rename_on_recursion_end(func):
     def wrapped(*args, **kwargs):
         """Check the parent caller to determine when to rename.
 
-        Raises:
+        Raise:
             RuntimeError: If the wrapped function doesn't return a physics
                 factory.
 
@@ -105,13 +105,13 @@ def rename_on_recursion_end(func):
 def configure_model(config, shared_vars=None, external_vars=None):
     """
 
-    Raises:
+    Raise:
         ConfigError: If the shared parameters are badly configured.
 
     """
     def sanitize_parameter(param, name, title):
         constraint = None
-        if isinstance(param, tuple):
+        if isinstance(param, (list, tuple)):
             param, constraint = param
         if not isinstance(param, ROOT.TObject):
             param, constraint = configure_parameter(name, title, param)
@@ -202,7 +202,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                 if 'yield' in config:
                     yield_ = config.pop('yield')
                     if 'yield' not in shared_vars:
-                        parameters['yield'] = sanitize_parameter(config.pop('yield'), 'Yield', 'Yield')
+                        parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
                 # if 'yield' in parameters:
                 #     parameters['yield'][0].setStringAttribute('shared', 'true')
             return factory.SumPhysicsFactory(factories, yields, parameters)
@@ -239,10 +239,13 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                                      in config['pdf'].items()),
                                                          cat)
         for cat in cat_list:
-            sim_factory.set('cat_%s' % cat.GetName(), cat)
+            sim_factory.set('cat_{}'.format(cat.GetName()), cat)
         return sim_factory
 
     import analysis.physics.factory as factory
+
+    # copy: to not alter argument; shallow (not deep!): do not duplicate ROOT objects
+    config = config.copy()
     # Prepare shared variables
     if shared_vars is None:
         try:

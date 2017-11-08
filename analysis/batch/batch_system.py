@@ -23,7 +23,7 @@ def which(program):
     Arguments:
         program (str): Command to check.
 
-    Returns:
+    Return:
         str: Path of the program. Returns None if it cannot be found.
 
     """
@@ -78,7 +78,7 @@ echo "------------------------------------------------------------------------"
     def is_available(self):
         """Check if the bacth system is available.
 
-        Returns:
+        Return:
             bool: If the batch system is available.
 
         """
@@ -96,20 +96,20 @@ echo "------------------------------------------------------------------------"
                 to `None`.
             **batch_config (dict): Configuration of the batch system.
 
-        Returns:
+        Return:
             str: Job ID
 
         """
         err_file = batch_config.pop('errfile', log_file)
         log_file, ext = os.path.splitext(log_file)
-        log_file = '%s%s%s' % (log_file, self.JOBID_FORMAT, ext)
+        log_file = '{}{}{}'.format(log_file, self.JOBID_FORMAT, ext)
         err_file, ext = os.path.splitext(err_file)
-        err_file = '%s%s%s' % (err_file, self.JOBID_FORMAT, ext)
+        err_file = '{}{}{}'.format(err_file, self.JOBID_FORMAT, ext)
         # Build header
-        header = [self.DIRECTIVES['job-name'] % job_name,
-                  self.DIRECTIVES['logfile'] % log_file,
-                  self.DIRECTIVES['errfile'] % err_file,
-                  self.DIRECTIVES['runtime'] % batch_config.pop('runtime', '01:00:00')]
+        header = [self.DIRECTIVES['job-name'].format(job_name),
+                  self.DIRECTIVES['logfile'].format(log_file),
+                  self.DIRECTIVES['errfile'].format(err_file),
+                  self.DIRECTIVES['runtime'].format(batch_config.pop('runtime', '01:00:00'))]
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
@@ -117,7 +117,7 @@ echo "------------------------------------------------------------------------"
             if directive is None:
                 logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
                 continue
-            header.append(directive % batch_value)
+            header.append(directive.format(batch_value))
         script_config = extra_config if extra_config is not None else {}
         script_config['workdir'] = script_config.get('workdir', os.getcwd())
         script_config['header'] = '\n'.join(header)
@@ -125,10 +125,12 @@ echo "------------------------------------------------------------------------"
         script_config['jobid_var'] = self.JOBID_VARIABLE
         # Submit using stdin
         logger.debug('Submitting job')
+        #  logger.debug(script.format(**script_config))
         proc = subprocess.Popen(self.SUBMIT_COMMAND,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
-        return proc.communicate(input=script.format(**script_config))[0].rstrip('\n')
+        stdout, stderr = proc.communicate(input=script.format(**script_config))
+        return stdout.rstrip('\n')
 
     # pylint: disable=too-many-arguments
     def submit_script(self, job_name, cmd_script, script_args,
@@ -145,13 +147,13 @@ echo "------------------------------------------------------------------------"
             executable (str, optional): Command to execute the script. Defaults to 'python'.
             **batch_config (dict): Configuration of the batch system.
 
-        Returns:
+        Return:
             str: JobID.
 
         """
-        cmd = '%s %s %s' % (executable + ' ' if executable else './',
-                            cmd_script,
-                            ' '.join(script_args))
+        cmd = '{} {} {}'.format(executable + ' ' if executable else './',
+                                cmd_script,
+                                ' '.join(script_args))
         return self.submit_job(job_name, self.DEFAULT_SCRIPT, log_file, extra_config={'script': cmd}, **batch_config)
 
     def get_job_id(self):
@@ -159,7 +161,7 @@ echo "------------------------------------------------------------------------"
 
         Only works if we are in the batch system.
 
-        Returns:
+        Return:
             str: Job ID.
 
         """
@@ -170,12 +172,12 @@ class Torque(BatchSystem):
     """Implement the Torque/PBS batch system."""
 
     SUBMIT_COMMAND = 'qsub'
-    DIRECTIVES = {'job-name': '#PBS -N %s',
-                  'logfile': '#PBS -o %s',
-                  'errfile': '#PBS -e %s',
+    DIRECTIVES = {'job-name': '#PBS -N {}',
+                  'logfile': '#PBS -o {}',
+                  'errfile': '#PBS -e {}',
                   'mergelogs': '#PBS -j oe',
-                  'runtime': '#PBS -l cput=%s',
-                  'memory': '#PBS -l mem=%s'}
+                  'runtime': '#PBS -l cput={0}\n#PBS -l walltime={0}',
+                  'memory': '#PBS -l mem={}'}
     JOBID_FORMAT = '_${PBS_JOBID}'
     JOBID_VARIABLE = 'PBS_JOBID'
 
@@ -184,14 +186,14 @@ class Slurm(BatchSystem):
     """Implement the Slurm batch system."""
 
     SUBMIT_COMMAND = 'sbatch'
-    DIRECTIVES = {'job-name': '#SBATCH -J %s',
-                  'logfile': '#SBATCH -o %s',
-                  'errfile': '#SBATCH -e %s',
+    DIRECTIVES = {'job-name': '#SBATCH -J {}',
+                  'logfile': '#SBATCH -o {}',
+                  'errfile': '#SBATCH -e {}',
                   'mergelogs': '',
-                  'runtime': '#SBATCH -t %s',
-                  'memory': '#SBATCH --mem=%s',
-                  'memory-per-cpu': '#SBATCH --mem-per-cpu=%s',
-                  'queue': '#SBATCH --partition=%s'}
+                  'runtime': '#SBATCH -t {}',
+                  'memory': '#SBATCH --mem={}',
+                  'memory-per-cpu': '#SBATCH --mem-per-cpu={}',
+                  'queue': '#SBATCH --partition={}'}
     JOBID_FORMAT = '_%j'
     JOBID_VARIABLE = 'SLURM_JOB_ID'
 

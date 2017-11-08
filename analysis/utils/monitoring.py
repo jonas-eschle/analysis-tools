@@ -20,7 +20,7 @@ def memory_usage():
     Tries to use :mod:`psutil`, if possible, otherwise fallback to calling
     ``ps`` directly.
 
-    Returns:
+    Return:
         float: Memory usage of the current process.
 
     """
