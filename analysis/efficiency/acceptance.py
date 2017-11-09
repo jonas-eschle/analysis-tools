@@ -33,6 +33,15 @@ class Acceptance(object):
         if set(reco_efficiency.get_variables()) != set(var_list):
             raise KeyError("Non-matching variable names in reconstruction")
 
+    def get_vars(self):
+        """Get acceptance variables in the correct order.
+
+        Return:
+            list
+
+        """
+        return self._var_list
+
     def apply_accept_reject(self, data, inplace=False, weight_col=None):
         """Apply the accept-reject method to filter an input data frame.
 
