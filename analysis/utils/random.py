@@ -6,9 +6,11 @@
 # @date   07.11.2017
 # =============================================================================
 """Random generation tools."""
+
 from __future__ import print_function, division, absolute_import
 
-import sys, os
+import sys
+import os
 
 
 def get_urandom_int(length):
@@ -16,12 +18,12 @@ def get_urandom_int(length):
 
     Can be used to initialize a random generator *truly* randomly.
 
-    Args:
+    Arguments:
         length (int): Length of binary generated number in bytes
         (e.g. 4 -> int, 8 -> long), the returned 10-base number
         will have less digits
 
-    Returns:
+    Return:
         int: The random number in 10-base
 
     """
@@ -31,3 +33,4 @@ def get_urandom_int(length):
         rand_int = int(os.urandom(length).encode('hex'), 16)
     return rand_int
 
+# EOF
