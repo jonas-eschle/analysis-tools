@@ -10,10 +10,14 @@
 from collections import OrderedDict
 
 import numpy as np
+from scipy.stats import poisson
+
+import ROOT
 
 from analysis.fit.result import FitResult
 from analysis.utils.root import list_to_rooargset, iterate_roocollection
 from analysis.data.mergers import merge_root
+from analysis.data.converters import pandas_from_dataset, dataset_from_pandas
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 
@@ -68,7 +72,8 @@ class Systematic(object):
         """Configure systematic.
 
         The physics model needs to be extended. In case it isn't, `yield` needs to
-        be specified in `config`.
+        be specified in `config`. For simultaneous PDFs, `yield` needs to be a
+        dictionary matching categories with their corresponding yield.
 
         Arguments:
             model (`analysis.physics.PhysicsFactory`): Factory used for generation and
@@ -80,6 +85,17 @@ class Systematic(object):
                 configuration.
 
         """
+        sub_models = {}
+        yields = {}
+        if model.is_simultaneous():
+            # Split
+        else:
+            sub_models[None] = model
+        for categories, sub_model in sub_models.items():
+
+
+
+        # TODO: Split in PDFs
         self._model = model
         if model.is_extended():
             self._gen_pdfs = [model.get_extended_pdf("GenSystPdf", "GenSystPdf")]
@@ -107,15 +123,31 @@ class Systematic(object):
             `ROOT.RooDataSet`.
 
         """
-        # TODO: Add weights, acceptance. If weights/acceptance, loop and generate one by one.
+        # TODO: Add weights?
         if randomize:
             self.randomize()
+        obs = list_to_rooargset(self._model.get_observables())
         if not acceptance:
-            return merge_root([pdf.generate(list_to_rooargset(self._model.get_observables()))
+            return merge_root([pdf.generate(obs, ROOT.RooFit.Extended(True))
                                for pdf in self._gen_pdfs],
                               'GenData', 'GenData')
-        else:
-            raise NotImplementedError("Acceptance not implemented yet")
+        pandas_dataset = None
+        for pdf in self._gen_pdfs:
+            yield_to_generate = poisson.rvs(pdf.expectedEvents(obs))
+            while yield_to_generate:
+                events = acceptance.apply_accept_reject(
+                    pandas_from_dataset(
+                        pdf.generate(obs, yield_to_generate*2)))
+                # Sample if the dataset is too large
+                if events.shape[0] > yield_to_generate:
+                    events = events.sample(yield_to_generate)
+                # Merge with existing
+                if not pandas_dataset:
+                    pandas_dataset = events
+                else:
+                    pandas_dataset = pandas_dataset.append(events, ignore_index=True)
+                yield_to_generate -= events.shape[0]
+        return dataset_from_pandas(pandas_dataset, "GenData", "GenData", categories=self._model.get_category_vars())
 
     def randomize(self):
         """Randomize the parameters relevant for the systematic calculation.
