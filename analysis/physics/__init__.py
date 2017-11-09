@@ -167,6 +167,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
+        global_yield = config.pop('yield', None)
         for pdf_name, pdf_config in config.items():
             # Disable parameter propagation
             # if 'parameters' not in pdf_config:
@@ -191,7 +192,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
             factory_name, factory_obj = factories.items()[0]
             if factory_name in yields:
                 factory_obj.set_yield_var(yields[factory_name])
-            return factory_obj
+            output_factory = factory_obj
         else:
             parameters = {}
             if (len(factories) - len(yields)) > 1:
@@ -205,7 +206,10 @@ def configure_model(config, shared_vars=None, external_vars=None):
                         parameters['yield'] = sanitize_parameter(config.pop('yield'), 'Yield', 'Yield')
                 # if 'yield' in parameters:
                 #     parameters['yield'][0].setStringAttribute('shared', 'true')
-            return factory.SumPhysicsFactory(factories, yields, parameters)
+            output_factory = factory.SumPhysicsFactory(factories, yields, parameters)
+        if global_yield:
+            output_factory.set_yield_var(global_yield)
+        return output_factory
 
     def configure_simul_factory(config, shared_vars):
         logger.debug("Configuring simultaneous -> %s", dict(config))
@@ -257,7 +261,13 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if isinstance(config.values()[0].get('pdf', None), str):
+            try:
+                indices = range(len(config))
+                indices.pop(config.keys().index('yield'))
+                index = indices[0]
+            except ValueError:
+                index = 0
+            if isinstance(config.values()[index].get('pdf', None), str):
                 shared = {'pdf': shared_vars}
                 return configure_prod_factory({'pdf': config}, shared)
             else:
