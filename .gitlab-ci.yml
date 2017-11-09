@@ -1,6 +1,7 @@
 
 stages:
   - test
+  - deploy
 
 test27:
 #  image: continuumio/anaconda
@@ -55,6 +56,9 @@ test36:
 #    run tests
     - coverage run -m pytest .
     - coverage report --omit=/*/anaconda*/*
+    
+autodoc36:
+  image: continuumio/miniconda3:latest
 
 # Pylint does not yet work, throws error for a file in analysis/data
 #
