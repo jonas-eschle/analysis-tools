@@ -15,7 +15,7 @@ from scipy.stats import poisson
 import ROOT
 
 from analysis.fit.result import FitResult
-from analysis.utils.root import list_to_rooargset, iterate_roocollection
+from analysis.utils.root import list_to_rooargset, list_to_rooarglist, iterate_roocollection
 from analysis.data.mergers import merge_root
 from analysis.data.converters import pandas_from_dataset, dataset_from_pandas
 from analysis import get_global_var
@@ -155,27 +155,36 @@ class Systematic(object):
         if randomize:
             self.randomize()
         obs = list_to_rooargset(self._model.get_observables())
-        if not acceptance:
-            return merge_root([pdf.generate(obs, ROOT.RooFit.Extended(True))
-                               for pdf in self._gen_pdfs],
-                              'GenData', 'GenData')
-        pandas_dataset = None
-        for pdf in self._gen_pdfs:
-            yield_to_generate = poisson.rvs(pdf.expectedEvents(obs))
-            while yield_to_generate:
-                events = acceptance.apply_accept_reject(
-                    pandas_from_dataset(
-                        pdf.generate(obs, yield_to_generate*2)))
-                # Sample if the dataset is too large
-                if events.shape[0] > yield_to_generate:
-                    events = events.sample(yield_to_generate)
-                # Merge with existing
-                if not pandas_dataset:
-                    pandas_dataset = events
+        datasets_to_merge = []
+        cats = list_to_rooarglist(self._model.get_category_vars())
+        for label, pdf_list in self._gen_pdfs.items():
+            if cats:
+                for lab_num, lab in enumerate(label.split(',')):
+                    cats[lab_num].setLabel(lab)
+            for pdf in pdf_list:
+                if acceptance:
+                    # TODO: Fixed yields
+                    yield_to_generate = poisson.rvs(pdf.expectedEvents(obs))
+                    pandas_dataset = None
+                    while yield_to_generate:
+                        events = acceptance.apply_accept_reject(
+                            pandas_from_dataset(
+                                pdf.generate(obs, yield_to_generate*2)))
+                        # Sample if the dataset is too large
+                        if events.shape[0] > yield_to_generate:
+                            events = events.sample(yield_to_generate)
+                        # Merge with existing
+                        if not pandas_dataset:
+                            pandas_dataset = events
+                        else:
+                            pandas_dataset = pandas_dataset.append(events, ignore_index=True)
+                    dataset = dataset_from_pandas(pandas_dataset, "GenData", "GenData")
                 else:
-                    pandas_dataset = pandas_dataset.append(events, ignore_index=True)
-                yield_to_generate -= events.shape[0]
-        return dataset_from_pandas(pandas_dataset, "GenData", "GenData", categories=self._model.get_category_vars())
+                    dataset = pdf.generate(obs, ROOT.RooFit.Extended(True))
+                if cats:
+                    dataset.addColumns(cats)
+                datasets_to_merge.append(dataset)
+        return merge_root(datasets_to_merge, 'GenData', 'GenData')
 
     def randomize(self):
         """Randomize the parameters relevant for the systematic calculation.
