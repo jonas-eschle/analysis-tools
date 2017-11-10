@@ -7,7 +7,7 @@
 # =============================================================================
 """Systematic uncertainty toy generators."""
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import numpy as np
 from scipy.stats import poisson
@@ -68,7 +68,7 @@ def get_systematic(syst_config):
 class Systematic(object):
     """Base class for systematics."""
 
-    def __init__(self, model, config):
+    def __init__(self, model, config=None):
         """Configure systematic.
 
         The physics model needs to be extended. In case it isn't, `yield` needs to
@@ -78,32 +78,60 @@ class Systematic(object):
         Arguments:
             model (`analysis.physics.PhysicsFactory`): Factory used for generation and
                 fitting.
-            config (dict): Configuration.
+            config (dict, optional): Configuration. Defaults to None.
 
         Raise:
             ValueError: If no yield is specified, either through the PDF model or the
                 configuration.
 
         """
-        sub_models = {}
-        yields = {}
-        if model.is_simultaneous():
-            # Split
-        else:
-            sub_models[None] = model
-        for categories, sub_model in sub_models.items():
+        def get_pdfs_to_generate(pdf_model, pdf_config):
+            """Split the PDF model into PDFs that need to be generated independently.
 
+            Arguments:
+                pdf_model (analysis.physics.factory.PhysicsFactory): Model to splot.
+                pdf_config (dict): Extra configuration. Currently, only the `yield` key
+                    is used.
 
+            Return:
+                dict: PDFs split by label. If the model is not simultaneous, all PDFs are
+                    under label `None`.
 
-        # TODO: Split in PDFs
+            Raise:
+                ValueError: If no yield is specified, either through the PDF model or the
+                    configuration.
+
+            """
+            if not pdf_model.is_extended():
+                try:
+                    if pdf_model.is_simultaneous():
+                        if set(pdf_model.get_children.keys()) != set(pdf_config['yield'].keys()):
+                            raise ValueError("PDF labels don't match yield labels")
+                        return {label: [child.get_extended_pdf("GenSystPdf_{}".format(label),
+                                                               "GenSystPdf_{}".format(label),
+                                                               pdf_config['yield'][label])]
+                                for label, child in pdf_model.get_children().items()}
+                    else:
+                        return {None: [pdf_model.get_extended_pdf("GenSystPdf", "GenSystPdf", config['yield'])]}
+                except (KeyError, AttributeError):
+                    raise ValueError("Yield badly specified")
+            else:
+                if pdf_model.get_children() and \
+                        all(child.is_extended() for child in pdf_model.get_children().values()):
+                    output = defaultdict(list)
+                    for label, child in pdf_model.get_children().items():
+                        if pdf_model.is_simultaneous():
+                            output[label] = get_pdfs_to_generate(child, None)[None]
+                        else:
+                            output[None].extend(get_pdfs_to_generate(child, None)[None])
+                    return output
+                else:
+                    return {None: [pdf_model.get_extended_pdf("GenSystPdf", "GenSystPdf")]}
+
+        if config is None:
+            config = {}
+        self._gen_pdfs = get_pdfs_to_generate(model, config)
         self._model = model
-        if model.is_extended():
-            self._gen_pdfs = [model.get_extended_pdf("GenSystPdf", "GenSystPdf")]
-        else:
-            try:
-                self._gen_pdfs = [model.get_extended_pdf("GenSystPdf", "GenSystPdf", config['yield'])]
-            except KeyError:
-                raise ValueError("No yield specified")
         self._input_values = None
         self._config = config
 
