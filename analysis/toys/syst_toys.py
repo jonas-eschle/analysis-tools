@@ -29,7 +29,7 @@ from analysis.efficiency import get_acceptance
 from analysis.fit import fit
 from analysis.fit.result import FitResult
 from analysis.batch import get_job_id
-from analysis.toys.systematics import get_systematic
+from analysis.toys import get_systematic
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
@@ -59,7 +59,6 @@ def run(config_files, link_from, verbose):
         config = _config.load_config(*config_files,
                                      validate=['fit/nfits',
                                                'name',
-                                               'data',
                                                'syst'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
@@ -68,8 +67,6 @@ def run(config_files, link_from, verbose):
             logger.error("Number of fits not specified")
         if 'name' in error.missing_keys:
             logger.error("No name was specified in the config file!")
-        if 'data' in error.missing_keys:
-            logger.error("No input data specified in the config file!")
         if 'syst' in error.missing_keys:
             logger.error("No systematics configuration specified in config file!")
         raise KeyError("ConfigError raised -> {}".format(error.missing_keys))

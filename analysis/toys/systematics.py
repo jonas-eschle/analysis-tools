@@ -18,51 +18,9 @@ from analysis.fit.result import FitResult
 from analysis.utils.root import list_to_rooargset, list_to_rooarglist, iterate_roocollection
 from analysis.data.mergers import merge_root
 from analysis.data.converters import pandas_from_dataset, dataset_from_pandas
-from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.toys.systematics')
-
-
-def register_systematic(name, syst_class):
-    """Register a systematic toy generator.
-
-    Systematics are registered in the `TOY_SYSTEMATICS` global variable.
-
-    Arguments:
-        name (str): Name of the systematic.
-        syst_class (SystematicToys): SystematicToys generator class to register.
-
-    Return:
-        int: Number of registered systematics.
-
-    Raise:
-        ValueError: If `syst_class` is not of the correct type.
-
-    """
-    logger.debug("Registering %s systematic generator", name)
-    if not isinstance(syst_class, SystematicToys):
-        raise ValueError("Wrong class type -> {}".format(type(syst_class)))
-    get_global_var('TOY_SYSTEMATICS').update({name: syst_class})
-    return len(get_global_var('TOY_SYSTEMATICS'))
-
-
-def get_systematic(syst_config):
-    """Load systematic toy generator.
-
-    The systematic type is specified through the `type` key.
-
-    Arguments:
-        syst_config (dict): Configuration of the systematic toy.
-
-    Return:
-        SystematicToys class
-
-    Raise:
-        KeyError: If the systematic type is unknown.
-
-    """
-    return get_global_var('TOY_SYSTEMATICS')[syst_config['type']]
 
 
 class SystematicToys(object):
@@ -333,5 +291,9 @@ class AcceptanceSyst(SystematicToys):
             logger.error("Error randomizing acceptance -> %s", str(error))
             raise ValueError("Error randomizing systematic")
         return 2
+
+
+SYSTEMATIC_TOYS = {'fixed_params': FixedParamsSyst,
+                   'acceptance': AcceptanceSyst}
 
 # EOF
