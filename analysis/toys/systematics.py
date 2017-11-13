@@ -31,7 +31,7 @@ def register_systematic(name, syst_class):
 
     Arguments:
         name (str): Name of the systematic.
-        syst_class (Systematic): Systematic generator class to register.
+        syst_class (SystematicToys): SystematicToys generator class to register.
 
     Return:
         int: Number of registered systematics.
@@ -41,7 +41,7 @@ def register_systematic(name, syst_class):
 
     """
     logger.debug("Registering %s systematic generator", name)
-    if not isinstance(syst_class, Systematic):
+    if not isinstance(syst_class, SystematicToys):
         raise ValueError("Wrong class type -> {}".format(type(syst_class)))
     get_global_var('TOY_SYSTEMATICS').update({name: syst_class})
     return len(get_global_var('TOY_SYSTEMATICS'))
@@ -56,7 +56,7 @@ def get_systematic(syst_config):
         syst_config (dict): Configuration of the systematic toy.
 
     Return:
-        Systematic class
+        SystematicToys class
 
     Raise:
         KeyError: If the systematic type is unknown.
@@ -65,10 +65,10 @@ def get_systematic(syst_config):
     return get_global_var('TOY_SYSTEMATICS')[syst_config['type']]
 
 
-class Systematic(object):
+class SystematicToys(object):
     """Base class for systematics."""
 
-    def __init__(self, model, config=None):
+    def __init__(self, model, acceptance, config=None, acceptance=None):
         """Configure systematic.
 
         The physics model needs to be extended. In case it isn't, `yield` needs to
@@ -78,7 +78,11 @@ class Systematic(object):
         Arguments:
             model (`analysis.physics.PhysicsFactory`): Factory used for generation and
                 fitting.
+            acceptance (`analysis.efficiency.acceptance.Acceptance`): Acceptance to apply.
+                Can be `None`.
             config (dict, optional): Configuration. Defaults to None.
+            acceptance (analysis.efficiency.acceptance.Acceptance): Generation acceptance.
+                Defaults to `None`.
 
         Raise:
             ValueError: If no yield is specified, either through the PDF model or the
@@ -125,8 +129,7 @@ class Systematic(object):
                         else:
                             output[None].extend(get_pdfs_to_generate(child, None)[None])
                     return output
-                else:
-                    return {None: [pdf_model.get_extended_pdf("GenSystPdf", "GenSystPdf")]}
+                return {None: [pdf_model.get_extended_pdf("GenSystPdf", "GenSystPdf")]}
 
         if config is None:
             config = {}
@@ -134,16 +137,15 @@ class Systematic(object):
         self._model = model
         self._input_values = None
         self._config = config
+        self._acceptance = acceptance
 
-    def get_dataset(self, acceptance, randomize=True):
+    def get_dataset(self, randomize=True):
         """Get dataset generated from the input model.
 
         If an acceptance is given, accept-reject is applied on the dataset, and an extra variable
         representing the inverse of the per-event weight (`fit_weight`) is added as weight.
 
         Arguments:
-            acceptance (analysis.efficiency.acceptance.Acceptance): Acceptance object. If `None`
-                is given, no acceptance is applied.
             randomize (bool, optional): Randomize the parameters according to the systematic.
                 Defaults to `True`.
 
@@ -162,12 +164,12 @@ class Systematic(object):
                 for lab_num, lab in enumerate(label.split(',')):
                     cats[lab_num].setLabel(lab)
             for pdf in pdf_list:
-                if acceptance:
+                if self._acceptance:
                     # TODO: Fixed yields
                     yield_to_generate = poisson.rvs(pdf.expectedEvents(obs))
                     pandas_dataset = None
                     while yield_to_generate:
-                        events = acceptance.apply_accept_reject(
+                        events = self._acceptance.apply_accept_reject(
                             pandas_from_dataset(
                                 pdf.generate(obs, yield_to_generate*2)))
                         # Sample if the dataset is too large
@@ -211,10 +213,10 @@ class Systematic(object):
         return self._input_values
 
 
-class FixedParamsSyst(Systematic):
+class FixedParamsSyst(SystematicToys):
     """Systematic for parameters fixed from simulation or other models."""
 
-    def __init__(self, model, config):
+    def __init__(self, model, acceptance, config):
         """Configure systematic.
 
         To specify where the parameters come from, `config` needs a `syst` key which contains
@@ -258,7 +260,7 @@ class FixedParamsSyst(Systematic):
                 column = column+mat.shape[1]
             return output_mat
 
-        super(FixedParamsSyst, self).__init__(model=model, config=config)
+        super(FixedParamsSyst, self).__init__(model, acceptance, config=config)
         cov_matrices = []
         central_values = []
         self._param_translation = OrderedDict()
@@ -297,5 +299,34 @@ class FixedParamsSyst(Systematic):
         for param_num, (param_name, pdf_index) in enumerate(self._pdf_index.items()):
             self._gen_pdfs[pdf_index].getVariables[param_name].setVal(random_values[param_num])
         return len(random_values)
+
+
+class AcceptanceSyst(SystematicToys):
+    """Systematic toys for acceptance parameters."""
+    def __init__(self, model, acceptance, config):
+        super(AcceptanceSyst, self).__init__(model, acceptance, config)
+        self._original_acceptance = acceptance
+
+    def randomize(self):
+        """Randomize the acceptance function.
+
+        The original is stored in `self._original_acceptance`.
+
+        Return:
+            const: 2 (the number of randomized matrices).
+
+        Raise:
+            ValueError: Problem randomizing the acceptance.
+
+        """
+        try:
+            self._acceptance = self._original_acceptance.randomize()
+        except NotImplementedError:
+            logger.error("Randomization not supported by the acceptance")
+            raise ValueError("Error randomizing systematic")
+        except ValueError as error:
+            logger.error("Error randomizing acceptance -> %s", str(error))
+            raise ValueError("Error randomizing systematic")
+        return 2
 
 # EOF

@@ -107,7 +107,9 @@ def run(config_files, link_from, verbose):
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
     # Load systematic configuration
-    systematic = get_systematic(config['syst'])(model=fit_model, config=config['syst'])
+    systematic = get_systematic(config['syst'])(model=fit_model,
+                                                acceptance,
+                                                config=config['syst'])
     # Set seed
     job_id = get_job_id()
     # Start looping

@@ -103,5 +103,19 @@ class Acceptance(object):
         weights = (gen_eff/reco_eff).replace([-np.inf, np.inf, np.nan], 0.0)
         return weights * data.shape[0] / weights.sum()
 
+    def randomize(self):
+        """Return a randomized version of itself.
+
+        Return:
+            Acceptance
+
+        Raises:
+            NotImplementedError: If the randomization is not implemented in the generation or
+                reconstruction efficiencies.
+            ValueError: If there is a problem randomizing either of the efficiencies.
+
+        """
+        return Acceptance(self._var_list, self._generation.randomize(), self._reconstruction.randomize())
 
 # EOF
+

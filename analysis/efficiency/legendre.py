@@ -183,6 +183,37 @@ class LegendreEfficiency(Efficiency):
             first = False
         return pd.Series(coeffs, name="efficiency")
 
+    def _get_efficiency_error(self, data):
+        """Calculate the efficiency error.
+
+        Note:
+            No variable checking is performed.
+
+        Arguments:
+            data (`pandas.DataFrame`): Data to calculate the efficiency errors of.
+
+        """
+        raise NotImplementedError()
+
+    def randomize(self):
+        """Return randomized version of itself.
+
+        Return:
+            LegendreEfficiency
+
+        Raise:
+            ValueError: If the covariance matrix had not been calculated.
+
+        """
+        if not np.any(self._covariance):
+            raise ValueError("No covariance matrix has been calculated")
+        # pylint: disable=E1101
+        coeffs = np.random.multivariate_normal(self._coefficients.flatten(),
+                                               self._covariance).reshape(self._coefficients.shape)
+        config = self._config.copy()
+        config['coefficients'] = coeffs
+        return LegendreEfficiency(self._var_list, config)
+
     # pylint: disable=R0914,W0221
     @staticmethod
     def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None, calculate_cov=False, chunk_size=1000):
@@ -398,6 +429,37 @@ class LegendreEfficiency1D(Efficiency):
         for var_number, var_name in enumerate(self.get_variables()):
             effs *= np.polynomial.legendre.legval(data[var_name].values, coeffs[var_number])
         return pd.Series(effs, name="efficiency")
+
+    def _get_efficiency_error(self, data):
+        """Calculate the efficiency error.
+
+        Note:
+            No variable checking is performed.
+
+        Arguments:
+            data (`pandas.DataFrame`): Data to calculate the efficiency errors of.
+
+        """
+        raise NotImplementedError()
+
+    def randomize(self):
+        """Return randomized version of itself.
+
+        Return:
+            LegendreEfficiency1D
+
+        Raise:
+            ValueError: If the covariance matrix had not been calculated.
+
+        """
+        if not np.any(self._covariance):
+            raise ValueError("No covariance matrix has been calculated")
+        # pylint: disable=E1101
+        coeffs = np.random.multivariate_normal(self._coefficients.flatten(),
+                                               self._covariance).reshape(self._coefficients.shape)
+        config = self._config.copy()
+        config['coefficients'] = coeffs
+        return LegendreEfficiency(self._var_list, config)
 
     # pylint: disable=R0914,W0221
     @staticmethod
