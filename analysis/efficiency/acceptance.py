@@ -109,7 +109,7 @@ class Acceptance(object):
         Return:
             Acceptance
 
-        Raises:
+        Raise:
             NotImplementedError: If the randomization is not implemented in the generation or
                 reconstruction efficiencies.
             ValueError: If there is a problem randomizing either of the efficiencies.
@@ -118,4 +118,3 @@ class Acceptance(object):
         return Acceptance(self._var_list, self._generation.randomize(), self._reconstruction.randomize())
 
 # EOF
-

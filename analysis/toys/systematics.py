@@ -183,11 +183,11 @@ class FixedParamsSyst(SystematicToys):
     def __init__(self, model, acceptance, config):
         """Configure systematic.
 
-        To specify where the parameters come from, `config` needs a `syst` key which contains
+        To specify where the parameters come from, `config` needs a `params` key which contains
         a list of results and parameter name correspondences to be used to translate from the
         fit result to `model`.
 
-            {'syst': [{'result': result_name,
+            {'params': [{'result': result_name,
                        'param_names': {'fit_result_name': 'model_parameter_name',
                                        ...}},
                        ...]}
