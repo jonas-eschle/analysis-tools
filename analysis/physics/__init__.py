@@ -261,13 +261,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            try:
-                indices = range(len(config))
-                indices.pop(config.keys().index('yield'))
-                index = indices[0]
-            except ValueError:
+            indices = list(range(len(config)))
+            try:  # remove 'yield'
+                indices.pop(list(config.keys()).index('yield'))
+            except ValueError:  # no yield defined
                 index = 0
-            if isinstance(config.values()[index].get('pdf', None), str):
+            else:
+                index = indices[0]
+            if isinstance(list(config.values())[index].get('pdf'), str):
                 shared = {'pdf': shared_vars}
                 return configure_prod_factory({'pdf': config}, shared)
             else:
@@ -276,8 +277,8 @@ def configure_model(config, shared_vars=None, external_vars=None):
             if len(config['pdf']) > 1:
                 return configure_prod_factory(config, shared_vars)
             else:
-                pdf_obs = config['pdf'].keys()[0]
-                pdf_config = config['pdf'].values()[0]
+                pdf_obs = list(config['pdf'].keys())[0]
+                pdf_config = list(config['pdf'].values())[0]
                 if 'parameters' not in pdf_config:
                     pdf_config['parameters'] = OrderedDict()
                 pdf_config['parameters'].update(config.get('parameters', {}))
@@ -286,7 +287,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                     sh_vars['parameters'].update(shared_vars['parameters'])
                 else:
                     sh_vars['parameters'] = shared_vars['parameters']
-                return configure_factory(pdf_obs, pdf_config, sh_vars)
+                return configure_factory(observable=pdf_obs, config=pdf_config, shared_vars=sh_vars)
     raise RuntimeError()
 
 

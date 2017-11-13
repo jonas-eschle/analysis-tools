@@ -26,7 +26,7 @@ logger = get_logger('analysis.toys.systematics')
 class SystematicToys(object):
     """Base class for systematics."""
 
-    def __init__(self, model, acceptance, config=None, acceptance=None):
+    def __init__(self, model, config=None, acceptance=None):
         """Configure systematic.
 
         The physics model needs to be extended. In case it isn't, `yield` needs to
@@ -102,8 +102,9 @@ class SystematicToys(object):
     def get_dataset(self, randomize=True):
         """Get dataset generated from the input model.
 
-        If an acceptance is given, accept-reject is applied on the dataset, and an extra variable
-        representing the inverse of the per-event weight (`fit_weight`) is added as weight.
+        If an acceptance was given on initialization, accept-reject is applied on the dataset,
+        and an extra variable representing the inverse of the per-event weight (`fit_weight`)
+        is added as weight.
 
         Arguments:
             randomize (bool, optional): Randomize the parameters according to the systematic.
@@ -142,6 +143,7 @@ class SystematicToys(object):
                             pandas_dataset = events
                         else:
                             pandas_dataset = pandas_dataset.append(events, ignore_index=True)
+                        yield_to_generate -= len(events)
                     logger.debug("Adding fitting weights")
                     pandas_dataset['fit_weight'] = self._fit_acceptance.get_fit_weights(pandas_dataset)
                     dataset = dataset_from_pandas(pandas_dataset, "GenData", "GenData", weight_var='fit_weight')
@@ -155,8 +157,8 @@ class SystematicToys(object):
     def randomize(self):
         """Randomize the parameters relevant for the systematic calculation.
 
-        This function modifies the internal parameters of the generator PDF, so doesn't
-        return their values.
+        This function modifies the internal parameters of the generator PDF, so
+        it doesn't return their values but the number of randomized parameters.
 
         Return:
             int: Number of randomized parameters.
@@ -232,7 +234,7 @@ class FixedParamsSyst(SystematicToys):
         syst = config['syst']
         if not isinstance(syst, (list, tuple)):
             syst = [syst]
-        for result_config in config['syst']:
+        for result_config in syst:
             fit_result = FitResult().from_yaml_file(result_config['result'])
             self._param_translation.update(result_config['param_names'])
             cov_matrices.append(fit_result.get_covariance_matrix(self._param_translation.keys()))
@@ -255,8 +257,8 @@ class FixedParamsSyst(SystematicToys):
     def randomize(self):
         """Randomize the fit parameters according to the covariance matrix.
 
-        This function modifies the internal parameters of the generator PDF, so doesn't
-        return their values.
+        This function modifies the internal parameters of the generator PDF, so
+        it doesn't return their values but the number of randomized parameters.
 
         Return:
             int: Number of randomized parameters.
