@@ -126,7 +126,7 @@ def run(config_files, link_from, verbose):
         np.random.seed(seed=seed)
         ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
-            dataset = systematic.get_dataset(acceptance)
+            dataset = systematic.get_dataset()
             fit_result = fit(fit_model,
                              model_name,
                              fit_strategy,

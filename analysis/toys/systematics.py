@@ -134,10 +134,12 @@ class SystematicToys(object):
         if config is None:
             config = {}
         self._gen_pdfs = get_pdfs_to_generate(model, config)
+        logger.debug("Determined split PDFs to generate -> %s", self._gen_pdfs)
         self._model = model
         self._input_values = None
         self._config = config
-        self._acceptance = acceptance
+        self._gen_acceptance = acceptance
+        self._fit_acceptance = acceptance
 
     def get_dataset(self, randomize=True):
         """Get dataset generated from the input model.
@@ -155,6 +157,7 @@ class SystematicToys(object):
         """
         # TODO: Add weights?
         if randomize:
+            self.logger("Applying randomization")
             self.randomize()
         obs = list_to_rooargset(self._model.get_observables())
         datasets_to_merge = []
@@ -164,12 +167,13 @@ class SystematicToys(object):
                 for lab_num, lab in enumerate(label.split(',')):
                     cats[lab_num].setLabel(lab)
             for pdf in pdf_list:
-                if self._acceptance:
+                logger.debug("Generating PDF -> %s", pdf.GetName())
+                if self._gen_acceptance:
                     # TODO: Fixed yields
                     yield_to_generate = poisson.rvs(pdf.expectedEvents(obs))
                     pandas_dataset = None
                     while yield_to_generate:
-                        events = self._acceptance.apply_accept_reject(
+                        events = self._gen_acceptance.apply_accept_reject(
                             pandas_from_dataset(
                                 pdf.generate(obs, yield_to_generate*2)))
                         # Sample if the dataset is too large
@@ -180,7 +184,9 @@ class SystematicToys(object):
                             pandas_dataset = events
                         else:
                             pandas_dataset = pandas_dataset.append(events, ignore_index=True)
-                    dataset = dataset_from_pandas(pandas_dataset, "GenData", "GenData")
+                    logger.debug("Adding fitting weights")
+                    pandas_dataset['fit_weight'] = self._fit_acceptance.get_fit_weights(pandas_dataset)
+                    dataset = dataset_from_pandas(pandas_dataset, "GenData", "GenData", weight_var='fit_weight')
                 else:
                     dataset = pdf.generate(obs, ROOT.RooFit.Extended(True))
                 if cats:
@@ -265,6 +271,9 @@ class FixedParamsSyst(SystematicToys):
         central_values = []
         self._param_translation = OrderedDict()
         # Load fit results and their covariance matrices
+        syst = config['syst']
+        if not isinstance(syst, (list, tuple)):
+            syst = [syst]
         for result_config in config['syst']:
             fit_result = FitResult().from_yaml_file(result_config['result'])
             self._param_translation.update(result_config['param_names'])
@@ -303,14 +312,10 @@ class FixedParamsSyst(SystematicToys):
 
 class AcceptanceSyst(SystematicToys):
     """Systematic toys for acceptance parameters."""
-    def __init__(self, model, acceptance, config):
-        super(AcceptanceSyst, self).__init__(model, acceptance, config)
-        self._original_acceptance = acceptance
-
     def randomize(self):
         """Randomize the acceptance function.
 
-        The original is stored in `self._original_acceptance`.
+        The fit acceptance is randomized and stored as generation acceptance.
 
         Return:
             const: 2 (the number of randomized matrices).
@@ -320,7 +325,7 @@ class AcceptanceSyst(SystematicToys):
 
         """
         try:
-            self._acceptance = self._original_acceptance.randomize()
+            self._gen_acceptance = self._fit_acceptance.randomize()
         except NotImplementedError:
             logger.error("Randomization not supported by the acceptance")
             raise ValueError("Error randomizing systematic")
