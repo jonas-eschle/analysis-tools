@@ -26,7 +26,7 @@ logger = get_logger('analysis.toys.systematics')
 class SystematicToys(object):
     """Base class for systematics."""
 
-    def __init__(self, model, acceptance, config=None, acceptance=None):
+    def __init__(self, model, config=None, acceptance=None):
         """Configure systematic.
 
         The physics model needs to be extended. In case it isn't, `yield` needs to
