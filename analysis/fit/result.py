@@ -16,6 +16,7 @@ from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
 from analysis.utils.paths import get_fit_result_path
 
+
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
 
@@ -31,18 +32,6 @@ def ensure_initialized(method):
     return wrapper
 
 
-def ensure_non_initialized(method):
-    """Make sure the fit result is not initialized."""
-
-    def wrapper(self, *args, **kwargs):
-        """Check result is non empty. Raise otherwise."""
-        if self.get_result():
-            raise AlreadyInitializedError("Trying to overwrite an initialized fit result")
-        return method(self, *args, **kwargs)
-
-    return wrapper
-
-
 class FitResult(object):
     """Manager for fit results.
 
@@ -51,9 +40,19 @@ class FitResult(object):
 
     """
 
-    def __init__(self):
-        """Initialize internal variables."""
-        self._result = None
+    def __init__(self, result=None):
+        """Initialize internal variables.
+
+        Arguments:
+            result (dict, optional): Fit result. Defaults to `None`.
+
+        Raise:
+            ValueError: If `result` is not of the correct type.
+
+        """
+        if result is not None and not isinstance(result, (dict, OrderedDict)):
+            raise ValueError("result is not of the proper type")
+        self._result = result
 
     def get_result(self):
         """Get the full fit result information.
@@ -64,18 +63,15 @@ class FitResult(object):
         """
         return self._result
 
-    @ensure_non_initialized
-    def from_roofit(self, roofit_result):
+    @staticmethod
+    def from_roofit(roofit_result):
         """Load the `RooFitResult` into the internal format.
 
         Arguments:
             roofit_result (`ROOT.RooFitResult`): Fit result.
 
         Return:
-            self
-
-        Raise:
-            AlreadyInitializedError: If the FitResult had already been initialized.
+            FitResult
 
         """
         result = {}
@@ -103,22 +99,20 @@ class FitResult(object):
         result['status'] = OrderedDict((roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
                                        for cycle in range(roofit_result.numStatusHistory()))
         result['edm'] = roofit_result.edm()
-        self._result = result
-        return self
+        return FitResult(result)
 
-    @ensure_non_initialized
-    def from_yaml(self, yaml_dict):
+    @staticmethod
+    def from_yaml(yaml_dict):
         """Initialize from a YAML dictionary.
 
         Arguments:
             yaml_dict (dict, OrderedDict): YAML information to load.
 
         Return:
-            self
+            FitResult
 
         Raise:
             KeyError: If any of the FitResult data is missing from the YAML dictionary.
-            AlreadyInitializedError: If the FitResult had already been initialized.
 
         """
         if not set(yaml_dict.keys()).issuperset({'fit-parameters',
@@ -133,11 +127,10 @@ class FitResult(object):
         yaml_dict['covariance-matrix']['matrix'] = np.asmatrix(
             np.array(yaml_dict['covariance-matrix']['matrix']).reshape(len(yaml_dict['fit-parameters']),
                                                                        len(yaml_dict['fit-parameters'])))
-        self._result = yaml_dict
-        return self
+        return FitResult(yaml_dict)
 
-    @ensure_non_initialized
-    def from_yaml_file(self, name):
+    @staticmethod
+    def from_yaml_file(name):
         """Initialize from a YAML file.
 
         File name is determined by get_fit_result_path.
@@ -151,23 +144,21 @@ class FitResult(object):
         Raise:
             OSError: If the file cannot be found.
             KeyError: If any of the FitResult data is missing from the input file.
-            AlreadyInitializedError: If the FitResult had already been initialized.
 
         """
         try:
-            self._result = dict(load_config(get_fit_result_path(name),
-                                            validate=('fit-parameters',
-                                                      'fit-parameters-initial',
-                                                      'const-parameters',
-                                                      'covariance-matrix/quality',
-                                                      'covariance-matrix/matrix',
-                                                      'status')))
+            return FitResult(dict(load_config(get_fit_result_path(name),
+                                              validate=('fit-parameters',
+                                                        'fit-parameters-initial',
+                                                        'const-parameters',
+                                                        'covariance-matrix/quality',
+                                                        'covariance-matrix/matrix',
+                                                        'status'))))
         except ConfigError as error:
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
-        return self
 
-    @ensure_non_initialized
-    def from_hdf(self, name):  # TODO: which path func?
+    @staticmethod
+    def from_hdf(name):  # TODO: which path func?
         """Initialize from a hdf file.
 
         Arguments:
@@ -177,8 +168,7 @@ class FitResult(object):
             self
 
         """
-
-        return self
+        raise NotImplementedError()
 
     @ensure_initialized
     def to_yaml(self):

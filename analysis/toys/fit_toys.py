@@ -312,7 +312,7 @@ def run(config_files, link_from, verbose):
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
-                result_roofit = FitResult().from_roofit(fit_result)
+                result_roofit = FitResult.from_roofit(fit_result)
                 result = result_roofit.to_plain_dict()
                 result['cov_matrix'] = result_roofit.get_covariance_matrix()
                 result['param_names'] = result_roofit.get_fit_parameters().keys()
