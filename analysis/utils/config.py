@@ -261,7 +261,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         if ':' in action_params[0]:  # We want to load a fit result
             from analysis.fit.result import FitResult
             fit_name, var_name = action_params[0].split(':')
-            result = FitResult().from_yaml_file(fit_name)
+            result = FitResult.from_yaml_file(fit_name)
             try:
                 value, value_error, _, _ = result.get_fit_parameter(var_name)
             except KeyError:
@@ -329,7 +329,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             elif ':' in second_var:
                 from analysis.fit.result import FitResult
                 fit_name, var_name = second_var.split(':')
-                result = FitResult().from_yaml_file(fit_name)
+                result = FitResult.from_yaml_file(fit_name)
                 try:
                     value = result.get_fit_parameter(var_name)[0]
                 except KeyError:
