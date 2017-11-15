@@ -235,7 +235,7 @@ class FixedParamsSyst(SystematicToys):
         if not isinstance(syst, (list, tuple)):
             syst = [syst]
         for result_config in syst:
-            fit_result = FitResult().from_yaml_file(result_config['result'])
+            fit_result = FitResult.from_yaml_file(result_config['result'])
             self._param_translation.update(result_config['param_names'])
             cov_matrices.append(fit_result.get_covariance_matrix(self._param_translation.keys()))
             central_values.append(np.diag([float(fit_result.get_fit_parameter(param)[0])

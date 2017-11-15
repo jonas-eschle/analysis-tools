@@ -137,7 +137,7 @@ def run(config_files, link_from, verbose):
             logger.exception()
             raise RuntimeError()  # TODO: provide more information?
         # Now results are in fit_parameters
-        result = FitResult().from_roofit(fit_result).to_plain_dict()
+        result = FitResult.from_roofit(fit_result).to_plain_dict()
         result['fitnum'] = fit_num
         result['seed'] = seed
         fit_results[fit_num].append(result)
