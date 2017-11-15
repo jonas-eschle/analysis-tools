@@ -33,7 +33,7 @@ def register_systematic(name, syst_class):
     """
     from analysis.toys.systematics import SystematicToys
     logger.debug("Registering %s systematic generator", name)
-    if not isinstance(syst_class, SystematicToys):
+    if not issubclass(syst_class, SystematicToys):
         raise ValueError("Wrong class type -> {}".format(type(syst_class)))
     get_global_var('TOY_SYSTEMATICS').update({name: syst_class})
     return len(get_global_var('TOY_SYSTEMATICS'))

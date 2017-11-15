@@ -57,5 +57,6 @@ set_global_var('FILE_TYPES', {})
 set_global_var('FIT_STRATEGIES', {})
 set_global_var('PHYSICS_FACTORIES', defaultdict(dict))
 set_global_var('EFFICIENCY_MODELS', {})
+set_global_var('TOY_SYSTEMATICS', {})
 
 # EOF
