@@ -6,6 +6,7 @@
 # @date   31.05.2017
 # =============================================================================
 """Toy submitter base class."""
+from __future__ import print_function, division, absolute_import
 
 import os
 
@@ -73,15 +74,15 @@ class ToySubmitter(object):
         try:
             config = _config.load_config(*config_files,
                                          validate=self.VALIDATION.keys())
-        except _config.ConfigError, error:
+        except _config.ConfigError as error:
             for key, error_message in self.VALIDATION.items():
                 if key in error.missing_keys:
                     logger.error(error_message)
             raise KeyError()
-        except OSError, error:
+        except OSError as error:
             raise OSError("Cannot load configuration file: {}"
                           .format(config_files))
-        except KeyError, error:
+        except KeyError as error:
             # logger.error(str(error))
             raise
         # Check conflicting arguments
@@ -91,7 +92,7 @@ class ToySubmitter(object):
         # Store infotmation
         self.config = config
         # Assign link-from giving priority to the argument
-        self.config['link-from'] = link_from if link_from else config.get('link-from', None)
+        self.config['link-from'] = link_from if link_from else config.get('link-from')
         self.link_from = link_from
         self.extend = extend
         self.overwrite = overwrite

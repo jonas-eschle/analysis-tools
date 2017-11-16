@@ -6,6 +6,7 @@
 # @date   16.05.2017
 # =============================================================================
 """Test data-related funcionality."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import tempfile

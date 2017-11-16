@@ -6,6 +6,7 @@
 # @date   11.01.2017
 # =============================================================================
 """Toy generation."""
+from __future__ import print_function, division, absolute_import
 
 import argparse
 
@@ -74,7 +75,7 @@ def generate(physics_factory, n_events):
             raise ValueError("Generation of a simultaneous requires a dictionary for the number of events.")
         output_dataset = None
         for label, n_events_label in n_events.items():
-            label_factory = physics_factory.get_children().get(label, None)
+            label_factory = physics_factory.get_children().get(label)
             if not label_factory:
                 raise KeyError("Unknown label -> {}".format(label))
             label_df = generate_events(label_factory.get_pdf("GenPdf_{}".format(label),
@@ -156,7 +157,7 @@ def run(config_files, link_from):
         logger.warning("Generating a RooAddPdf or a RooSimultaneous: "
                        "yields will be generated at a fixed value")
     try:
-        dataset = generate(physics, config['gen'].get('nevents-per-job', config['gen']['nevents']))  # TODO: catch config error?
+        dataset = generate(physics, config['gen'].get('nevents-per-job', config['gen']['nevents']))
     except ValueError as error:
         logger.exception("Exception on generation")
         raise RuntimeError(str(error))
@@ -173,7 +174,7 @@ def run(config_files, link_from):
         # Save
         with work_on_file(config['name'],
                           path_func=get_toy_path,
-                          link_from=config.get('link-from', None)) as toy_file:
+                          link_from=config.get('link-from')) as toy_file:
             with modify_hdf(toy_file) as hdf_file:
                 hdf_file.append('data', dataset.assign(jobid=job_id))
                 hdf_file.append('toy_info', pd.DataFrame(toy_info))
@@ -181,7 +182,7 @@ def run(config_files, link_from):
         logger.info("Written output to %s", toy_file)
         if 'link-from' in config:
             logger.info("Linked to %s", config['link-from'])
-    except OSError, excp:
+    except OSError as excp:
         logger.error(str(excp))
         raise
     except ValueError as error:
@@ -218,7 +219,7 @@ def main():
     except KeyError:
         exit_status = 1
         logger.exception("Bad configuration given")
-    except OSError, error:
+    except OSError as error:
         exit_status = 2
         logger.error(str(error))
     except ValueError:

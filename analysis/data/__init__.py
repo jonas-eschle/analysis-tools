@@ -6,6 +6,7 @@
 # @date   10.04.2017
 # =============================================================================
 """Manage datasets."""
+from __future__ import print_function, division, absolute_import
 
 import os
 
@@ -113,7 +114,7 @@ def get_data(data_config, **kwargs):
     # Optional: output-type, cuts, branches
     input_ext = os.path.splitext(file_name)[1]
     try:
-        input_type = data_config.get('input-type', None)
+        input_type = data_config.get('input-type')
         if not input_type:
             input_type = get_global_var('FILE_TYPES')[input_ext]
     except KeyError:

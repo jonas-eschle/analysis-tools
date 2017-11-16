@@ -6,6 +6,7 @@
 # @date   31.05.2017
 # =============================================================================
 """Implementation of different batch systems."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import subprocess
@@ -113,7 +114,7 @@ echo "------------------------------------------------------------------------"
         if log_file == err_file:
             header.append(self.DIRECTIVES['mergelogs'])
         for batch_option, batch_value in batch_config.items():
-            directive = self.DIRECTIVES.get(batch_option, None)
+            directive = self.DIRECTIVES.get(batch_option)
             if directive is None:
                 logger.warning("Ignoring directive %s -> %s", batch_option, batch_value)
                 continue
