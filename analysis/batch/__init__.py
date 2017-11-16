@@ -27,7 +27,7 @@ def get_batch_system(name=None):
     """
     from analysis.batch.batch_system import BATCH_SYSTEMS
     if name:
-        batch_system = BATCH_SYSTEMS.get(name, None)
+        batch_system = BATCH_SYSTEMS.get(name)
         if batch_system:
             return batch_system
     else:

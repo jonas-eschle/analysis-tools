@@ -91,7 +91,7 @@ class ToySubmitter(object):
         # Store infotmation
         self.config = config
         # Assign link-from giving priority to the argument
-        self.config['link-from'] = link_from if link_from else config.get('link-from', None)
+        self.config['link-from'] = link_from if link_from else config.get('link-from')
         self.link_from = link_from
         self.extend = extend
         self.overwrite = overwrite

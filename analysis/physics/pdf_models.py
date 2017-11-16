@@ -353,7 +353,7 @@ class RooWorkspaceMixin(object):
             var = self._workspace.var(obs_name)
             if not var:
                 raise KeyError("Observable {} not present in RooWorkspace".format(obs_name))
-            if obs_id not in self._objects or var != self._objects[obs_id]:
+            if obs_id not in self or var != self[obs_id]:
                 self.set(obs_id, var)
                 self.set_observable(obs_id, title=obs_title, limits=(obs_min, obs_max), units=unit)
         return super(RooWorkspaceMixin, self).get_observables()

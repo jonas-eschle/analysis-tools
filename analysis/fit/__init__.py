@@ -77,8 +77,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
 
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-    if 'Range' not in kwargs:
-        kwargs['Range'] = 'Full'
+    kwargs.setdefault('Range', 'Full')
     for command, val in kwargs.items():
         roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:

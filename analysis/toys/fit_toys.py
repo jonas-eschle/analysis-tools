@@ -160,7 +160,7 @@ def run(config_files, link_from, verbose):
         logger.error("Missing model configuration -> %s", str(error))
         raise KeyError("Missing model configuration")
     if not models:
-        logger.error("No model was specified in the config file!")
+        logger.error("Empty list specified in the config file under 'fit/models'!")
         raise KeyError()
     fit_strategies = config['fit'].get('strategies', ['simple'])
     if not fit_strategies:
@@ -192,10 +192,10 @@ def run(config_files, link_from, verbose):
                                    'source-type': 'toy',
                                    'tree': 'data',
                                    'output-format': 'pandas',
-                                   'selection': data_source.get('selection', None)}),
+                                   'selection': data_source.get('selection')}),
                          data_source['nevents'],
-                         data_source.get('poisson', None),
-                         data_source.get('category', None))
+                         data_source.get('poisson'),
+                         data_source.get('category'))
         # Generator values
         toy_info = get_data({'source': source_toy,
                              'source-type': 'toy',
@@ -228,7 +228,7 @@ def run(config_files, link_from, verbose):
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
                                  _paths.get_toy_fit_path,
-                                 config.get('link-from', None)) as toy_fit_file:
+                                 config.get('link-from')) as toy_fit_file:
             with modify_hdf(toy_fit_file) as hdf_file:
                 logger.debug("Checking generator values")
                 test_gen = [('gen_{}'.format(data_source)) in hdf_file
@@ -307,8 +307,8 @@ def run(config_files, link_from, verbose):
                                      fit_strategy,
                                      dataset,
                                      verbose,
-                                     Extended=config['fit'].get('extended', True),
-                                     Minos=config['fit'].get('minos', True))
+                                     Extended=config['fit'].get('extended', False),
+                                     Minos=config['fit'].get('minos', False))
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
@@ -351,7 +351,7 @@ def run(config_files, link_from, verbose):
         # pylint: disable=E1101
         with _paths.work_on_file(config['name'],
                                  path_func=_paths.get_toy_fit_path,
-                                 link_from=config.get('link-from', None)) as toy_fit_file:
+                                 link_from=config.get('link-from')) as toy_fit_file:
             with modify_hdf(toy_fit_file) as hdf_file:
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
