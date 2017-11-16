@@ -36,6 +36,7 @@ def register_file_type(extension, file_type):
 # Register
 register_file_type('h5', 'pandas')
 register_file_type('hdf', 'pandas')
+register_file_type('csv', 'csv')
 register_file_type('root', 'root')
 
 
@@ -96,7 +97,7 @@ def get_data(data_config, **kwargs):
     # Merge data_config and keyword arguments
     data_config.update(kwargs)
     # Check the configuration
-    for key in ('source', 'tree', 'output-format'):
+    for key in ('source', 'output-format'):
         if key not in data_config:
             raise KeyError("Bad data configuration -> '{}' key is missing".format(key))
     source_name = data_config.pop('source')
@@ -108,7 +109,7 @@ def get_data(data_config, **kwargs):
             raise OSError("Cannot find input file -> {}".format(file_name))
     except AttributeError:
         raise AttributeError("Unknown source type -> {}".format(source_type))
-    tree_name = data_config.pop('tree')
+    tree_name = data_config.pop('tree', '')
     output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches
     input_ext = os.path.splitext(file_name)[1]
