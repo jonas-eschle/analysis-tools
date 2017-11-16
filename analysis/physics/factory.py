@@ -7,6 +7,7 @@
 # =============================================================================
 """Physics factory classes."""
 
+import os
 import re
 from collections import OrderedDict
 
@@ -227,6 +228,35 @@ class BaseFactory(object):
                                                 'originalName',
                                                 parameter_name))
 
+    def get_parameter(self, param_path):
+        """Recursively get a parameter.
+
+        Recursion can be specified using a path-like structure, eg,
+        `f.get_parameter('label1/signal/mass/mu')` is equivalent to
+        `f.get_children()['label1'].get_children()['signal'].get_children()['mass'].get('mu')`
+
+        Arguments:
+            param_path (str): Parameter identifier string.
+
+        Return:
+            `ROOT.RooRealVar` or `None`
+
+        Raise:
+            KeyError: If some part of the path does not exist.
+
+        """
+        path, param_name = os.path.split(param_path)
+        current_obj = self
+
+        for path_element in path.split('/'):
+            try:
+                current_obj = current_obj.get_children()[path_element]
+            except KeyError as error:
+
+                logger.error("Unknown child %s in path -> %s", path_element, path.split()[0])
+                raise
+        return current_obj.get(param_name)
+
     def get_parameter_name(self, param_id):
         """Get the name of the parameter according to the configuration.
 
@@ -425,12 +455,32 @@ class BaseFactory(object):
     def set_yield_var(self, yield_):
         raise NotImplementedError()
 
+    def get_yield_vars(self):
+        """Recursively get the factory's yield variables.
+
+        Order is determined by child order.
+
+        Return:
+            list[`ROOT.RooRealVar`]
+
+        Raise:
+            ValueError: If the model is not extended.
+
+        """
+        if not self.is_extended():
+            raise ValueError("Non-extended model doesn't have yields")
+        yields = [self.get_yield_var()]
+        for child in self._children.values():
+            if child.is_extended():
+                yields.extend(child.get_yield_vars())
+        return yields  # TODO: may return dict with name?
+
     def get_category_var(self):
         return self._category
 
     def get_category_vars(self):
         if not self._category:
-            return None
+            return []
         if isinstance(self._category, ROOT.RooSuperCategory):
             cats = []
             cat_iter = self._category.serverIterator()

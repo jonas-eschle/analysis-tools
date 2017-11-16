@@ -176,6 +176,15 @@ class Efficiency(object):
         """
         raise NotImplementedError()
 
+    def randomize(self):
+        """Return randomized version of itself.
+
+        Raise:
+            ValueError: If there is a problem in randomizing.
+
+        """
+        raise NotImplementedError()
+
     def plot(self, data, weight_var=None, labels=None):
         """Plot the efficiency against a dataset.
 

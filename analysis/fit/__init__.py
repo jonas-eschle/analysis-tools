@@ -36,7 +36,7 @@ def register_fit_strategy(name, fit_function):
     """
     if len(inspect.getargspec(fit_function).args) != 3:
         raise ValueError("The strategy function needs to have 3 arguments")
-    logger.debug("Registering {} fitting strategy".format(name))
+    logger.debug("Registering %s fitting strategy", name)
     get_global_var('FIT_STRATEGIES').update({name: fit_function})
     return len(get_global_var('FIT_STRATEGIES'))
 

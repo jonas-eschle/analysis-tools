@@ -276,17 +276,34 @@ class FitResult(object):
         return self._result['fit-parameters']
 
     @ensure_initialized
-    def get_covariance_matrix(self):
+    def get_const_parameters(self):
+        """Get the full list of const parameters.
+
+        Return:
+            OrderedDict: Parameters as keys and their values and errors as values.
+
+        """
+        return self._result['const-parameters']
+
+    @ensure_initialized
+    def get_covariance_matrix(self, params=None):
         """Get the fit covariance matrix.
+
+        Arguments:
+            params (iterable, optional): Iterable of fit parameters to get the covariance for.
 
         Return:
             `numpy.matrix`: Covariance matrix.
 
         Raise:
+            ValueError: If a requested parameter is not in the fitted parameters list.
             NotInitializedError: If the FitResult has not been initialized.
 
         """
-        return self._result['covariance-matrix']['matrix']
+        if not params:
+            params = self.get_fit_parameters().keys()
+        params_to_get = [list(self.get_fit_parameters().keys()).index(param) for param in params]
+        return self.get_result()['covariance-matrix']['matrix'][np.ix_(params_to_get, params_to_get)]
 
     @ensure_initialized
     def get_edm(self):
@@ -310,25 +327,30 @@ class FitResult(object):
                self._result['covariance-matrix']['quality'] == 3
 
     @ensure_initialized
-    def generate_random_pars(self, include_const=False):
+    def generate_random_pars(self, params=None, include_const=False):
         """Generate random variation of the fit parameters.
 
         Use a multivariate Gaussian according to the covariance matrix.
 
         Arguments:
-            include_const (bool, optional): Return constant parameters? Defaults to False.
+            params (iterable, optional): Iterable of fit parameters to get. If None is given, all
+                parameters are varied.
+            include_const (bool, optional): Return constant parameters? Defaults to False. If
+                True is given, constant parameters are additionally included independent of `param_list`.
 
         Return:
             OrderedDict
 
         """
+        if params is None:
+            params = self.get_fit_parameters().keys()
+        param_values = [self.get_fit_parameter(param_name) for param_name in params]
         # pylint: disable=E1101
-        output = OrderedDict(zip(self._result['fit-parameters'].keys(),
-                                 np.random.multivariate_normal([param[0]
-                                                                for param in self._result['fit-parameters'].values()],
-                                                               self._result['covariance-matrix']['matrix'])))
+        output = OrderedDict(zip(params,
+                                 np.random.multivariate_normal([param[0] for param in param_values],
+                                                               self.get_covariance_matrix(params))))
         if include_const:
-            for name, param in self._result['const-parameters'].items():
+            for name, param in self.get_const_parameters().items():
                 output[name] = param
         return output
 
