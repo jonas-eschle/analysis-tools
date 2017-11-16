@@ -15,6 +15,7 @@ import numpy as np
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
 from analysis.utils.paths import get_fit_result_path
+from analysis.utils.decorators import memoize
 
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
@@ -22,7 +23,6 @@ _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
 def ensure_initialized(method):
     """Make sure the fit result is initialized."""
-
     def wrapper(self, *args, **kwargs):
         """Check result is empty. Raise otherwise."""
         if not self.get_result():
@@ -63,6 +63,7 @@ class FitResult(object):
         """
         return self._result
 
+    @memoize
     @staticmethod
     def from_roofit(roofit_result):
         """Load the `RooFitResult` into the internal format.
@@ -101,6 +102,7 @@ class FitResult(object):
         result['edm'] = roofit_result.edm()
         return FitResult(result)
 
+    @memoize
     @staticmethod
     def from_yaml(yaml_dict):
         """Initialize from a YAML dictionary.
@@ -129,6 +131,7 @@ class FitResult(object):
                                                                        len(yaml_dict['fit-parameters'])))
         return FitResult(yaml_dict)
 
+    @memoize
     @staticmethod
     def from_yaml_file(name):
         """Initialize from a YAML file.
@@ -157,6 +160,7 @@ class FitResult(object):
         except ConfigError as error:
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
 
+    @memoize
     @staticmethod
     def from_hdf(name):  # TODO: which path func?
         """Initialize from a hdf file.
@@ -222,7 +226,7 @@ class FitResult(object):
                                    for param_name, param in self._result['fit-parameters'].items()
                                    for val, suffix in zip(param, _SUFFIXES)))
         pandas_dict.update(OrderedDict((param_name, val) for param_name, val
-                            in self._result['const-parameters'].items()))
+                                       in self._result['const-parameters'].items()))
         pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
@@ -324,7 +328,7 @@ class FitResult(object):
 
         """
         return not any(status for status in self._result['status'].values()) and \
-               self._result['covariance-matrix']['quality'] == 3
+            self._result['covariance-matrix']['quality'] == 3
 
     @ensure_initialized
     def generate_random_pars(self, params=None, include_const=False):
