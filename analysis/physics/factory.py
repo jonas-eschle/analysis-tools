@@ -477,7 +477,7 @@ class PhysicsFactory(BaseFactory):
     def __init__(self, config, parameters=None):
         super(PhysicsFactory, self).__init__(config, parameters)
         # Configure yields
-        if 'yield' in parameters:
+        if parameters and 'yield' in parameters:
             self.set_yield_var(parameters['yield'])
 
     def get_unbound_pdf(self, name, title):
