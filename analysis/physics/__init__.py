@@ -232,10 +232,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
         for cat_label in config['pdf'].keys():
             for cat_iter, cat_sublabel in enumerate(cat_label.split(',')):
                 cat_sublabel = cat_sublabel.strip()
-                if cat_sublabel not in labels[cat_iter]:
-                    logger.debug("Registering label for %s -> %s", cat_list[cat_iter].GetName(), cat_sublabel)
-                    cat_list[cat_iter].defineType(cat_sublabel)
-                labels[cat_iter].add(cat_sublabel)
+                try:
+                    if cat_sublabel not in labels[cat_iter]:
+                        logger.debug("Registering label for %s -> %s", cat_list[cat_iter].GetName(), cat_sublabel)
+                        cat_list[cat_iter].defineType(cat_sublabel)
+                    labels[cat_iter].add(cat_sublabel)
+                except IndexError:
+                    logger.error("Mismatch between declared number of categories and label '%s'", cat_label)
+                    raise ConfigError("Badly defined category label '{}'".format(cat_label))
         sim_factory = factory.SimultaneousPhysicsFactory(OrderedDict((tuple(cat_label.replace(' ', '').split(',')),
                                                                       configure_model(cat_config,
                                                                                       shared_vars['pdf'][cat_label]))
