@@ -14,6 +14,7 @@ The threshold level for displaying messages and the format of the
 logger can be configured with the lvl and format arguments
 
 """
+from __future__ import print_function, division, absolute_import
 
 import logging
 import colorlog
