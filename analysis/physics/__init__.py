@@ -167,6 +167,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
+        global_yield = config.pop('yield', None)
         for pdf_name, pdf_config in config.items():
             # Disable parameter propagation
             # if 'parameters' not in pdf_config:
@@ -191,7 +192,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
             factory_name, factory_obj = factories.items()[0]
             if factory_name in yields:
                 factory_obj.set_yield_var(yields[factory_name])
-            return factory_obj
+            output_factory = factory_obj
         else:
             parameters = {}
             if (len(factories) - len(yields)) > 1:
@@ -205,7 +206,10 @@ def configure_model(config, shared_vars=None, external_vars=None):
                         parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
                 # if 'yield' in parameters:
                 #     parameters['yield'][0].setStringAttribute('shared', 'true')
-            return factory.SumPhysicsFactory(factories, yields, parameters)
+            output_factory = factory.SumPhysicsFactory(factories, yields, parameters)
+        if global_yield:
+            output_factory.set_yield_var(global_yield)
+        return output_factory
 
     def configure_simul_factory(config, shared_vars):
         logger.debug("Configuring simultaneous -> %s", dict(config))
@@ -257,7 +261,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if isinstance(config.values()[0].get('pdf'), str):
+            indices = list(range(len(config)))
+            try:  # remove 'yield'
+                indices.pop(list(config.keys()).index('yield'))
+            except ValueError:  # no yield defined
+                index = 0
+            else:
+                index = indices[0]
+            if isinstance(list(config.values())[index].get('pdf'), str):
                 shared = {'pdf': shared_vars}
                 return configure_prod_factory({'pdf': config}, shared)
             else:
@@ -266,8 +277,8 @@ def configure_model(config, shared_vars=None, external_vars=None):
             if len(config['pdf']) > 1:
                 return configure_prod_factory(config, shared_vars)
             else:
-                pdf_obs = config['pdf'].keys()[0]
-                pdf_config = config['pdf'].values()[0]
+                pdf_obs = list(config['pdf'].keys())[0]
+                pdf_config = list(config['pdf'].values())[0]
                 if 'parameters' not in pdf_config:
                     pdf_config['parameters'] = OrderedDict()
                 pdf_config['parameters'].update(config.get('parameters', {}))
@@ -276,7 +287,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                     sh_vars['parameters'].update(shared_vars['parameters'])
                 else:
                     sh_vars['parameters'] = shared_vars['parameters']
-                return configure_factory(pdf_obs, pdf_config, sh_vars)
+                return configure_factory(observable=pdf_obs, config=pdf_config, shared_vars=sh_vars)
     raise RuntimeError()
 
 

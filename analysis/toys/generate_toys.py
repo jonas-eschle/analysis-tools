@@ -15,6 +15,7 @@ import ROOT
 
 from analysis.physics import configure_model
 from analysis.physics.factory import SumPhysicsFactory, SimultaneousPhysicsFactory
+from analysis.utils.random import get_urandom_int
 from analysis.utils.root import destruct_object, list_to_rooargset
 from analysis.utils.config import load_config, ConfigError
 from analysis.utils.logging_color import get_logger
@@ -139,12 +140,7 @@ def run(config_files, link_from):
         logger.debug("No linking specified")
     # Set seed
     job_id = get_job_id()
-    if job_id:
-        seed = int(job_id.split('.')[0])
-    else:
-        import random
-        job_id = 'local'
-        seed = random.randint(0, 100000)
+    seed = get_urandom_int(8)
     np.random.seed(seed=seed)
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Generate

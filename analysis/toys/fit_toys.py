@@ -20,6 +20,7 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
+from analysis.utils.random import get_urandom_int
 from analysis.data import get_data
 from analysis.data.hdf import modify_hdf
 from analysis.data.converters import dataset_from_pandas
@@ -31,7 +32,6 @@ from analysis.batch import get_job_id
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
-import analysis.utils.fit as _fit
 
 
 logger = get_logger('analysis.toys.fit')
@@ -42,14 +42,26 @@ def get_datasets(data_frames, acceptance, fit_models):
 
     If an acceptance is specified, events are selected using accept-reject.
 
+    Logic regarding the poisson variation of yields is as follows:
+        - If the fit model is extended, the yields of the individual data sets are
+            varied as randomly following a poisson distribution.
+        - If the fit model is not extended, the yields of the individual data set
+            are exactly the number of events given in the configuration.
+
+    Note:
+        Proper handling of poissonian variations is not fool proof. If datasets contain a
+        mixture of populations that have different yield parameters in the fit model, they
+        cannot be varied properly and therefore their pulls will be wrong.
+
     Arguments:
-        data_frames (dict[tuple(pandas.DataFrame, int, str)]): Data frames with the requested
-            number of events and the corresponding category.
+        data_frames (dict[tuple(pandas.DataFrame, int, bool, str)]): Data frames with
+            - the requested number of events (int)
+            - a boolean telling whether to use poisson statistics (bool)
+            - the corresponding category (str)
         acceptance (analysis.efficiency.acceptance.Acceptance): Acceptance description.
             Can be None, in which case it is ignored.
         fit_models (dict): Fit models to use to transform datasets and (possibly) establish
             the data categories, with the name of the output as key.
-        categories (dict, optional): Category of each data frame.
 
     Return:
         tuple (dict (str: ROOT.RooDataSet), dict (str: int)): Datasets made of the
@@ -64,13 +76,16 @@ def get_datasets(data_frames, acceptance, fit_models):
     sample_sizes = {}
     weight_var = None
     logger.debug("Sampling datasets -> %s", data_frames.keys())
-    for data_name, (data, n_events, category) in data_frames.items():
+    is_extended = fit_models.values()[0].is_extended()
+    for data_name, (data, n_events, do_poisson, category) in data_frames.items():
         if acceptance:
             data = acceptance.apply_accept_reject(data)
-        # Do poisson if it is extended
-        sample_sizes[data_name] = poisson.rvs(n_events)
+        # Do poisson if it is extended and it has not been disabled
+        if do_poisson is None:
+            do_poisson = is_extended
+        sample_sizes[data_name] = poisson.rvs(n_events) if do_poisson else n_events
         # Extract suitable number of rows and transform them
-        rows = data.sample(sample_sizes[data_name])
+        rows = data.sample(sample_sizes[data_name])  # TODO: Weights support?
         # Add category column
         if category:
             # By default the label is stored in the 'category' column
@@ -103,6 +118,8 @@ def get_datasets(data_frames, acceptance, fit_models):
 
 def run(config_files, link_from, verbose):
     """Run the script.
+
+    Run a sample/fit sequence as many times as requested.
 
     Arguments:
         config_files (list[str]): Path to the configuration files.
@@ -177,6 +194,7 @@ def run(config_files, link_from, verbose):
                                    'output-format': 'pandas',
                                    'selection': data_source.get('selection')}),
                          data_source['nevents'],
+                         data_source.get('poisson'),
                          data_source.get('category'))
         # Generator values
         toy_info = get_data({'source': source_toy,
@@ -194,9 +212,16 @@ def run(config_files, link_from, verbose):
             if model_name not in config:
                 raise KeyError("Missing model definition -> {}".format(model_name))
             fit_models[model_name] = configure_model(config[model_name])
+            if any(yield_.isConstant() for yield_ in fit_models[model_name].get_yield_vars()):
+                logger.warning("Model %s has constant yields. "
+                               "Be careful when configuring the input data, you may need to disable poisson sampling",
+                               model_name)
     except KeyError:
-        logger.exception('Error loading model')
-        raise ValueError('Error loading model')
+        logger.exception("Error loading model")
+        raise ValueError("Error loading model")
+    if len(set(model.is_extended() for model in fit_models.values())) == 2:
+        logger.error("Mix of extended and non-extended models!")
+        raise ValueError("Error loading fit models")
     # Let's check these generator values against the output file
     try:
         gen_values_frame = {}
@@ -255,6 +280,9 @@ def run(config_files, link_from, verbose):
         if (fit_num+1) % 20 == 0:
             logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Get a compound dataset
+        seed = get_urandom_int(8)
+        np.random.seed(seed=seed)
+        ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
             logger.debug("Sampling input data")
             datasets, sample_sizes = get_datasets(data,
@@ -284,11 +312,12 @@ def run(config_files, link_from, verbose):
                 except ValueError:
                     raise RuntimeError()
                 # Now results are in fit_parameters
-                result_roofit = FitResult().from_roofit(fit_result)
+                result_roofit = FitResult.from_roofit(fit_result)
                 result = result_roofit.to_plain_dict()
                 result['cov_matrix'] = result_roofit.get_covariance_matrix()
                 result['param_names'] = result_roofit.get_fit_parameters().keys()
                 result['fitnum'] = fit_num
+                result['seed'] = seed
                 fit_results[toy_key].append(result)
                 _root.destruct_object(fit_result)
             _root.destruct_object(dataset)
@@ -315,8 +344,7 @@ def run(config_files, link_from, verbose):
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([pd.DataFrame(gen_events),
                                   data_frame,
-                                  pd.concat([pd.DataFrame({'seed': [seed],
-                                                           'jobid': [job_id]})]
+                                  pd.concat([pd.DataFrame({'jobid': [job_id]})]
                                             * data_frame.shape[0]).reset_index(drop=True)],
                                  axis=1)
     try:
@@ -389,13 +417,13 @@ def main():
         logger.error(str(error))
     except ValueError:
         exit_status = 3
-        logger.exception("Problem configuring physics factories")
+        logger.error("Problem configuring physics factories")
     except RuntimeError as error:
         exit_status = 4
         logger.error("Error in fitting events")
     except AttributeError as error:
         exit_status = 5
-        logger.error("Inconsistent input data -> %s" % error)
+        logger.error("Inconsistent input data -> %s", error)
     # pylint: disable=W0703
     except Exception as error:
         exit_status = 128

@@ -176,6 +176,15 @@ class Efficiency(object):
         """
         raise NotImplementedError()
 
+    def randomize(self):
+        """Return randomized version of itself.
+
+        Raise:
+            ValueError: If there is a problem in randomizing.
+
+        """
+        raise NotImplementedError()
+
     def plot(self, data, weight_var=None, labels=None):
         """Plot the efficiency against a dataset.
 
@@ -227,8 +236,8 @@ class Efficiency(object):
         for var_name in self.get_variables():
             x, y = self.project_efficiency(var_name, n_points=1000)
             fig = plt.figure()
-            data_to_plot = data[var_name]*data[weight_var] if weight_var else data[var_name]
-            sns.distplot(data_to_plot, kde=None, norm_hist=True)
+            data_weights = data[weight_var] if weight_var else None
+            sns.distplot(data[var_name], kde=None, norm_hist=True, hist_kws={'weights': data_weights})
             plt.plot(x, y, 'b-')
             if var_name not in labels:
                 labels[var_name] = tex_escape(var_name)
