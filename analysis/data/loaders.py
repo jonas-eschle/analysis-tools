@@ -68,6 +68,111 @@ def _analyze_weight_config(config):
     return weight_var, weights_to_normalize, weights_not_to_normalize
 
 
+def _get_root_from_dataframe(frame, kwargs):
+    """Properly load a pandas DataFrame into a `ROOT.RooDataSet`.
+
+    Needed keys in `kwargs` are:
+        + `name`: Name of the `RooDataSet`.
+        + `title`: Title of the `RooDataSet`.
+
+    Optional keys are:
+        + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
+        + `weights-to-normalize`: Variables defining the weights that are normalized
+            to the total number of entries of the dataset.
+        + `weights-not-to-normalize`: Variables defining the weights that are not normalized.
+        + `weight-var-name`: Name of the weight variable. If there is only one weight,
+            it is not needed. Otherwise it has to be specified.
+        + `acceptance`: Load an acceptance. This needs to be accompanied with a weight
+            specification, either in `weights-to-normalize` or `weights-not-to-normalize`, which
+            is either `acceptance_fit` or `acceptance_gen`. Depending on which one is
+            specified, `acceptance.get_fit_weights` or `acceptance.get_gen_weights` is used.
+        + `categories`: RooCategory variables to use.
+
+    Arguments:
+        file_name (str): File to load.
+        tree_name (str): Tree to load.
+        **kwargs (dict): Extra configuration.
+
+    Return:
+        ROOT.RooDataSet: pandas.DataFrame converted to RooDataSet.
+
+    Raise:
+        KeyError: If there are errors in the `kwargs` variables.
+        ValueError: If there is an error in loading the acceptance.
+
+    """
+    logger.debug("Loading pandas DataFrame in RooDataSet format")
+    # Checks and variable preparation
+    try:
+        name = kwargs['name']
+        title = kwargs.get('title', name)
+    except KeyError as error:
+        raise KeyError("Missing configuration key -> {}".format(error))
+    # Check weights
+    try:
+        weight_var, weights_to_normalize, weights_not_to_normalize = _analyze_weight_config(kwargs)
+    except KeyError:
+        raise KeyError("Badly specified weights")
+    # Variables
+    var_list = kwargs.get('variables', list(frame.columns))
+    # Raise an error if some weights are not loaded.
+    if not set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list)):
+        raise ValueError("Missing weights in the list of variables read from input file.")
+    acc_var = ''
+    # Acceptance specified
+    if 'acceptance' in kwargs:
+        if any('acceptance_fit' in weights
+               for weights in (weights_to_normalize, weights_not_to_normalize)):
+            acc_var = 'acceptance_fit'
+        if any('acceptance_gen' in weights
+               for weights in (weights_to_normalize, weights_not_to_normalize)):
+            if acc_var:
+                raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
+            acc_var = 'acceptance_gen'
+        if not acc_var:
+            logger.warning("Requested acceptance but it has not been specified as a weight to use. Ignoring.")
+
+    if weight_var:
+        if 'acceptance' in kwargs:
+            if any('acceptance_fit' in weights
+                   for weights in (weights_to_normalize, weights_not_to_normalize)):
+                acc_var = 'acceptance_fit'
+            if any('acceptance_gen' in weights
+                   for weights in (weights_to_normalize, weights_not_to_normalize)):
+                if acc_var:
+                    raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
+                acc_var = 'acceptance_gen'
+            if not acc_var:
+                logger.warning("Requested acceptance but it has not been specified as a weight to use. Ignoring.")
+    if acc_var:
+        from analysis.efficiency import get_acceptance
+        try:
+            acceptance = get_acceptance(kwargs['acceptance'])
+        except Exception as error:
+            raise ValueError(str(error))
+        if acc_var in frame.columns:
+            raise ValueError("Name clash: the column '{}' is present in the dataset".format(acc_var))
+        if acc_var == 'acceptance_fit':
+            frame['acceptance_fit'] = acceptance.get_fit_weights(frame)
+        else:
+            frame['acceptance_gen'] = acceptance.get_gen_weights(frame)
+    # Apply weights
+    if weight_var:
+        frame[weight_var] = np.prod([frame[w_var] for w_var in weights_to_normalize],
+                                    axis=0)
+        frame[weight_var] = frame[weight_var]/frame[weight_var].sum()*frame.shape[0]
+        frame[weight_var] = np.prod([frame[w_var] for w_var in weights_not_to_normalize + [weight_var]],
+                                    axis=0)
+    if var_list is not None and weight_var:
+        var_list.append(weight_var)
+    # Convert it
+    return dataset_from_pandas(frame, name, title,
+                               var_list=var_list,
+                               weight_var=weight_var,
+                               categories=kwargs.get('categories'))
+
+
 ###############################################################################
 # Load pandas files
 ###############################################################################
@@ -158,78 +263,98 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     """
     logger.debug("Loading pandas file in RooDataSet format -> %s:%s",
                  file_name, tree_name)
-    # Checks and variable preparation
-    try:
-        name = kwargs['name']
-        title = kwargs.get('title', name)
-    except KeyError as error:
-        raise KeyError("Missing configuration key -> {}".format(error))
-    # Check weights
-    try:
-        weight_var, weights_to_normalize, weights_not_to_normalize = _analyze_weight_config(kwargs)
-    except KeyError:
-        raise KeyError("Badly specified weights")
-    # Variables
-    var_list = kwargs.get('variables')
-    # Raise an error if some weights are not loaded.
-    if not (set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list))) :
-        raise ValueError("Missing weights in the list of variables read from input file.")
-    acc_var = ''
-    # Acceptance specified
-    if 'acceptance' in kwargs:
-        if any('acceptance_fit' in weights
-               for weights in (weights_to_normalize, weights_not_to_normalize)):
-            acc_var = 'acceptance_fit'
-        if any('acceptance_gen' in weights
-               for weights in (weights_to_normalize, weights_not_to_normalize)):
-            if acc_var:
-                raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
-            acc_var = 'acceptance_gen'
-        if not acc_var:
-            logger.warning("Requested acceptance but it has not been specified as a weight to use. Ignoring.")
+    return _get_root_from_dataframe(_load_pandas(file_name, tree_name,
+                                                 kwargs.get('variables', []),
+                                                 kwargs.get('selection')),
+                                    kwargs)
 
-    if weight_var:
-        if 'acceptance' in kwargs:
-            if any('acceptance_fit' in weights
-                   for weights in (weights_to_normalize, weights_not_to_normalize)):
-                acc_var = 'acceptance_fit'
-            if any('acceptance_gen' in weights
-                   for weights in (weights_to_normalize, weights_not_to_normalize)):
-                if acc_var:
-                    raise ValueError("Specified both 'acceptance_fit' and 'acceptance_gen' as weights.")
-                acc_var = 'acceptance_gen'
-            if not acc_var:
-                logger.warning("Requested acceptance but it has not been specified as a weight to use. Ignoring.")
-    # Load the data
-    frame = _load_pandas(file_name, tree_name,
-                         var_list,
-                         kwargs.get('selection'))
-    if acc_var:
-        from analysis.efficiency import get_acceptance
-        try:
-            acceptance = get_acceptance(kwargs['acceptance'])
-        except Exception as error:
-            raise ValueError(str(error))
-        if acc_var in frame.columns:
-            raise ValueError("Name clash: the column '{}' is present in the dataset".format(acc_var))
-        if acc_var == 'acceptance_fit':
-            frame['acceptance_fit'] = acceptance.get_fit_weights(frame)
-        else:
-            frame['acceptance_gen'] = acceptance.get_gen_weights(frame)
-    # Apply weights
-    if weight_var:
-        frame[weight_var] = np.prod([frame[w_var] for w_var in weights_to_normalize],
-                                    axis=0)
-        frame[weight_var] = frame[weight_var]/frame[weight_var].sum()*frame.shape[0]
-        frame[weight_var] = np.prod([frame[w_var] for w_var in weights_not_to_normalize + [weight_var]],
-                                    axis=0)
-    if var_list is not None and weight_var:
-        var_list.append(weight_var)
-    # Convert it
-    return dataset_from_pandas(frame, name, title,
-                               var_list=var_list,
-                               weight_var=weight_var,
-                               categories=kwargs.get('categories'))
+
+###############################################################################
+# Load CSV files
+###############################################################################
+def _load_csv(file_name, variables, selection):
+    """Load a pandas dataset from a CSV file.
+
+    Arguments:
+        file_name (str): File to load.
+        variables (list): List of variables to load (speeds up loading). An empty
+            list returns the full dataset.
+        selection (str): Not used right now.
+
+    Return:
+        pandas.DataFrame
+
+    Raise:
+        OSError: If the input file does not exist.
+        KeyError: If the tree is not found or some of the requested branches are missing.
+
+    """
+    if not os.path.exists(file_name):
+        raise OSError("Cannot find input file -> {}".format(file_name))
+    output_data = pd.read_csv(file_name)
+    if selection:
+        output_data = output_data.query(selection)
+    if variables:
+        output_data = output_data[variables]
+    return output_data
+
+
+def get_pandas_from_csv_file(file_name, _, kwargs):
+    """Load a pandas DataFrame from CSV file.
+
+    Optional keys in `kwargs` are:
+        + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
+
+    Arguments:
+        file_name (str): File to load.
+        **kwargs (dict): Extra configuration.
+
+    """
+    logger.debug("Loading CSV file in pandas format -> %s", file_name)
+    return _load_csv(file_name,
+                     kwargs.get('variables', None),
+                     kwargs.get('selection', None))
+
+
+def get_root_from_csv_file(file_name, _, kwargs):
+    """Load a CSV file into a `ROOT.RooDataSet`.
+
+    Needed keys in `kwargs` are:
+        + `name`: Name of the `RooDataSet`.
+        + `title`: Title of the `RooDataSet`.
+
+    Optional keys are:
+        + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
+        + `weights-to-normalize`: Variables defining the weights that are normalized
+            to the total number of entries of the dataset.
+        + `weights-not-to-normalize`: Variables defining the weights that are not normalized.
+        + `weight-var-name`: Name of the weight variable. If there is only one weight,
+            it is not needed. Otherwise it has to be specified.
+        + `acceptance`: Load an acceptance. This needs to be accompanied with a weight
+            specification, either in `weights-to-normalize` or `weights-not-to-normalize`, which
+            is either `acceptance_fit` or `acceptance_gen`. Depending on which one is
+            specified, `acceptance.get_fit_weights` or `acceptance.get_gen_weights` is used.
+        + `categories`: RooCategory variables to use.
+
+    Arguments:
+        file_name (str): File to load.
+        **kwargs (dict): Extra configuration.
+
+    Return:
+        ROOT.RooDataSet: pandas.DataFrame converted to RooDataSet.
+
+    Raise:
+        KeyError: If there are errors in the `kwargs` variables.
+        ValueError: If there is an error in loading the acceptance.
+
+    """
+    logger.debug("Loading CSV file in RooDataSet format -> %s", file_name)
+    return _get_root_from_dataframe(_load_csv(file_name,
+                                              kwargs.get('variables', []),
+                                              kwargs.get('selection')),
+                                    kwargs)
 
 
 ###############################################################################
