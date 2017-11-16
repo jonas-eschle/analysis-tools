@@ -35,12 +35,17 @@ def load_config(*file_names, **options):
         - `validate` (list), which gets a list of keys to check. If one of these
             keys is not present, `config.ConfigError` is raised.
 
-    Additional, the `requires` key can be used to load other config files from the
-    config file. The value of this key can have two formats:
-        - `file_name:key` inserts the contents of `key` in `file_name` at the same
-            level as the `requires` entry.
-        - `path_func:name:key` inserts the contents `key` in the file obtained by the
-            `get_{path_func}_path(name)` call at the same level as the `requires` entry.
+    Additionally, several commands are available to modify the configurations:
+        - The `load` key can be used to load other config files from the
+            config file. The value of this key can have two formats:
+
+            + `file_name:key` inserts the contents of `key` in `file_name` at the same
+                level as the `load` entry.
+            + `path_func:name:key` inserts the contents `key` in the file obtained by the
+                `get_{path_func}_path(name)` call at the same level as the `load` entry.
+        - The `modify` command can be used to modify a previously loaded key/value pair.
+            It has the format `key:value` and replaces `key` at its same level by the value
+            given by `value`.
 
     Arguments:
         *file_names (list[str]): Files to load.
@@ -68,7 +73,8 @@ def load_config(*file_names, **options):
     # Load required data
     unfolded_data_expanded = []
     for key, val in unfolded_data:
-        if key.split('/')[-1] == 'requires':  # An input requirement has been made
+        command = key.split('/')[-1]
+        if command == 'load':  # An input requirement has been made
             split_val = val.split(":")
             if len(split_val) == 2:  # file_name:key format
                 file_name, required_key = split_val
@@ -81,14 +87,24 @@ def load_config(*file_names, **options):
                     raise ConfigError("Unknown path getter type -> {}".format(path_name))
                 file_name = path_func(name)
             else:
-                raise ConfigError("Malformed 'requires' key")
+                raise ConfigError("Malformed 'load' key")
             try:
-                root = key.rstrip('/requires')
+                root = key.rstrip('/load')
                 for new_key, new_val in unfold_config(load_config(file_name, root=required_key)):
                     unfolded_data_expanded.append(('{}/{}'.format(root, new_key), new_val))
             except Exception:
-                logger.error("Error loadind required data in %s", required_key)
+                logger.error("Error loading required data in %s", required_key)
                 raise
+        elif command == 'modify':
+            root = key.rstrip('/modify')
+            new_val = val.split(":")
+            key_to_replace = '{}/{}'.format(root, new_val.pop(0))
+            try:
+                key_index = [key for key, _ in unfolded_data_expanded].index(key_to_replace)
+            except IndexError:
+                logger.error("Cannot find key to modify -> %s", key_to_replace)
+                raise ConfigError("Malformed 'modify' key")
+            unfolded_data_expanded[key_index] = (key_to_replace, new_val)
         else:
             unfolded_data_expanded.append((key, val))
     # Fold back
