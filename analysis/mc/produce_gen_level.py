@@ -30,8 +30,8 @@ set -e
 if [ -f $HOME/.localrc ]; then
   source $HOME/.localrc
 fi
-#  source LbLogin.sh -c x86_64-slc5-gcc46-opt
-source SetupProject.sh Gauss v49r8
+source LbLogin.sh -c x86_64-slc6-gcc48-opt
+source SetupProject.sh Gauss v49r7
 seed=`echo ${jobid_var} | cut -d'.' -f1`
 echo "------------------------------------------------------------------------"
 echo "Seed is "$seed
@@ -52,9 +52,22 @@ echo "Config file:"
 cat $seedfile
 # Run
 if [ "{remove_detector}" == true ]; then
-    gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py $GAUSSOPTS/GenStandAlone.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+    gaudirun.py \
+        $GAUSSOPTS/Gauss-2016.py \
+        $GAUSSOPTS/GenStandAlone.py \
+        {decfile} \
+        $LBPYTHIA8ROOT/options/Pythia8.py \
+        $APPCONFIGOPTS/Gauss/G4PL_FTFP_BERT_EmNoCuts.py \
+        $APPCONFIGOPTS/Persistency/Compression-ZLIB-1.py \
+        $seedfile
 else
-    gaudirun.py $GAUSSOPTS/Gauss-Job.py $GAUSSOPTS/Gauss-2012.py {decfile} $LBPYTHIA8ROOT/options/Pythia8.py $seedfile
+    gaudirun.py \
+        $GAUSSOPTS/Gauss-2016.py \
+        {decfile} \
+        $LBPYTHIA8ROOT/options/Pythia8.py \
+        $APPCONFIGOPTS/Gauss/G4PL_FTFP_BERT_EmNoCuts.py \
+        $APPCONFIGOPTS/Persistency/Compression-ZLIB-1.py \
+        $seedfile
 fi
 # Move output
 echo "Done"
