@@ -127,7 +127,7 @@ def run(config_files, link_from):
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
-    # Locate decfile
+    # Event type
     evt_type = config['event-type']
     try:
         evt_type = int(evt_type)
@@ -140,21 +140,28 @@ def run(config_files, link_from):
     _, _, log_file = _paths.prepare_path(name='mc/{}'.format(evt_type),
                                          path_func=_paths.get_log_path,
                                          link_from=None)  # No linking is done for logs
+    # MC config
+    sim_version = config['simulation-version'].lower()
+    year = int(config['year'])
+    magnet_polarity = config['magnet-polarity'].lower().lstrip('magnet').lstrip('mag')
+    remove_detector = config.get('remove-detector', True)
+    # Prepare paths
     do_link, output_path, output_path_link = _paths.prepare_path(name='',
                                                                  path_func=_paths.get_genlevel_mc_path,
                                                                  link_from=link_from,
-                                                                 evt_type=evt_type)
+                                                                 evt_type=evt_type,
+                                                                 sim_version=sim_version,
+                                                                 year=year,
+                                                                 magnet_polarity=magnet_polarity,
+                                                                 remove_detector=remove_detector)
     link_status = 'true' if do_link else 'false'
-    remove_detector = config.get('remove-detector', True)
     try:
-        options = get_gaudirun_options(config['simulation-version'].lower(),
-                                       int(config['year']),
-                                       config['magnet-polarity'].lower(),
+        options = get_gaudirun_options(sim_version,
+                                       year,
+                                       magnet_polarity,
                                        remove_detector)
-        gauss_version = get_gauss_version(config['simulation-version'].lower(), int(config['year']))
-        dddb_tag, conddb_tag = get_db_tags(config['simulation-version'].lower(),
-                                           int(config['year']),
-                                           config['magnet-polarity'].lower())
+        gauss_version = get_gauss_version(sim_version, year)
+        dddb_tag, conddb_tag = get_db_tags(sim_version, year, magnet_polarity)
     except KeyError as error:
         logger.error("Unknown Gauss configuration")
         raise KeyError(str(error))
