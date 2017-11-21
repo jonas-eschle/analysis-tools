@@ -496,8 +496,8 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         destruct_object(dataset)
         dataset = dataset_w
     # ROOT Cleanup
-    tfile.Close()
     destruct_object(tree)
+    tfile.Close()
     destruct_object(tfile)
     if selection:
         for leave in leave_list:
