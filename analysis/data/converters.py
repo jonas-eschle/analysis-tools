@@ -87,9 +87,9 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             dataset.add(var_set)
         return dataset
 
+    var_names = var_list if var_list else list(frame.columns)
     if weight_var and weight_var not in frame.columns:
         raise KeyError("Cannot find weight variable -> {}".format(weight_var))
-    var_names = var_list if var_list else list(frame.columns)
     cat_names = []
     roovar_list = []
     if categories:
