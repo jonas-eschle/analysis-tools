@@ -55,14 +55,15 @@ def _analyze_weight_config(config):
     if not isinstance(weights_not_to_normalize, (list, tuple)):
         weights_not_to_normalize = [weights_not_to_normalize]
     weights = weights_to_normalize + weights_not_to_normalize
-    if weights :
-        # If `weight-var-name` is specified, create a total weight variable with this name, otherwise create a total weight variable `totalWeight`
+    if weights:
+        # If `weight-var-name` is specified, create a total weight variable with this name,
+        # otherwise create a total weight variable `totalWeight`
         weight_var = config.get('weight-var-name', 'totalWeight')
         # If `weight_var-name` corresponds to a weight, raise an error
-        if set(weights_to_normalize + weights_not_to_normalize).intersection([weight_var]) :
+        if set(weights_to_normalize + weights_not_to_normalize).intersection([weight_var]):
             logger.error("'weight-var-name' is already used as weight")
             raise ValueError
-    else :
+    else:
         weight_var = None
     return weight_var, weights_to_normalize, weights_not_to_normalize
 
@@ -114,9 +115,10 @@ def _get_root_from_dataframe(frame, kwargs):
     except KeyError:
         raise KeyError("Badly specified weights")
     # Variables
-    var_list = kwargs.get('variables', list(frame.columns))
+    var_list = list(frame.columns)
     # Raise an error if some weights are not loaded.
     if not set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list)):
+        print
         raise ValueError("Missing weights in the list of variables read from input file.")
     acc_var = ''
     # Acceptance specified
@@ -175,14 +177,22 @@ def _get_root_from_dataframe(frame, kwargs):
 ###############################################################################
 # Load pandas files
 ###############################################################################
-def _load_pandas(file_name, tree_name, variables, selection):
+def _load_pandas(file_name, tree_name, kwargs):
     """Load the pandas dataset.
 
     Arguments:
         file_name (str): File to load.
         tree_name (str): Tree to load.
-        variables (list): List of variables to load (speeds up loading).
-        selection (str): Not used right now.
+        kwargs (dict): Optional configuration keys.
+
+    Optional keys are:
+        + `variables`: List of variables to load.
+        + `selection`: Selection to apply.
+        + `weights-to-normalize`: Variables defining the weights that are normalized
+            to the total number of entries of the dataset.
+        + `weights-not-to-normalize`: Variables defining the weights that are not normalized.
+        + `weight-var-name`: Name of the weight variable. If there is only one weight,
+            it is not needed. Otherwise it has to be specified.
 
     Return:
         pandas.DataFrame
@@ -190,8 +200,21 @@ def _load_pandas(file_name, tree_name, variables, selection):
     Raise:
         OSError: If the input file does not exist.
         KeyError: If the tree is not found or some of the requested branches are missing.
+        ValueError: If the weights are not properly specified.
 
     """
+    selection = kwargs.get('selection')
+    # Check weights
+    try:
+        _, weights_to_normalize, weights_not_to_normalize = _analyze_weight_config(kwargs)
+    except KeyError:
+        raise ValueError("Badly specified weights")
+    # Variables
+    variables = kwargs.get('variables')
+    if variables is not None:
+        variables = list(set(variables +
+                             weights_to_normalize +
+                             weights_not_to_normalize))
     if not os.path.exists(file_name):
         raise OSError("Cannot find input file -> {}".format(file_name))
     with pd.HDFStore(file_name, 'r') as store:
@@ -202,7 +225,13 @@ def _load_pandas(file_name, tree_name, variables, selection):
             if variables:
                 output_data = output_data[variables]
         else:
-            output_data = store.select(tree_name, columns=variables)
+            try:
+                output_data = store.select(tree_name, columns=variables)
+            except TypeError:
+                logger.warning("Column specification given for loading a fixed store. Loading will be slower.")
+                output_data = store.select(tree_name)
+                if variables:
+                    output_data = output_data[variables]
     return output_data
 
 
@@ -221,9 +250,7 @@ def get_pandas_from_pandas_file(file_name, tree_name, kwargs):
     """
     logger.debug("Loading pandas file in pandas format -> %s:%s",
                  file_name, tree_name)
-    return _load_pandas(file_name, tree_name,
-                        kwargs.get('variables', None),
-                        kwargs.get('selection', None))
+    return _load_pandas(file_name, tree_name, kwargs)
 
 
 def get_root_from_pandas_file(file_name, tree_name, kwargs):
@@ -262,23 +289,19 @@ def get_root_from_pandas_file(file_name, tree_name, kwargs):
     """
     logger.debug("Loading pandas file in RooDataSet format -> %s:%s",
                  file_name, tree_name)
-    return _get_root_from_dataframe(_load_pandas(file_name, tree_name,
-                                                 kwargs.get('variables', []),
-                                                 kwargs.get('selection')),
+    return _get_root_from_dataframe(_load_pandas(file_name, tree_name, kwargs),
                                     kwargs)
 
 
 ###############################################################################
 # Load CSV files
 ###############################################################################
-def _load_csv(file_name, variables, selection):
+def _load_csv(file_name, kwargs):
     """Load a pandas dataset from a CSV file.
 
     Arguments:
         file_name (str): File to load.
-        variables (list): List of variables to load (speeds up loading). An empty
-            list returns the full dataset.
-        selection (str): Not used right now.
+        kwargs (dict): Configuration: `selection` and `variables`.
 
     Return:
         pandas.DataFrame
@@ -291,8 +314,10 @@ def _load_csv(file_name, variables, selection):
     if not os.path.exists(file_name):
         raise OSError("Cannot find input file -> {}".format(file_name))
     output_data = pd.read_csv(file_name)
+    selection = kwargs.get('selection')
     if selection:
         output_data = output_data.query(selection)
+    variables = kwargs.get('variables')
     if variables:
         output_data = output_data[variables]
     return output_data
@@ -311,9 +336,7 @@ def get_pandas_from_csv_file(file_name, _, kwargs):
 
     """
     logger.debug("Loading CSV file in pandas format -> %s", file_name)
-    return _load_csv(file_name,
-                     kwargs.get('variables', None),
-                     kwargs.get('selection', None))
+    return _load_csv(file_name, kwargs)
 
 
 def get_root_from_csv_file(file_name, _, kwargs):
@@ -350,10 +373,7 @@ def get_root_from_csv_file(file_name, _, kwargs):
 
     """
     logger.debug("Loading CSV file in RooDataSet format -> %s", file_name)
-    return _get_root_from_dataframe(_load_csv(file_name,
-                                              kwargs.get('variables', []),
-                                              kwargs.get('selection')),
-                                    kwargs)
+    return _get_root_from_dataframe(_load_csv(file_name, kwargs), kwargs)
 
 
 ###############################################################################
@@ -373,7 +393,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     Arguments:
         file_name (str): File to load.
         tree_name (str): Tree to load.
-        **kwargs (dict): Extra configuration.
+        kwargs (dict): Extra configuration.
 
     Return:
         ROOT.RooDataSet: ROOT file converted to RooDataSet.
@@ -500,7 +520,7 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
     Arguments:
         file_name (str): File to load.
         tree_name (str): Tree to load.
-        **kwargs (dict): Extra configuration.
+        kwargs (dict): Extra configuration.
 
     Return:
         pandas.DataFrame: ROOT file converted to pandas.
