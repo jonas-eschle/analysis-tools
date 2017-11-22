@@ -88,6 +88,8 @@ def _get_root_from_dataframe(frame, kwargs):
             is either `acceptance_fit` or `acceptance_gen`. Depending on which one is
             specified, `acceptance.get_fit_weights` or `acceptance.get_gen_weights` is used.
         + `categories`: RooCategory variables to use.
+        + `ranges`: Dictionary specifying min and max for the given variables. If not given,
+            variables are unbound.
 
     Arguments:
         file_name (str): File to load.
@@ -167,11 +169,19 @@ def _get_root_from_dataframe(frame, kwargs):
                                     axis=0)
     if var_list is not None and weight_var:
         var_list.append(weight_var)
+    # Process ranges
+    ranges = kwargs.get('ranges')
+    if ranges:
+        for var_name, range_val in ranges.items():
+            if isinstance(range_val, str):
+                min_, max_ = range_val.split()
+            ranges[var_name] = (float(min_), float(max_))
     # Convert it
     return dataset_from_pandas(frame, name, title,
                                var_list=var_list,
                                weight_var=weight_var,
-                               categories=kwargs.get('categories'))
+                               categories=kwargs.get('categories'),
+                               ranges=ranges)
 
 
 ###############################################################################
@@ -389,6 +399,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     Optional keys are:
         + `variables`: List of variables to load.
         + `selection`: Selection to apply.
+        + `ranges`: Range to apply to some variables.
 
     Arguments:
         file_name (str): File to load.
@@ -399,8 +410,9 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         ROOT.RooDataSet: ROOT file converted to RooDataSet.
 
     Raise:
-        KeyError: If there are missing variables in `kwargs`.
+        KeyError: If there are errors in `kwargs`.
         ValueError: If the requested variables cannot be found in the input file.
+        OSError: If the ROOT file cannot be found.
 
     """
     def get_list_of_leaves(tree):
@@ -465,6 +477,17 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     for var in variables:
         var_list[var] = ROOT.RooRealVar(var, var, 0.0)
         var_set.add(var_list[var])
+    if kwargs.get('ranges'):
+        for var_name, range_val in kwargs['ranges'].items():
+            if var_name not in var_list:
+                raise KeyError("Range specified for a variable not included in the dataset -> {}".format(var_name))
+            if isinstance(range_val, str):
+                try:
+                    min_, max_ = range_val.split()
+                except ValueError:
+                    raise KeyError("Malformed range specification for {} -> {}".format(var_name, range_val))
+            var_set[var_name].setMin(float(min_))
+            var_set[var_name].setMax(float(max_))
     dataset = ROOT.RooDataSet(name, title, var_set, ROOT.RooFit.Import(tree))
     if weight_var:
         # Weights to normalize

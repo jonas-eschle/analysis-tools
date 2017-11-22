@@ -75,6 +75,15 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     """
     import ROOT
 
+    # Check the match between dataset and factory
+    dataset_event = dataset.get()
+    for obs in factory.get_observables():
+        dataset_obs = dataset_event[obs.GetName()]
+        if (obs.getMin(), obs.getMax()) != (dataset_obs.getMin(), dataset_obs.getMax()):
+            logger.warning("Mismatching ranges between PDF and dataset for observable %s, correcting...",
+                           obs.GetName())
+            dataset_obs.setMin(obs.getMin())
+            dataset_obs.setMax(obs.getMax())
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
     kwargs.setdefault('Range', 'Full')
