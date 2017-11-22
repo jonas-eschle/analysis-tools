@@ -127,7 +127,13 @@ get_efficiency_path = register_path('efficiency', ['data_files', 'efficiency'], 
 get_acceptance_path = register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
 get_genlevel_mc_path = register_path('genlevel_mc', ['data_files', 'mc'], '',
                                      lambda name, args, kwargs:
-                                     os.path.join(str(kwargs['evt_type']), name))
+                                     os.path.join('{}_{}_{}_Mag{}{}'.format(str(kwargs['evt_type']),
+                                                                            kwargs['sim_version'].title(),
+                                                                            str(kwargs['year']),
+                                                                            kwargs['magnet_polarity'].title(),
+                                                                            '_with_detector'
+                                                                            if not kwargs['remove_detector'] else ''),
+                                                  name))
 get_plot_style_path = register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
                                     lambda name, args, kwargs: 'matplotlib_' + name)
 get_fit_result_path = register_path('fit_result', ['data_files', 'fit'], 'yaml')
