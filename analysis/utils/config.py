@@ -271,9 +271,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             try:
                 value = float(action_params[0])
             except ValueError:
-
                 print("error, action params[0]", action_params[0])
-
         parameter = ROOT.RooRealVar(name, title, value)
         if action == 'VAR':  # Free parameter, we specify its initial value
             parameter.setConstant(False)

@@ -16,6 +16,7 @@ import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 from analysis.batch import get_batch_system
 from analysis.utils.logging_color import get_logger
+from analysis.mc.gauss import get_gauss_version, get_gaudirun_options, get_db_tags
 
 
 logger = get_logger('analysis.efficiency.gen_level')
@@ -32,7 +33,7 @@ if [ -f $HOME/.localrc ]; then
   source $HOME/.localrc
 fi
 source LbLogin.sh -c x86_64-slc6-gcc48-opt
-source SetupProject.sh Gauss v49r7
+source SetupProject.sh Gauss {gauss_version}
 seed=`echo ${jobid_var} | cut -d'.' -f1`
 echo "------------------------------------------------------------------------"
 echo "Seed is "$seed
@@ -43,44 +44,25 @@ mkdir $seed
 cd $seed
 echo "Workdir: "$PWD
 seedfile={workdir}/$seed/$seed.py
-echo "from Configurables import GenInit,LHCbApp,Gauss
+echo "from Configurables import GenInit, LHCbApp, Gauss
 GaussGen = GenInit('GaussGen')
 GaussGen.FirstEventNumber = 1
-GaussGen.RunNumber        = $seed
+GaussGen.RunNumber = $seed
 LHCbApp().EvtMax = {n_events}
+LHCbApp().DDDBtag   = "{dddb_tag}"
+LHCbApp().CondDBtag = "{conddb_tag}"
 Gauss().DatasetName = '$seed'" > $seedfile
 echo "Config file:"
 cat $seedfile
 # Run
-if [ "{remove_detector}" == true ]; then
-    gaudirun.py \
-        $GAUSSOPTS/Gauss-2016.py \
-        $GAUSSOPTS/GenStandAlone.py \
-        {decfile} \
-        $LBPYTHIA8ROOT/options/Pythia8.py \
-        $APPCONFIGOPTS/Gauss/G4PL_FTFP_BERT_EmNoCuts.py \
-        $APPCONFIGOPTS/Persistency/Compression-ZLIB-1.py \
-        $seedfile
-else
-    gaudirun.py \
-        $GAUSSOPTS/Gauss-2016.py \
-        {decfile} \
-        $LBPYTHIA8ROOT/options/Pythia8.py \
-        $APPCONFIGOPTS/Gauss/G4PL_FTFP_BERT_EmNoCuts.py \
-        $APPCONFIGOPTS/Persistency/Compression-ZLIB-1.py \
-        $seedfile
-fi
+gaudirun.py {gaudirun_options} $seedfile
 # Move output
 echo "Done"
 ls -ltr
 [ -d {output_path} ] || mkdir -p {output_path}
 [ -d {output_path_link} ] || mkdir -p {output_path_link}
 echo "Copying output to {output_path}"
-if [ "{remove_detector}" == true ]; then
-    cp $seed-*.xgen {output_path}
-else
-    cp $seed-*.sim {output_path}
-fi
+cp $seed-*.{output_extension} {output_path}
 cp $seed-*-histos.root {output_path}
 output_gen_log={output_path_link}/${{seed}}_GeneratorLog.xml
 echo "Copying GeneratorLog.xml : ${{output_gen_log}}"
@@ -121,6 +103,9 @@ def run(config_files, link_from):
     try:
         config = _config.load_config(*config_files,
                                      validate=['event-type',
+                                               'simulation-version',
+                                               'year',
+                                               'magnet-polarity',
                                                'prod/nevents',
                                                'prod/nevents-per-job'])
     except OSError:
@@ -129,6 +114,12 @@ def run(config_files, link_from):
     except _config.ConfigError as error:
         if 'event-type' in error.missing_keys:
             logger.error("No event type was specified in the config file!")
+        if 'simulation-version' in error.missing_keys:
+            logger.error("No simulation version was specified in the config file!")
+        if 'year' in error.missing_keys:
+            logger.error("No simulation year was specified in the config file!")
+        if 'magnet-polarity' in error.missing_keys:
+            logger.error("No magnet polarity was specified in the config file!")
         if 'prod/nevents' in error.missing_keys:
             logger.error("The number of events to produce was not specified in the config file!")
         if 'prod/nevents-per-job' in error.missing_keys:
@@ -137,7 +128,7 @@ def run(config_files, link_from):
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
-    # Locate decfile
+    # Event type
     evt_type = config['event-type']
     try:
         evt_type = int(evt_type)
@@ -150,12 +141,35 @@ def run(config_files, link_from):
     _, _, log_file = _paths.prepare_path(name='mc/{}'.format(evt_type),
                                          path_func=_paths.get_log_path,
                                          link_from=None)  # No linking is done for logs
+    # MC config
+    sim_version = config['simulation-version'].lower()
+    year = int(config['year'])
+    magnet_polarity = config['magnet-polarity'].lower().lstrip('magnet').lstrip('mag')
+    remove_detector = config.get('remove-detector', True)
+    # Prepare paths
     do_link, output_path, output_path_link = _paths.prepare_path(name='',
                                                                  path_func=_paths.get_genlevel_mc_path,
                                                                  link_from=link_from,
-                                                                 evt_type=evt_type)
+                                                                 evt_type=evt_type,
+                                                                 sim_version=sim_version,
+                                                                 year=year,
+                                                                 magnet_polarity=magnet_polarity,
+                                                                 remove_detector=remove_detector)
     link_status = 'true' if do_link else 'false'
-    remove_detector = 'true' if config['prod'].get('remove-detector', True) else 'false'
+    try:
+        options = get_gaudirun_options(sim_version,
+                                       year,
+                                       magnet_polarity,
+                                       remove_detector)
+        gauss_version = get_gauss_version(sim_version, year)
+        dddb_tag, conddb_tag = get_db_tags(sim_version, year, magnet_polarity)
+    except KeyError as error:
+        logger.error("Unknown Gauss configuration")
+        raise KeyError(str(error))
+    # Add compression and our decfile
+    options.append('$APPCONFIGOPTS/Persistency/Compression-ZLIB-1.py')
+    options.append(decfile)
+    # Prepare to submit
     nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
     logger.info("Generatic %s events of decfile -> %s", nevents, decfile)
     logger.info("Output path: %s", output_path)
@@ -164,10 +178,13 @@ def run(config_files, link_from):
         logger.info("Linking to %s", output_path_link)
     extra_config = {'workdir': '$TMPDIR',
                     'do_link': link_status,
-                    'remove_detector': remove_detector,
+                    'gaudirun_options': ' '.join(options),
+                    'gauss_version': gauss_version,
+                    'dddb_tag': dddb_tag,
+                    'conddb_tag': conddb_tag,
+                    'output_extension': 'xgen' if remove_detector else 'sim',
                     'output_path': output_path,
                     'output_path_link': output_path_link,
-                    'decfile': decfile,
                     'n_events': nevents}
     # Prepare batch
     batch_config = config.get('batch', {})
