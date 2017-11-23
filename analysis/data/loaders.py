@@ -173,8 +173,13 @@ def _get_root_from_dataframe(frame, kwargs):
     ranges = kwargs.get('ranges')
     if ranges:
         for var_name, range_val in ranges.items():
-            if isinstance(range_val, str):
-                min_, max_ = range_val.split()
+            try:
+                if isinstance(range_val, str):
+                    min_, max_ = range_val.split()
+                else:
+                    min_, max_ = range_val
+            except ValueError:
+                raise KeyError("Malformed range specification for {} -> {}".format(var_name, range_val))
             ranges[var_name] = (float(min_), float(max_))
     # Convert it
     return dataset_from_pandas(frame, name, title,
@@ -481,11 +486,13 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         for var_name, range_val in kwargs['ranges'].items():
             if var_name not in var_list:
                 raise KeyError("Range specified for a variable not included in the dataset -> {}".format(var_name))
-            if isinstance(range_val, str):
-                try:
+            try:
+                if isinstance(range_val, str):
                     min_, max_ = range_val.split()
-                except ValueError:
-                    raise KeyError("Malformed range specification for {} -> {}".format(var_name, range_val))
+                else:
+                    min_, max_ = range_val
+            except ValueError:
+                raise KeyError("Malformed range specification for {} -> {}".format(var_name, range_val))
             var_set[var_name].setMin(float(min_))
             var_set[var_name].setMax(float(max_))
     dataset = ROOT.RooDataSet(name, title, var_set, ROOT.RooFit.Import(tree))
