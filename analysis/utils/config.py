@@ -60,8 +60,8 @@ def load_config(*file_names, **options):
             raise KeyError(str(error))
     data = fold_config(unfolded_data, OrderedDict)
     logger.debug('Loaded configuration -> %s', data)
-    if 'root' in options:
-        data_root = options['root']
+    data_root = options.get('root', '')
+    if data_root:
         if data_root not in data:
             raise ConfigError("Root node not found in dataset -> {}".format(**data_root))
         data = data[data_root]
@@ -73,6 +73,7 @@ def load_config(*file_names, **options):
         logger.debug("Validating against the following keys -> %s",
                      ', '.join(data_keys))
         for key in options['validate']:
+            key = os.path.join(data_root, key)
             if key not in data_keys:
                 missing_keys.append(key)
         if missing_keys:
