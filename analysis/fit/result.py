@@ -63,8 +63,8 @@ class FitResult(object):
         """
         return self._result
 
-    @memoize
     @staticmethod
+    @memoize
     def from_roofit(roofit_result):
         """Load the `RooFitResult` into the internal format.
 
@@ -102,8 +102,8 @@ class FitResult(object):
         result['edm'] = roofit_result.edm()
         return FitResult(result)
 
-    @memoize
     @staticmethod
+    @memoize
     def from_yaml(yaml_dict):
         """Initialize from a YAML dictionary.
 
@@ -131,8 +131,8 @@ class FitResult(object):
                                                                        len(yaml_dict['fit-parameters'])))
         return FitResult(yaml_dict)
 
-    @memoize
     @staticmethod
+    @memoize
     def from_yaml_file(name):
         """Initialize from a YAML file.
 
@@ -160,8 +160,8 @@ class FitResult(object):
         except ConfigError as error:
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
 
-    @memoize
     @staticmethod
+    @memoize
     def from_hdf(name):  # TODO: which path func?
         """Initialize from a hdf file.
 
