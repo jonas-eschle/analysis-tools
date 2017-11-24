@@ -37,13 +37,7 @@ Configuring physics factories
 
 Physics factories can be loaded and configured using the `analysis.physics.configure_fit_factory` function, which takes a name and a dictionary (easily taken from a YAML file).
 The `pdfs` key is used to load the `PhysicsFactory` in the same way as `get_physics_factory`, but additional constraints can be imposed on the parameters.
-Instead of simply specifying their value, one can use a character to define an action, followed by the corresponding configuration:
-
-    * `I` specifies a free parameter. Only one argument is required: its initial value. This is optional; if no action is specified the parameter is considered free.
-    * `F` configures a fixed parameter. The following argument indicates at which value to fix it.
-    * `L` is used for a limited parameter. Initial value, lower limit and upper limit follow.
-    * `G` is used for a Gaussian-constrained parameter. The arguments of that Gaussian, *i.e.*, its mean and sigma, have to be given after the action.
-
+Instead of simply specifying their value, one can use strings, which we will call `RooVarConfig` in the following, to define more complex variable configurations (details can be found below). 
 This processing is performed by the `utils.config.configure_parameter`, which also returns any resulting constraints from the configuration.
 
 On top of this, all parameters are renamed according to the name given to the factory with the template `{param_name}^{factory_name}`.
@@ -51,3 +45,95 @@ This will allow to differentiate them when adding several `PhysicsFactory` insta
 In this way, the factory and its parameters are properly configured, and any constraints derived from their configuration are obtained.
 
 
+### Normal variables
+
+Mimicking `ROOT.RooRealVar`, one can defined three types of variables:
+floating (bound and unbound), constant and constrained.
+
+
+### Floating variable
+
+The floating variable can be either bound or unbound, depending whether we specify limits or not.
+The optional parameters are marked below in parenthesis:
+of they are not given, the variable is unbound.
+
+  + **ROOT analogue**: `ROOT.RooRealVar` with `setConstant(False)`.
+  + **Specification**: VAR initial_val (minimum maximum)  
+  + **Types**: string numerical (numerical numerical)  
+  + **Example**: `VAR 500 450 570`  
+
+Since this is the most used variable type, we can also simply specify `value` and the parameter configurator will interpret it as `VAR value`.
+
+
+### Constant variable
+
+A numerical constant.
+
+  + **ROOT analogue**: `ROOT.RooRealVar` with `setConstant(True)`  
+  + **Specification**: CONST value
+  + **Types**: string numerical  
+  + **Example**: `CONST 13.41`  
+
+
+### Constrained variable
+
+Currently implemented is the Gaussian constraint of a parameter.
+
+  + **ROOT analogue**: `ROOT.RooRealVar` with a `ROOT.RooGaussian` constraint  
+  + **Types**: string numerical numerical  
+  + **Specification**: GAUSS gaussian_mu gaussian_sigma
+  + **Example**: `GAUSS 647 15`  
+
+This configures a `ROOT.RooRealVar` and creates a `ROOT.RooGaussian` constraint to be used during fitting.
+
+
+## Shift, scale and blind
+
+These options are used to configure the parameter as a modification of another value already defined.
+It is therefore necessary to "refer" to another variable, and this means using a *shared variable* (explained below) for this referenced value.
+
+
+### Shift variable
+
+Define a variable as a linear shift with respect to another variable.
+The shift value can be defined as any of the other types of variables define above.
+
+  + **ROOT analogue**: `ROOT.RooAddition`  
+  + **Specification**: SHIFT variable_to_shift_from shift_value    
+  + **Types**: string reference RooVarConfig     
+  + **Example**: `SHIFT @muTrue VAR 500 200 900`  
+
+
+### Scale variable
+
+Define a variable as a scale with respect to another variable.
+
+  + **ROOT analogue**: `ROOT.RooProduct`  
+  + **Specification**: SCALE variable_to_be_scaled scale_value
+  + **Types**: string reference RooVarConfig  
+  + **Example**: `SCALE @sigma1 VAR 3 1 5`  
+
+
+## Blinding
+
+Parameter blinding is performed with `ROOT.RooUnblindPrecision`, so a string, a central value and a sigma value need to be provided.
+
+  + **ROOT analogue**: `ROOT.RooUnblindPrecision`
+  + **Specification**: BLIND blinding_reference blind_str central_val sigma_val  
+  + **Types**: string reference  string numerical numerical  
+  + **Example**: `BLIND @sigma1 uzhirchel 15 36`  
+
+*Hint*: to blind a region of a given observable, you can use the `selection` parameter to cut it off at load time and a custom fit strategy to fit the disjoint fit range.
+
+
+## Shared variables
+
+Shared variables are normal variables that can be referenced after they have been defined, by using the syntax `@ref_name`.
+
+  + **Specification**: @reference_name/variable_name/variable_title/variable_config
+  + **Types**: @string/string/string/RooVarConfig
+  + **Example**: `@mu1_low/mu1/mu_the_lower/VAR 50 10 90` (shared free floating variable) 
+ 
+The two main types of usage are:  
+  + Just the reference: `@mu1_low`  
+  + Within another variable: `SHIFT @mu1_low 2701` (shift the value 2071 by @mu1_low)    

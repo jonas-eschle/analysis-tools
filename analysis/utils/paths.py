@@ -137,6 +137,7 @@ get_genlevel_mc_path = register_path('genlevel_mc', ['data_files', 'mc'], '',
 get_plot_style_path = register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
                                     lambda name, args, kwargs: 'matplotlib_' + name)
 get_fit_result_path = register_path('fit_result', ['data_files', 'fit'], 'yaml')
+get_splot_path = register_path('splot', ['data_files', 'splots'], '')
 
 
 def prepare_path(name, path_func, link_from, *args, **kwargs):
