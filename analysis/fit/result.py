@@ -15,7 +15,7 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
-from analysis.utils.paths import get_fit_result_path
+import analysis.utils.paths as _paths
 
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
@@ -148,7 +148,7 @@ class FitResult(object):
 
         """
         try:
-            return FitResult(dict(load_config(get_fit_result_path(name),
+            return FitResult(dict(load_config(_paths.get_fit_result_path(name),
                                               validate=('fit-parameters',
                                                         'fit-parameters-initial',
                                                         'const-parameters',
@@ -202,8 +202,8 @@ class FitResult(object):
             NotInitializedError: If the fit result has not been initialized.
 
         """
-        file_name = get_fit_result_path(name)
-        write_config(self.to_yaml(), file_name)
+        with _paths.work_on_file(name, path_func=_paths.get_fit_result_path) as file_name:
+            write_config(self.to_yaml(), file_name)
         return file_name
 
     @ensure_initialized
