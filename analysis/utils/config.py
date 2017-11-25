@@ -77,7 +77,7 @@ def load_config(*file_names, **options):
         if command == 'load':  # An input requirement has been made
             split_val = val.split(":")
             if len(split_val) == 2:  # file_name:key format
-                file_name, required_key = split_val
+                file_name_result, required_key = split_val
             elif len(split_val) == 3:  # path_func:name:key format
                 path_name, name, required_key = split_val
                 import analysis.utils.paths as _paths
@@ -85,20 +85,20 @@ def load_config(*file_names, **options):
                     path_func = getattr(_paths, 'get_{}_path'.format(path_name))
                 except AttributeError:
                     raise ConfigError("Unknown path getter type -> {}".format(path_name))
-                file_name = path_func(name)
+                file_name_result = path_func(name)
             else:
                 raise ConfigError("Malformed 'load' key")
             try:
                 root = key.rstrip('/load')
-                for new_key, new_val in unfold_config(load_config(file_name, root=required_key)):
+                for new_key, new_val in unfold_config(load_config(file_name_result, root=required_key)):
                     unfolded_data_expanded.append(('{}/{}'.format(root, new_key), new_val))
             except Exception:
                 logger.error("Error loading required data in %s", required_key)
                 raise
         elif command == 'modify':
             root = key.rstrip('/modify')
-            new_val = val.split(":")
-            key_to_replace = '{}/{}'.format(root, new_val.pop(0))
+            relative_key, new_val = val.split(":")
+            key_to_replace = '{}/{}'.format(root, relative_key)
             try:
                 key_index = [key for key, _ in unfolded_data_expanded].index(key_to_replace)
             except IndexError:
@@ -112,9 +112,11 @@ def load_config(*file_names, **options):
     logger.debug('Loaded configuration -> %s', data)
     data_root = options.get('root', '')
     if data_root:
-        if data_root not in data:
-            raise ConfigError("Root node not found in dataset -> {}".format(**data_root))
-        data = data[data_root]
+        for root_node in data_root.split('/'):
+            try:
+                data = data[root_node]
+            except KeyError:
+                raise ConfigError("Root node {} of {} not found in dataset".format(root_node, data_root))
     if 'validate' in options:
         missing_keys = []
         data_keys = ['/'.join(key.split('/')[:entry_num+1])
