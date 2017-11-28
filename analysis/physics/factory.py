@@ -934,8 +934,8 @@ class SimultaneousPhysicsFactory(BaseFactory):
         # Check observable compatibility
         super(SimultaneousPhysicsFactory, self).__init__({}, None)
         self._category = category_var
-        self._children = {';'.join(label): factory
-                          for label, factory in factories.items()}
+        self._children = OrderedDict((';'.join(label), factory)
+                                     for label, factory in factories.items())
 
     def get_unbound_pdf(self, name, title):
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
