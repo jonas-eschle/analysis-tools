@@ -94,6 +94,10 @@ def get_datasets(data_frames, acceptance, fit_models):
                              rows, set(rows['category']) - {category})
                 raise ValueError("Data {} has categories different to the specified one".format(data_name))  # TODO: replace with DataError
             rows['category'] = category
+        elif 'category' in rows:
+            logger.info("Data %s contains a 'category' column but no category was specified"
+                        "in the config file -> ignoring 'category column for the fit", rows)
+            del rows['category']
         # Append to merged dataset
         if dataset is None:
             dataset = rows
