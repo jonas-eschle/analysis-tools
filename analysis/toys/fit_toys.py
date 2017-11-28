@@ -78,9 +78,6 @@ def get_datasets(data_frames, acceptance, fit_models):
     logger.debug("Sampling datasets -> %s", data_frames.keys())
     is_extended = fit_models.values()[0].is_extended()
     for data_name, (data, n_events, do_poisson, category) in data_frames.items():
-        if category:
-            # By default the label is stored in the 'category' column
-            data = data[data[category] == category_from_model? Or similar?]
         if acceptance:
             data = acceptance.apply_accept_reject(data)
         # Do poisson if it is extended and it has not been disabled
@@ -89,6 +86,14 @@ def get_datasets(data_frames, acceptance, fit_models):
         sample_sizes[data_name] = poisson.rvs(n_events) if do_poisson else n_events
         # Extract suitable number of rows and transform them
         rows = data.sample(sample_sizes[data_name])  # TODO: Weights support?
+        # Add category column
+        if category:
+            # By default the label is stored in the 'category' column
+            if 'category' in rows and not all(rows['category']==category):
+                logger.error("Data %s contains categories not matching the specified category: ",
+                             rows, set(rows['category']) - {category})
+                raise DataError("Data {} constains categories different to the specified one".format(data_name))
+            rows['category'] = category
         # Append to merged dataset
         if dataset is None:
             dataset = rows
