@@ -92,7 +92,7 @@ def get_datasets(data_frames, acceptance, fit_models):
             if 'category' in rows and not all(rows['category']==category):
                 logger.error("Data %s contains categories not matching the specified category: ",
                              rows, set(rows['category']) - {category})
-                raise DataError("Data {} constains categories different to the specified one".format(data_name))
+                raise ValueError("Data {} has categories different to the specified one".format(data_name))  # TODO: replace with DataError
             rows['category'] = category
         # Append to merged dataset
         if dataset is None:
