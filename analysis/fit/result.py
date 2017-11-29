@@ -6,6 +6,7 @@
 # @date   19.05.2017
 # =============================================================================
 """Analyze and store fit results."""
+from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict
 import copy
@@ -14,6 +15,7 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
+import analysis.utils.paths as _paths
 from analysis.utils.decorators import memoize
 import analysis.utils.paths as _paths
 
