@@ -370,7 +370,13 @@ class BaseFactory(object):
         raise NotImplementedError()
 
     def is_extended(self):
-        return 'Yield' in self and not 'Fraction' in self
+        """Check if the factory is extended.
+
+        Return:
+            bool
+
+        """
+        return 'Yield' in self and 'Fraction' not in self
 
     def has_to_be_extended(self):
         raise NotImplementedError()
@@ -966,6 +972,18 @@ class SimultaneousPhysicsFactory(BaseFactory):
         return sim_pdf
 
     def is_extended(self):
+        """Check if the factory is extended.
+
+        Children are checked. They must all be extended.
+
+        Return:
+            bool
+
+        Raise:
+            ValueError: If children are inconsistent (some extended
+                and some non-extended)
+
+        """
         children_are_extended = (child.is_extended()
                                  for child in self.get_children().values())
         if all(children_are_extended):
