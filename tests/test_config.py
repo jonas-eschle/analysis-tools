@@ -89,13 +89,10 @@ def config_simple_load(result_simple):
                     pdf: cb
                     parameters:
                         load: {yaml_res}:result/signal_pdf/fit-result
-                        modify: mu:5246.7 5200 5300  # works, but only for one parameter...
-                        # sigma1:
-                        #     modify: ':@sigma/sigma/sigma/41 35 45'  # not working and cumbersome
-
-                        sigma1: '@sigma/sigma/sigma/41 35 45'
-                        n1: 5.6689 2 9  # Working!
-
+                        modify: 
+                            mu: 5246.7 5200 5300
+                            sigma1: '@sigma/sigma/sigma/41 35 45'
+                            n1: 5.6689 2 9
         background:
             pdf:
                 mass:

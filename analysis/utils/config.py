@@ -72,6 +72,7 @@ def load_config(*file_names, **options):
             raise KeyError(str(error))
     # Load required data
     unfolded_data_expanded = []
+    root_prev_load = None
     for key, val in unfolded_data:
         command = key.split('/')[-1]
         if command == 'load':  # An input requirement has been made
@@ -89,23 +90,29 @@ def load_config(*file_names, **options):
             else:
                 raise ConfigError("Malformed 'load' key")
             try:
-                root = key.rstrip('/load')
+                root = key.rsplit('/load')[0]
                 for new_key, new_val in unfold_config(load_config(file_name_result, root=required_key)):
                     unfolded_data_expanded.append(('{}/{}'.format(root, new_key), new_val))
             except Exception:
                 logger.error("Error loading required data in %s", required_key)
                 raise
-        elif command == 'modify':
-            root = key.rstrip('/modify')
-            relative_key, new_val = val.split(":")
-            key_to_replace = '{}/{}'.format(root, relative_key)
+            else:
+                root_prev_load = root
+        elif root_prev_load and key.startswith(root_prev_load):  # we have to handle it *somehow*
+            relative_key = key.split(root_prev_load + '/', 1)[1]  # remove root
+            if not relative_key.startswith('modify/'):
+                logger.error("Key {} cannot be used without 'modify' if 'load' came before.".format(key))
+                raise ConfigError("Loaded pdf with 'load' can *only* be modified by using 'modify'.")
+
+            key_to_replace = '{}/{}'.format(root_prev_load, relative_key.split('modify/', 1)[1])
             try:
                 key_index = [key for key, _ in unfolded_data_expanded].index(key_to_replace)
             except IndexError:
                 logger.error("Cannot find key to modify -> %s", key_to_replace)
                 raise ConfigError("Malformed 'modify' key")
-            unfolded_data_expanded[key_index] = (key_to_replace, new_val)
+            unfolded_data_expanded[key_index] = (key_to_replace, val)
         else:
+            root_prev_load = None  # reset, there was no 'load'
             unfolded_data_expanded.append((key, val))
     # Fold back
     data = fold_config(unfolded_data_expanded, OrderedDict)
