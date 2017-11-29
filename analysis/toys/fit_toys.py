@@ -212,7 +212,7 @@ def run(config_files, link_from, verbose):
             if model_name not in config:
                 raise KeyError("Missing model definition -> {}".format(model_name))
             fit_models[model_name] = configure_model(config[model_name])
-            if any(yield_.isConstant() for yield_ in fit_models[model_name].get_yield_vars()):
+            if any(yield_.isConstant() for yield_ in fit_models[model_name].get_yield_vars() if yield_):
                 logger.warning("Model %s has constant yields. "
                                "Be careful when configuring the input data, you may need to disable poisson sampling",
                                model_name)
