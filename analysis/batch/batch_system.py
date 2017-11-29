@@ -6,6 +6,7 @@
 # @date   31.05.2017
 # =============================================================================
 """Implementation of different batch systems."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import subprocess

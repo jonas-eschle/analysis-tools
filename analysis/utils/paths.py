@@ -16,6 +16,7 @@ The structure is fixed:
 These may just be soft links, depending on how they have been run.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import os
 import inspect
@@ -92,7 +93,11 @@ def register_path(path_type,
     # Checks
     if extension and not extension.startswith('.'):
         extension = '.' + extension
-    if len(inspect.getargspec(name_transformation).args) != 3:
+    try:  # PY3
+        name_transformation_args = inspect.getfullargspec(name_transformation).args
+    except AttributeError:  # PY2
+        name_transformation_args = inspect.getargspec(name_transformation).args
+    if len(name_transformation_args) != 3:
         raise ValueError("The name transformation function needs to have 3 arguments")
     # Register the partialled function in globals
     func_name = 'get_' + path_type + '_path'
