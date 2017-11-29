@@ -6,6 +6,7 @@
 # @date   13.03.2017
 # =============================================================================
 """Toy scripts."""
+from __future__ import print_function, division, absolute_import
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
