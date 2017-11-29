@@ -14,7 +14,7 @@ import yaml
 import yamlordereddictloader
 import pytest
 
-from analysis.utils.config import load_config
+from analysis.utils.config import load_config, ConfigError
 
 
 def create_tempfile(suffix=None):
@@ -66,6 +66,7 @@ def result_simple():
                             parameters:
                                 tau: CONST -0.003
                         signal_pdf:
+                            yield: 0.9
                             fit-result:
                                 mu: 999 99 9999
                                 sigma1: '111 11 1111'
@@ -78,6 +79,33 @@ def result_simple():
     filename = dump_yaml_str(result_str)
     return filename
 
+
+@pytest.fixture
+def result_simple_signal():
+    result_str = """
+        signal:
+            yield: 0.5
+            pdf:
+                mass:
+                    pdf: cb
+                    parameters:
+                        mu: 5246.7 5200 5300
+                        sigma1: '@sigma/sigma/sigma/41 35 45'
+                        sigma2: '@sigma'
+                        n1: 5.6689 2 9
+                        n2: 1.6 0.2 2
+                        alpha1: 0.25923 0.1 0.5
+                        alpha2: -1.9749 -3.5 -1.0
+                        frac: 0.84873 0.1 1.0
+        background:
+            pdf:
+                mass:
+                    pdf: exp
+                    parameters:
+                        tau: CONST -0.003
+        """
+    filename = dump_yaml_str(result_str)
+    return filename
 
 @pytest.fixture
 def config_simple_load(result_simple):
@@ -93,6 +121,46 @@ def config_simple_load(result_simple):
                             mu: 5246.7 5200 5300
                             sigma1: '@sigma/sigma/sigma/41 35 45'
                             n1: 5.6689 2 9
+        background:
+            pdf:
+                mass:
+                    load: {yaml_res}:result/bkg_pdf""".format(yaml_res=result_simple)  # tempfile name
+    filename = dump_yaml_str(config_str)
+
+    return filename
+
+
+@pytest.fixture
+def config_simple_load_signal(result_simple_signal):
+    config_str = """
+        signal:
+            load: {yaml_res}:signal
+            modify: 
+                yield: 0.5
+                pdf:
+                    mass:
+                        parameters: 
+                            mu: 5246.7 5200 5300
+                            sigma1: '@sigma/sigma/sigma/41 35 45'
+                            n1: 5.6689 2 9
+        background:
+            pdf:
+                load: {yaml_res}:background/pdf""".format(yaml_res=result_simple_signal)  # tempfile name
+    filename = dump_yaml_str(config_str)
+
+    return filename
+
+@pytest.fixture
+def config_simple_fail_noload(result_simple):
+    config_str = """
+        signal:
+            yield: 0.5
+            pdf:
+                mass:
+                    pdf: cb
+                    parameters:
+                        load: {yaml_res}:result/signal_pdf/fit-result 
+                        mu: 5246.7 5200 5300
         background:
             pdf:
                 mass:
@@ -134,3 +202,11 @@ def config_simple_load_target():
 def test_simple(config_simple_load, config_simple_load_target):
     config = load_config(config_simple_load)
     assert config == config_simple_load_target
+
+def test_simple_signal(config_simple_load_signal, config_simple_load_target):
+    config = load_config(config_simple_load_signal)
+    assert config == config_simple_load_target
+
+def test_fails_loudly(config_simple_fail_noload):
+    with pytest.raises(ConfigError) as error_info:
+        load_config(config_simple_fail_noload)
