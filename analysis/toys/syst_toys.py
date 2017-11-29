@@ -119,7 +119,7 @@ def run(config_files, link_from, verbose):
         if (fit_num+1) % 20 == 0:
             logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Generate a dataset
-        seed = get_urandom_int(8)
+        seed = get_urandom_int(4)
         np.random.seed(seed=seed)
         ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
