@@ -6,6 +6,7 @@
 # @date   06.04.2017
 # =============================================================================
 """Handle fitting procedures."""
+from __future__ import print_function, division, absolute_import
 
 import inspect
 
@@ -34,7 +35,11 @@ def register_fit_strategy(name, fit_function):
         ValueError: If the fit function doesn't have the correct number of parameters.
 
     """
-    if len(inspect.getargspec(fit_function).args) != 3:
+    try:  # PY3
+        fit_function_args = inspect.getfullargspec(fit_function).args
+    except AttributeError:  # PY2
+        fit_function_args = inspect.getargspec(fit_function).args
+    if len(fit_function_args) != 3:
         raise ValueError("The strategy function needs to have 3 arguments")
     logger.debug("Registering %s fitting strategy", name)
     get_global_var('FIT_STRATEGIES').update({name: fit_function})
