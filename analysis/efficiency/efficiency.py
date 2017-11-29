@@ -6,6 +6,7 @@
 # @date   21.03.2017
 # =============================================================================
 """Efficiency class."""
+from __future__ import print_function, division, absolute_import
 
 import re
 from collections import OrderedDict
@@ -13,6 +14,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import sys
 
 from analysis.utils.paths import get_efficiency_path, work_on_file
 from analysis.utils.config import write_config
@@ -49,7 +51,7 @@ class Efficiency(object):
             list: Variables in the correct order.
 
         """
-        return self._var_names.values()
+        return list(self._var_names.values())
 
     def get_variable_names(self):
         """Get variable names.
@@ -223,9 +225,14 @@ class Efficiency(object):
                     '\\': r'\textbackslash{}',
                     '<': r'\textless',
                     '>': r'\textgreater'}
-            regex = re.compile('|'.join(re.escape(unicode(key))
-                                        for key in sorted(conv.keys(),
-                                                          key=lambda item: -len(item))))
+            escape_chars = []
+            for key in sorted(list(conv.keys()), key=lambda item: -len(item)):
+                # python 2/3 compatibility layer, alt: from builtins import str
+                if sys.version_info[0] < 3:
+                    escape_chars.append(unicode(key))
+                else:
+                    escape_chars.append(str(key))
+            regex = re.compile('|'.join(escape_chars))
             return regex.sub(lambda match: conv[match.group()], text)
 
         if weight_var and weight_var not in data.columns:
