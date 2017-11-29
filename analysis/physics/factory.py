@@ -367,7 +367,7 @@ class BaseFactory(object):
         raise NotImplementedError()
 
     def is_extended(self):
-        return 'Yield' in self
+        return 'Yield' in self and not 'Fraction' in self
 
     def has_to_be_extended(self):
         raise NotImplementedError()
@@ -464,7 +464,9 @@ class BaseFactory(object):
         """
         if not self.is_extended():
             raise ValueError("Non-extended model doesn't have yields")
-        yields = [self.get_yield_var()]
+        yields = []
+        if self.get_yield_var():
+            yields.append(self.get_yield_var())
         for child in self._children.values():
             if child.is_extended():
                 yields.extend(child.get_yield_vars())
