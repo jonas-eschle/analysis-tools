@@ -18,6 +18,7 @@ from collections import OrderedDict, defaultdict
 import yaml
 import yamlordereddictloader
 
+from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
 
 
@@ -415,10 +416,4 @@ def get_shared_vars(config, external_vars=None):
 
 
 # Exceptions
-class ConfigError(Exception):
-    """Error in loading configuration file."""
-    def __init__(self, message, missing_keys=None):
-        self.missing_keys = missing_keys if missing_keys else []
-        super(ConfigError, self).__init__(message)
-
 # EOF

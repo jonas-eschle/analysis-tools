@@ -18,6 +18,7 @@ import pandas as pd
 
 import ROOT
 
+from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
 from analysis.utils.random import get_urandom_int
@@ -150,7 +151,7 @@ def run(config_files, link_from, verbose):
                                                'data'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
-    except _config.ConfigError as error:
+    except ConfigError as error:
         if 'fit/nfits' in error.missing_keys:
             logger.error("Number of fits not specified")
         if 'name' in error.missing_keys:
@@ -264,7 +265,7 @@ def run(config_files, link_from, verbose):
         acceptance = get_acceptance(config['acceptance']) \
             if 'acceptance' in config \
             else None
-    except _config.ConfigError as error:
+    except ConfigError as error:
         raise KeyError("Error loading acceptance -> {}".format(error))
     # Prepare output
     gen_events = defaultdict(list)
