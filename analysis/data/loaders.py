@@ -119,7 +119,7 @@ def _get_root_from_dataframe(frame, kwargs):
     # Variables
     var_list = list(frame.columns)
     # Raise an error if some weights are not loaded.
-    if var_list and not (set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list))):
+    if var_list and not set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list)):
         raise ValueError("Missing weights in the list of variables read from input file.")
     acc_var = ''
     # Acceptance specified
