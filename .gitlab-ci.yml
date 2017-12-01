@@ -15,14 +15,17 @@ test27:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test27 python=2.7 root=6 root_numpy
+    - conda create -n test27 python=2.7 root=6 root-numpy rootpy
     - source activate test27 && echo 'activated'
-    - conda install python=2.7 root=6 root_numpy
+#    - conda install python=2.7 root=6 root_numpy
 #   install test utilities
     - conda install pytest coverage
 #   install package
 #   HACK, psutil and subprocess32 fail to build currently
     - conda install psutil subprocess32
+#    HACK, install manually deps
+    - conda install scipy h5py PyYAML matplotlib seaborn root_pandas
+
 #    - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
 #     run tests
@@ -42,7 +45,7 @@ test36:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test36 python=3.6 root=6 root-numpy
+    - conda create -n test36 python=3.6 root=6 root-numpy rootpy root-
     - source activate test36 && echo 'activated'
 #    - conda install python=3.6 root=6 root-numpy
 
@@ -52,11 +55,13 @@ test36:
 #   HACK, psutil fails to build currently
     - conda install psutil
 #    - pip install git+https://github.com/ibab/root_pandas.git
+# HACK: install deps manually...
+    - conda install psutil scipy h5py PyYAML matplotlib seaborn
     - pip install -e .
 #    run tests
     - coverage run -m pytest .
     - coverage report --omit=/*/anaconda*/*
-    
+
 #autodoc36:
 #  image: continuumio/miniconda3:latest
 
