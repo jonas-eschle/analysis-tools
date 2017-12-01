@@ -6,6 +6,7 @@
 # @date   13.04.2017
 # =============================================================================
 """Deal with HDF files."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import subprocess
@@ -28,7 +29,7 @@ def modify_hdf(file_name, compress=True):
         no error is raised.
 
     Arguments:
-        file_name (str): Final (desination) file name to write to.
+        file_name (str): Final (destination) file name to write to.
         compress (bool, optional): Compress the file after closing? This is very
             useful when appending to an existing file. Defaults to `True`.
 
@@ -41,7 +42,7 @@ def modify_hdf(file_name, compress=True):
         yield data_file
     logger.debug('Compressing...')
     if compress:
-        compressed_file = "%s.out" % file_name
+        compressed_file = "{}.out".format(file_name)
         try:
             cmd = ["ptrepack",
                    "--chunkshape=auto",

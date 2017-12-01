@@ -6,8 +6,10 @@
 # @date   16.02.2017
 # =============================================================================
 """Generic analysis package."""
+from __future__ import print_function, division, absolute_import
 
 from setuptools import setup
+
 setup(name='analysis',
       version='2.0',
       description='Generic analysis package',
@@ -24,7 +26,7 @@ setup(name='analysis',
                         'contextlib2',
                         'yamlordereddictloader',
                         'root_pandas>=0.2.0',
-                        'numpy',
+                        'numpy>=1.13.1',
                         'scipy',
                         'psutil',
                         'matplotlib',
@@ -32,4 +34,4 @@ setup(name='analysis',
       packages=['analysis'],
       zip_safe=False)
 
-# EOF
+# EOFpi

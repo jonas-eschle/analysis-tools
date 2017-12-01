@@ -6,6 +6,7 @@
 # @date   16.01.2017
 # =============================================================================
 """Fit-related utils."""
+from __future__ import print_function, division, absolute_import
 
 import pandas as pd
 
@@ -28,7 +29,7 @@ def fit_parameters_to_dict(parameters):
     Arguments:
         parameters (list[`ROOT.RooRealVar`]): Fit parameters
 
-    Returns:
+    Return:
         dict.
 
     """
@@ -53,7 +54,7 @@ def calculate_pulls(fit_results, gen_values):
         fit_results (`pandas.DataFrame`): Frame containing fit values and errors.
         gen_values (`pandas.DataFrame`): Frame containing generator values.
 
-    Returns:
+    Return:
         pandas.DataFrame: Data frame containing pull information for all
             fitted parameters.
 

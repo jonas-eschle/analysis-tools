@@ -6,10 +6,14 @@
 # @date   11.01.2017
 # =============================================================================
 """Generic analysis configuration."""
+from __future__ import print_function, division, absolute_import
 
 import os
 from collections import defaultdict
 
+# TODO: automative version and author
+__version__ = '3.0'
+__author__ = 'Albert Piug'
 
 __GLOBAL_VARIABLES = {}
 
@@ -23,7 +27,7 @@ def get_global_var(name, default=None):
         default (object, optional): Value to return if the global variable
             is not defined. Defaults to `None`.
 
-    Returns:
+    Return:
         object: Value of the global variable.
 
     """
@@ -37,7 +41,7 @@ def set_global_var(name, value):
         name (str): Name of the variable.
         value (object): Value to assign to the global variable.
 
-    Returns:
+    Return:
         object: Value of the global variable.
 
     """
@@ -57,5 +61,6 @@ set_global_var('FILE_TYPES', {})
 set_global_var('FIT_STRATEGIES', {})
 set_global_var('PHYSICS_FACTORIES', defaultdict(dict))
 set_global_var('EFFICIENCY_MODELS', {})
+set_global_var('TOY_SYSTEMATICS', {})
 
 # EOF

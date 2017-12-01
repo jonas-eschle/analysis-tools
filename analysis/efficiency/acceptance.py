@@ -6,6 +6,7 @@
 # @date   21.03.2017
 # =============================================================================
 """Acceptance class."""
+from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
@@ -21,7 +22,7 @@ class Acceptance(object):
             gen_efficiency (`analysis.efficiency.Efficiency`): Generator level efficiency.
             reco_efficiency (`analysis.efficiency.Efficiency`): Reconstructed efficiency.
 
-        Raises:
+        Raise:
             KeyError: If the variable names don't match.
 
         """
@@ -33,6 +34,15 @@ class Acceptance(object):
         if set(reco_efficiency.get_variables()) != set(var_list):
             raise KeyError("Non-matching variable names in reconstruction")
 
+    def get_vars(self):
+        """Get acceptance variables in the correct order.
+
+        Return:
+            list
+
+        """
+        return self._var_list
+
     def apply_accept_reject(self, data, inplace=False, weight_col=None):
         """Apply the accept-reject method to filter an input data frame.
 
@@ -43,10 +53,10 @@ class Acceptance(object):
             weight_col (str, optional): Name of the weights column to be added.
                 Defaults to None, in which case the column is not added.
 
-        Returns:
+        Return:
             `pandas.DataFrame`: Filtered data frame, with the weights column added.
 
-        Raises:
+        Raise:
             KeyError: If the weight column name already exists in the dataset.
             ValueError: If the acceptance variables cannot be found in the data frame.
 
@@ -94,5 +104,18 @@ class Acceptance(object):
         weights = (gen_eff/reco_eff).replace([-np.inf, np.inf, np.nan], 0.0)
         return weights * data.shape[0] / weights.sum()
 
+    def randomize(self):
+        """Return a randomized version of itself.
+
+        Return:
+            Acceptance
+
+        Raise:
+            NotImplementedError: If the randomization is not implemented in the generation or
+                reconstruction efficiencies.
+            ValueError: If there is a problem randomizing either of the efficiencies.
+
+        """
+        return Acceptance(self._var_list, self._generation.randomize(), self._reconstruction.randomize())
 
 # EOF

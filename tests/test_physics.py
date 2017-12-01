@@ -6,6 +6,7 @@
 # @date   19.04.2017
 # =============================================================================
 """Test imports."""
+from __future__ import print_function, division, absolute_import
 
 import yaml
 import yamlordereddictloader
@@ -50,6 +51,7 @@ class DoubleCBFactory(pdfs.DoubleCBPdfMixin, MassFactory):
 
     """
 
+
 class ExponentialFactory(pdfs.ExponentialPdfMixin, MassFactory):
     """Exponential mass PDF.
 
@@ -78,7 +80,7 @@ class FlatQ2(phys_factory.PhysicsFactory):
         Returns a lambda that builds the `RooPolynomial` starting from
             order 0.
 
-        Returns:
+        Return:
             lambda.
 
         """
@@ -136,6 +138,25 @@ def factory_with_yield():
         frac: 0.84873 0.1 1.0""")
 
 
+@pytest.fixture
+def factory_with_blind_yield():
+    """Load a PhysicsFactory with blinded yield."""
+    return load_model("""mass:
+    pdf: cb
+    yield: 'BLIND @yield1 yieldstr 18 94'
+    parameters:
+        mu: 5246.7 5200 5300
+        sigma1: '@sigma/sigma/sigma/41 35 45'
+        sigma2: '@sigma'
+        shared_yield: '@yield1/Yield/Yield/VAR 1000 300 2000'
+        alpha_shared: '@alpha_blind/alpha_blind/alpha_blind/VAR 0.25923 0.1 0.5'
+        n1: 5.6689 2 9
+        n2: 1.6 0.2 2
+        alpha1: 'BLIND @alpha_blind mystr 10 50'
+        alpha2: '-1.9749 -3.5 -1.0'
+        frac: 0.84873 0.1 1.0""")
+
+
 # pylint: disable=W0621
 def test_factory_load(factory):
     """Test factory loading returns an object of the correct type."""
@@ -157,7 +178,28 @@ def test_factory_get_extendedpdf(factory, factory_with_yield):
     model = factory.get_extended_pdf("TestFactory", "TestFactory", 1000)
     model_yield = factory_with_yield.get_extended_pdf("TestFactoryWithYield", "TestFactoryWithYield")
     assert model.getVariables()["Yield"].getVal() == 1000.0
-    assert model_yield.getVariables()["Yield"].getVal() == 1000.0
+
+
+# pylint: disable=W0621
+def test_factory_get_extendedpdf_blind(factory, factory_with_blind_yield):
+    """Test the PDF from the factory has the correct properties."""
+    model = factory.get_extended_pdf("TestFactory", "TestFactory", 1000)
+    model_yield = factory_with_blind_yield.get_extended_pdf("TestFactoryWithBlindYield",
+                                                            "TestFactoryWithBlindYield")
+
+    print("value from direct rooRealVar", factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getVal())
+    print("Hidden value", factory_with_blind_yield.get_fit_parameters()[2].getHiddenVal())
+
+    assert factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getMax() == 0.5
+    assert factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'].getMin() == 0.1
+    assert isinstance(factory_with_blind_yield.get_fit_parameters()[2].getVariables()['alpha_blind'],
+                      ROOT.RooRealVar)
+    assert isinstance(factory_with_blind_yield.get_fit_parameters()[2], ROOT.RooUnblindPrecision)
+
+    assert isinstance(factory_with_blind_yield.get_yield_var(), ROOT.RooUnblindPrecision)
+    assert isinstance(factory_with_blind_yield.get_yield_var().getVariables()['Yield'], ROOT.RooRealVar)
+    assert factory_with_blind_yield.get_yield_var().getVariables()['Yield'].getMax() == 2000
+    assert factory_with_blind_yield.get_yield_var().getVariables()['Yield'].getMin() == 300
 
 
 # pylint: disable=W0621
@@ -433,8 +475,8 @@ def test_simfactory_get_pdf(sim_factory):
     assert isinstance(model, ROOT.RooSimultaneous)
     assert model.GetName() == 'TestSimFactory'
     assert model.GetTitle() == 'TestSimFactory'
-    assert model.getVariables()["tau^{label1,background,mass}"].getVal() == -0.003
-    assert model.getVariables()["tau^{label1,background,mass}"].isConstant()
+    assert model.getVariables()["tau^{label1;background;mass}"].getVal() == -0.003
+    assert model.getVariables()["tau^{label1;background;mass}"].isConstant()
 
 
 # pylint: disable=W0621
@@ -444,7 +486,81 @@ def test_simfactory_vs_factory(factory, sim_factory):
     sim_model = sim_factory.get_extended_pdf("TestSimFactory", "TestSimFactory")
     factory.get_observables()[0].setVal(5000.0)
     sim_factory.get_observables()[0].setVal(5000.0)
-    assert fac_model.getVal() == sim_model.getComponents()["TestSimFactory^{label1,signal,mass}_{noext}"].getVal()
+    assert fac_model.getVal() == sim_model.getComponents()["TestSimFactory^{label1;signal;mass}_{noext}"].getVal()
+
+
+@pytest.fixture
+def shift_scale_factory():
+    """Load a PhysicsFactory."""
+    return load_model("""mass:
+    pdf: cb
+    parameters:
+        mu: SHIFT @shift_mu @muMC
+        shift_mu: '@shift_mu/shift_mu/shift_mu/VAR 41 35 45'
+        muMC: '@muMC/muMC/muMC/CONST 5100'
+        sigmaMC: '@sigmaMC/sigmaMC/sigmaMC/CONST 4'
+        scale_sigma1: '@scale_sigma1/scale_sigma1/scale_sigma1/VAR 2 0.1 5'
+        sigma1: 'SCALE @scale_sigma1 @sigmaMC'
+        scale_sigma2: '@scale_sigma2/scale_sigma2/scale_sigma2/VAR 3 0.2 4'
+        sigma2: 'SCALE @scale_sigma2 42'
+        shift_n1: '@shift_n1/shift_n1/shift_n1/VAR 4 3 5'
+        n1: 'SHIFT @shift_n1 5.6689'
+        n2:  1.6 0.2 2
+        alpha1: 0.25923 0.1 0.5
+        alpha2:  -1.9749 -3.5 -1.0
+        frac: 0.84873 0.1 1.0""")
+
+
+# in the Kstee angular analysis, there are several config files which use a different
+# syntax than expected. As RooAddition and RooMultiplication
+@pytest.fixture
+def legacy_syntax_factory():
+    """Load a PhysicsFactory."""
+    return load_model("""mass:
+    pdf: cb
+    parameters:
+        mu: SHIFT @muMC @shift_mu"""  # intentionally inverted syntax
+        """
+        shift_mu: '@shift_mu/shift_mu/shift_mu/VAR 41 35 45'
+        muMC: '@muMC/muMC/muMC/CONST 5100'
+        sigmaMC: '@sigmaMC/sigmaMC/sigmaMC/CONST 4'
+        scale_sigma1: '@scale_sigma1/scale_sigma1/scale_sigma1/VAR 2 0.1 5'
+        sigma1: 'SCALE @sigmaMC @scale_sigma1'"""  # intentionally inverted syntax
+        """
+        scale_sigma2: '@scale_sigma2/scale_sigma2/scale_sigma2/VAR 3 0.2 4'
+        sigma2: 'SCALE @scale_sigma2 42'
+        shift_n1: '@shift_n1/shift_n1/shift_n1/VAR 4 3 5'
+        n1: 'SHIFT @shift_n1 5.6689'
+        n2:  1.6 0.2 2
+        alpha1: 0.25923 0.1 0.5
+        alpha2:  -1.9749 -3.5 -1.0
+        frac: 0.84873 0.1 1.0""")
+
+
+def  scale_shift_tester(factory):
+
+    assert isinstance(factory.get_fit_parameters()[0], ROOT.RooAddition)
+    assert isinstance(factory.get_fit_parameters()[0].getVariables()["shift_mu"], ROOT.RooRealVar)
+    assert isinstance(factory.get_fit_parameters()[0].getVariables()["muMC"], ROOT.RooRealVar)
+
+    assert isinstance(factory.get_fit_parameters()[3], ROOT.RooAddition)
+    assert isinstance(factory.get_fit_parameters()[3].getVariables()["shift_n1"], ROOT.RooRealVar)
+
+    assert isinstance(factory.get_fit_parameters()[1], ROOT.RooProduct)
+    assert isinstance(factory.get_fit_parameters()[1].getVariables()["scale_sigma1"], ROOT.RooRealVar)
+    assert isinstance(factory.get_fit_parameters()[1].getVariables()["sigmaMC"], ROOT.RooRealVar)
+
+    assert isinstance(factory.get_fit_parameters()[4], ROOT.RooProduct)
+    assert isinstance(factory.get_fit_parameters()[4].getVariables()["scale_sigma2"], ROOT.RooRealVar)
+
+
+
+def test_scale_shift(shift_scale_factory):
+    scale_shift_tester(shift_scale_factory)
+
+
+def test_legacy_syntax_factory(legacy_syntax_factory):
+    scale_shift_tester(legacy_syntax_factory)
 
 
 # EOF
