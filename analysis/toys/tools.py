@@ -48,8 +48,18 @@ def load_toy_fits(*toy_list, **kwargs):
     if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toy_list):
         raise OSError("Cannot load all toys")
     with contextlib2.ExitStack() as toy_stack:
-        fit_results = [toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))['fit_results']
-                       for toy_name in toy_list]
+        # toy_results = []
+        fit_cov_matrices = []
+        fit_results = []
+        for toy_name in toy_list:
+            toy_result = toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))
+            fit_result = toy_result['fit_results']
+            fit_results.append(fit_result)
+            cov_matrices = []
+            for row in fit_result.iterrows():
+                cov_path = os.path.join('covariance', row[1]['jobid'], row[1]['fit_num'])
+                cov_matrices.append(toy_result[cov_path])
+            fit_cov_matrices.append(cov_matrices)
         if not all(all(fit_result.columns == fit_results[0].columns)
                    for fit_result in fit_results):
             if kwargs.get('fail_on_incompatible', True):
@@ -63,6 +73,6 @@ def load_toy_fits(*toy_list, **kwargs):
                            '_{gen}' in col and not col.startswith('N^'),
                            '_{nominal}' in col))]
         merged_result.set_index(indices, inplace=True)
-    return merged_result
+    return merged_result, fit_cov_matrices
 
 # EOF
