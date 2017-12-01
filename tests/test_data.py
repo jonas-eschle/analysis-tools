@@ -48,7 +48,7 @@ def test_load_with_weights(pandas_weights):
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': 'half'})  # wrong keyword?
+                         'weights-to-normalize': 'half'})
         assert data.isWeighted()
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)
@@ -59,32 +59,18 @@ def test_load_with_weights(pandas_weights):
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': ['half', 'quarter'],
-                         'weight_var': 'weight'})
+                         'weights-to-normalize': ['half', 'quarter']})
         assert data.isWeighted()
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)
         assert data.weight() == 1.0  # Since all weights are equal
-        # This should fail
-        try:
-            data = get_data({'name': 'Test',
-                             'source': file_name,
-                             'tree': 'ds',
-                             'output-format': 'root',
-                             'input-type': 'pandas',
-                             'weights': ['half', 'quarter']})
-        except KeyError:
-            pass
-        else:
-            assert False
         # And now product of the three to make sure it's not chance
         data = get_data({'name': 'Test',
                          'source': file_name,
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': ['half', 'quarter', 'asym'],
-                         'weight_var': 'weight'})
+                         'weights-to-normalize': ['half', 'quarter', 'asym']})
         if not data.isWeighted():
             return False
         # Correct normalization
