@@ -295,12 +295,11 @@ class BaseFactory(object):
 
     def _add_superscript(self, name, superscript, old_first=True):
         subscript_match = re.search(r'\^{(.*?)}', name)
-        sub_func = lambda match, name=superscript: '^{{{},{}}}'.format(match.groups()[0], name) \
-            if old_first \
-            else lambda match, name=superscript: '^{{{},{}}}'.format(name, match.groups()[0])
         if subscript_match:
             new_name = re.sub(r'\^{(.*?)}',
-                              sub_func,
+                              lambda match, name=superscript: '^{{{};{}}}'.format(match.groups()[0], name)
+                              if old_first
+                              else lambda match, name=superscript: '^{{{};{}}}'.format(name, match.groups()[0]),
                               name)
         else:
             new_name = '{}^{{{}}}'.format(name, superscript)
@@ -311,7 +310,7 @@ class BaseFactory(object):
             naming_scheme = self._children.viewitems()
         for label, factory in list(naming_scheme):
             # Recursively rename children
-            factory.rename_children_parameters(('{},{}'.format(label, child_name), child)
+            factory.rename_children_parameters(('{};{}'.format(label, child_name), child)
                                                for child_name, child in factory.get_children().items())
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
