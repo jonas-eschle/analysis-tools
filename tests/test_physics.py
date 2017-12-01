@@ -475,8 +475,8 @@ def test_simfactory_get_pdf(sim_factory):
     assert isinstance(model, ROOT.RooSimultaneous)
     assert model.GetName() == 'TestSimFactory'
     assert model.GetTitle() == 'TestSimFactory'
-    assert model.getVariables()["tau^{label1,background,mass}"].getVal() == -0.003
-    assert model.getVariables()["tau^{label1,background,mass}"].isConstant()
+    assert model.getVariables()["tau^{label1;background;mass}"].getVal() == -0.003
+    assert model.getVariables()["tau^{label1;background;mass}"].isConstant()
 
 
 # pylint: disable=W0621
@@ -486,7 +486,7 @@ def test_simfactory_vs_factory(factory, sim_factory):
     sim_model = sim_factory.get_extended_pdf("TestSimFactory", "TestSimFactory")
     factory.get_observables()[0].setVal(5000.0)
     sim_factory.get_observables()[0].setVal(5000.0)
-    assert fac_model.getVal() == sim_model.getComponents()["TestSimFactory^{label1,signal,mass}_{noext}"].getVal()
+    assert fac_model.getVal() == sim_model.getComponents()["TestSimFactory^{label1;signal;mass}_{noext}"].getVal()
 
 
 @pytest.fixture
