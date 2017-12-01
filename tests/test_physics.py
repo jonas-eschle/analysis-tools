@@ -17,7 +17,7 @@ import analysis.physics as phys
 import analysis.physics.factory as phys_factory
 import analysis.physics.pdf_models as pdfs
 from analysis.utils.logging_color import get_logger
-from analysis.utils.config import ConfigError
+from analysis.utils.exceptions import ConfigError
 
 
 get_logger('analysis.physics').setLevel(10)

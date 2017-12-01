@@ -12,10 +12,10 @@ import copy
 
 import numpy as np
 
-from analysis.utils.config import load_config, write_config, ConfigError
-from analysis.utils.root import iterate_roocollection
+from analysis.utils.config import load_config, write_config
+from analysis.utils.exceptions import NotInitializedError, ConfigError
 import analysis.utils.paths as _paths
-
+from analysis.utils.root import iterate_roocollection
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
@@ -353,13 +353,5 @@ class FitResult(object):
             for name, param in self.get_const_parameters().items():
                 output[name] = param
         return output
-
-
-class AlreadyInitializedError(Exception):
-    """Used when the internal fit result has already been initialized."""
-
-
-class NotInitializedError(Exception):
-    """Use when the FitResult has not been initialized."""
 
 # EOF

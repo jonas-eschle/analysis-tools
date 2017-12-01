@@ -29,3 +29,8 @@ class FactoryError(Exception):
 
     def __init__(self, message):
         super(FactoryError, self).__init__(message)
+
+
+class NotInitializedError(Exception):
+    """Use when an object has not been initialized."""
+

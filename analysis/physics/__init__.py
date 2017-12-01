@@ -14,7 +14,8 @@ import ROOT
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-from analysis.utils.config import get_shared_vars, configure_parameter, ConfigError
+from analysis.utils.config import get_shared_vars, configure_parameter
+from analysis.utils.exceptions import ConfigError
 
 
 logger = get_logger('analysis.physics')
