@@ -45,7 +45,7 @@ def load_config(*file_names, **options):
                 `get_{path_func}_path(name)` call at the same level as the `load` entry.
         - The `modify` command can be used to modify a previously loaded key/value pair.
             It has the format `key:value` and replaces `key` at its same level by the value
-            given by `value`.
+            given by `value`. For more complete examples and documentation, see the README.
 
     Arguments:
         *file_names (list[str]): Files to load.
