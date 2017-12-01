@@ -24,9 +24,9 @@ test27:
 #   HACK, psutil and subprocess32 fail to build currently
     - conda install psutil subprocess32 > tmp.txt && echo 'activated'
 #    HACK, install manually deps
-    - conda install scipy h5py PyYAML matplotlib seaborn root_pandas > tmp.txt && echo 'activated'
+    - conda install h5py PyYAML seaborn root_pandas > tmp.txt && echo 'activated'
 #   HACK
-    - conda install -c serge-sans-paille gcc_49
+#    - conda install -c serge-sans-paille gcc_49
 #    - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
 #     run tests
@@ -57,9 +57,9 @@ test36:
     - conda install psutil > tmp.txt && echo 'activated'
 #    - pip install git+https://github.com/ibab/root_pandas.git
 # HACK: install deps manually...
-    - conda install psutil scipy h5py PyYAML matplotlib seaborn > tmp.txt && echo 'activated'
+    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
 #   HACK
-    - conda install -c serge-sans-paille gcc_49
+#    - conda install -c serge-sans-paille gcc_49
 
     - pip install -e .
 #    run tests
