@@ -35,6 +35,18 @@ def load_config(*file_names, **options):
         - `validate` (list), which gets a list of keys to check. If one of these
             keys is not present, `config.ConfigError` is raised.
 
+    Additionally, several commands are available to modify the configurations:
+        - The `load` key can be used to load other config files from the
+            config file. The value of this key can have two formats:
+
+            + `file_name:key` inserts the contents of `key` in `file_name` at the same
+                level as the `load` entry.
+            + `path_func:name:key` inserts the contents `key` in the file obtained by the
+                `get_{path_func}_path(name)` call at the same level as the `load` entry.
+        - The `modify` command can be used to modify a previously loaded key/value pair.
+            It has the format `key: value` and replaces `key` at its same level by the value
+            given by `value`. For more complete examples and documentation, see the README.
+
     Arguments:
         *file_names (list[str]): Files to load.
         **options (dict): Configuration options. See above for supported
@@ -58,13 +70,60 @@ def load_config(*file_names, **options):
                                                              Loader=yamlordereddictloader.Loader)))
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
-    data = fold_config(unfolded_data, OrderedDict)
+    # Load required data
+    unfolded_data_expanded = []
+    root_prev_load = None
+    for key, val in unfolded_data:
+        command = key.split('/')[-1]
+        if command == 'load':  # An input requirement has been made
+            split_val = val.split(":")
+            if len(split_val) == 2:  # file_name:key format
+                file_name_result, required_key = split_val
+            elif len(split_val) == 3:  # path_func:name:key format
+                path_name, name, required_key = split_val
+                import analysis.utils.paths as _paths
+                try:
+                    path_func = getattr(_paths, 'get_{}_path'.format(path_name))
+                except AttributeError:
+                    raise ConfigError("Unknown path getter type -> {}".format(path_name))
+                file_name_result = path_func(name)
+            else:
+                raise ConfigError("Malformed 'load' key")
+            try:
+                root = key.rsplit('/load')[0]
+                for new_key, new_val in unfold_config(load_config(file_name_result, root=required_key)):
+                    unfolded_data_expanded.append(('{}/{}'.format(root, new_key), new_val))
+            except Exception:
+                logger.error("Error loading required data in %s", required_key)
+                raise
+            else:
+                root_prev_load = root
+        elif root_prev_load and key.startswith(root_prev_load):  # we have to handle it *somehow*
+            relative_key = key.split(root_prev_load + '/', 1)[1]  # remove root
+            if not relative_key.startswith('modify/'):
+                logger.error("Key {} cannot be used without 'modify' if 'load' came before.".format(key))
+                raise ConfigError("Loaded pdf with 'load' can *only* be modified by using 'modify'.")
+
+            key_to_replace = '{}/{}'.format(root_prev_load, relative_key.split('modify/', 1)[1])
+            try:
+                key_index = [key for key, _ in unfolded_data_expanded].index(key_to_replace)
+            except IndexError:
+                logger.error("Cannot find key to modify -> %s", key_to_replace)
+                raise ConfigError("Malformed 'modify' key")
+            unfolded_data_expanded[key_index] = (key_to_replace, val)
+        else:
+            root_prev_load = None  # reset, there was no 'load'
+            unfolded_data_expanded.append((key, val))
+    # Fold back
+    data = fold_config(unfolded_data_expanded, OrderedDict)
     logger.debug('Loaded configuration -> %s', data)
-    if 'root' in options:
-        data_root = options['root']
-        if data_root not in data:
-            raise ConfigError("Root node not found in dataset -> {}".format(**data_root))
-        data = data[data_root]
+    data_root = options.get('root', '')
+    if data_root:
+        for root_node in data_root.split('/'):
+            try:
+                data = data[root_node]
+            except KeyError:
+                raise ConfigError("Root node {} of {} not found in dataset".format(root_node, data_root))
     if 'validate' in options:
         missing_keys = []
         data_keys = ['/'.join(key.split('/')[:entry_num+1])
@@ -73,6 +132,7 @@ def load_config(*file_names, **options):
         logger.debug("Validating against the following keys -> %s",
                      ', '.join(data_keys))
         for key in options['validate']:
+            key = os.path.join(data_root, key)
             if key not in data_keys:
                 missing_keys.append(key)
         if missing_keys:
@@ -213,20 +273,20 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
     consists in a letter that indicates the "action" to apply on the parameter,
     followed by the configuration of that action. There are several possibilities:
         * 'VAR' (or nothing) is used for parameters without constraints. If one configuration
-        element is given, the parameter doesn't have limits. If three are given, the last two
-        specify the low and upper limits. Parameter is set to not constant.
+            element is given, the parameter doesn't have limits. If three are given, the last two
+            specify the low and upper limits. Parameter is set to not constant.
         * 'CONST' indicates a constant parameter. The following argument indicates
-        at which value to fix it.
+            at which value to fix it.
         * 'GAUSS' is used for a Gaussian-constrained parameter. The arguments of that
-        Gaussian, ie, its mean and sigma, have to be given after the letter.
+            Gaussian, ie, its mean and sigma, have to be given after the letter.
         * 'SHIFT' is used to perform a constant shift to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
         * 'SCALE' is used to perform a constant scaling to a variable. The first value must be a
             shared variable, the second can be a number or a shared variable.
         * 'BLIND' covers the actual parameter by altering its value in an unknown way. The first
-          value must be a shared variable whereas the following are a string and two floats.
-          They represent a randomization string, a mean and a width (both used for the
-          randomization of the value as well).
+            value must be a shared variable whereas the following are a string and two floats.
+            They represent a randomization string, a mean and a width (both used for the
+            randomization of the value as well).
 
     In addition, wherever a variable value is expected one can use a 'fit_name:var_name' specification to
     load the value from a fit result. In the case of 'GAUSS', if no sigma is given, the Hesse error

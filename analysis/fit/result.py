@@ -14,7 +14,8 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
-from analysis.utils.paths import get_fit_result_path
+from analysis.utils.decorators import memoize
+import analysis.utils.paths as _paths
 
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
@@ -22,7 +23,6 @@ _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
 def ensure_initialized(method):
     """Make sure the fit result is initialized."""
-
     def wrapper(self, *args, **kwargs):
         """Check result is empty. Raise otherwise."""
         if not self.get_result():
@@ -64,6 +64,7 @@ class FitResult(object):
         return self._result
 
     @staticmethod
+    @memoize
     def from_roofit(roofit_result):
         """Load the `RooFitResult` into the internal format.
 
@@ -102,6 +103,7 @@ class FitResult(object):
         return FitResult(result)
 
     @staticmethod
+    @memoize
     def from_yaml(yaml_dict):
         """Initialize from a YAML dictionary.
 
@@ -130,6 +132,7 @@ class FitResult(object):
         return FitResult(yaml_dict)
 
     @staticmethod
+    @memoize
     def from_yaml_file(name):
         """Initialize from a YAML file.
 
@@ -147,7 +150,7 @@ class FitResult(object):
 
         """
         try:
-            return FitResult(dict(load_config(get_fit_result_path(name),
+            return FitResult(dict(load_config(_paths.get_fit_result_path(name),
                                               validate=('fit-parameters',
                                                         'fit-parameters-initial',
                                                         'const-parameters',
@@ -158,6 +161,7 @@ class FitResult(object):
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
 
     @staticmethod
+    @memoize
     def from_hdf(name):  # TODO: which path func?
         """Initialize from a hdf file.
 
@@ -201,8 +205,8 @@ class FitResult(object):
             NotInitializedError: If the fit result has not been initialized.
 
         """
-        file_name = get_fit_result_path(name)
-        write_config(self.to_yaml(), file_name)
+        with _paths.work_on_file(name, path_func=_paths.get_fit_result_path) as file_name:
+            write_config(self.to_yaml(), file_name)
         return file_name
 
     @ensure_initialized
@@ -222,7 +226,7 @@ class FitResult(object):
                                    for param_name, param in self._result['fit-parameters'].items()
                                    for val, suffix in zip(param, _SUFFIXES)))
         pandas_dict.update(OrderedDict((param_name, val) for param_name, val
-                            in self._result['const-parameters'].items()))
+                                       in self._result['const-parameters'].items()))
         pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
         pandas_dict['status_hesse'] = self._result['status'].get('HESSE', -1)
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
@@ -324,7 +328,7 @@ class FitResult(object):
 
         """
         return not any(status for status in self._result['status'].values()) and \
-               self._result['covariance-matrix']['quality'] == 3
+            self._result['covariance-matrix']['quality'] == 3
 
     @ensure_initialized
     def generate_random_pars(self, params=None, include_const=False):

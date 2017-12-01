@@ -89,7 +89,15 @@ def get_datasets(data_frames, acceptance, fit_models):
         # Add category column
         if category:
             # By default the label is stored in the 'category' column
+            if 'category' in rows and not all(rows['category']==category):
+                logger.error("Data %s contains categories not matching the specified category: ",
+                             rows, set(rows['category']) - {category})
+                raise ValueError("Data {} has categories different to the specified one".format(data_name))  # TODO: replace with DataError
             rows['category'] = category
+        elif 'category' in rows:
+            logger.warning("Data %s contains a 'category' column but no category was specified"
+                        "in the config file -> ignoring 'category column for the fit", rows)
+            del rows['category']
         # Append to merged dataset
         if dataset is None:
             dataset = rows
@@ -212,7 +220,7 @@ def run(config_files, link_from, verbose):
             if model_name not in config:
                 raise KeyError("Missing model definition -> {}".format(model_name))
             fit_models[model_name] = configure_model(config[model_name])
-            if any(yield_.isConstant() for yield_ in fit_models[model_name].get_yield_vars()):
+            if any(yield_.isConstant() for yield_ in fit_models[model_name].get_yield_vars() if yield_):
                 logger.warning("Model %s has constant yields. "
                                "Be careful when configuring the input data, you may need to disable poisson sampling",
                                model_name)
@@ -280,7 +288,7 @@ def run(config_files, link_from, verbose):
         if (fit_num+1) % 20 == 0:
             logger.info("  Fitting event %s/%s", fit_num+1, nfits)
         # Get a compound dataset
-        seed = get_urandom_int(8)
+        seed = get_urandom_int(4)
         np.random.seed(seed=seed)
         ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:

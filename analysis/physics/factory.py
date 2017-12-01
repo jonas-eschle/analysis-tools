@@ -367,7 +367,13 @@ class BaseFactory(object):
         raise NotImplementedError()
 
     def is_extended(self):
-        return 'Yield' in self
+        """Check if the factory is extended.
+
+        Return:
+            bool
+
+        """
+        return 'Yield' in self and 'Fraction' not in self
 
     def has_to_be_extended(self):
         raise NotImplementedError()
@@ -464,7 +470,9 @@ class BaseFactory(object):
         """
         if not self.is_extended():
             raise ValueError("Non-extended model doesn't have yields")
-        yields = [self.get_yield_var()]
+        yields = []
+        if self.get_yield_var():
+            yields.append(self.get_yield_var())
         for child in self._children.values():
             if child.is_extended():
                 yields.extend(child.get_yield_vars())
@@ -934,8 +942,8 @@ class SimultaneousPhysicsFactory(BaseFactory):
         # Check observable compatibility
         super(SimultaneousPhysicsFactory, self).__init__({}, None)
         self._category = category_var
-        self._children = {';'.join(label): factory
-                          for label, factory in factories.items()}
+        self._children = OrderedDict((';'.join(label), factory)
+                                     for label, factory in factories.items())
 
     def get_unbound_pdf(self, name, title):
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
@@ -961,6 +969,18 @@ class SimultaneousPhysicsFactory(BaseFactory):
         return sim_pdf
 
     def is_extended(self):
+        """Check if the factory is extended.
+
+        Children are checked. They must all be extended.
+
+        Return:
+            bool
+
+        Raise:
+            ValueError: If children are inconsistent (some extended
+                and some non-extended)
+
+        """
         children_are_extended = (child.is_extended()
                                  for child in self.get_children().values())
         if all(children_are_extended):

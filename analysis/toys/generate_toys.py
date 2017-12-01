@@ -140,7 +140,7 @@ def run(config_files, link_from):
         logger.debug("No linking specified")
     # Set seed
     job_id = get_job_id()
-    seed = get_urandom_int(8)
+    seed = get_urandom_int(4)
     np.random.seed(seed=seed)
     ROOT.RooRandom.randomGenerator().SetSeed(seed)
     # Generate

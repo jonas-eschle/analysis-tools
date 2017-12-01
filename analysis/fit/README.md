@@ -37,3 +37,12 @@ Fits are very easy to configure:
   `components-to-splot` is a list of the components that we want to get *sPlot* weights for;
   `output-file` is the name of the output file if we want to save the *sPlotted* dataset (if it's an absolute path, it will be used directly, if not, the `get_splot_path` function is used);
   and the optional `overwrite` key defined if older *sPlot* datasets with the same name are removed before saving the new one (default is `False`, so the script will throw an error if the file is present).
+=======
+Types: @string/string/string/string *(followed by params as needed for Roo variable config)*
+Meaning: @reference_name/variable_name/variable_title/type (type is the exact config
+syntax for a variable)
+Example: @mu1_low/mu1/mu_the_lower/VAR 50 10 90 (shared variable of type VAR)
+
+Usage examples:
+just the reference: @mu1_low
+within another variable: SHIFT @mu1_low 2701 (shift the value 2071 by @mu1_low)

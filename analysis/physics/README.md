@@ -32,8 +32,7 @@ Factories are instantiated with the `analysis.physics.get_physics_factory` funct
 If more than one is given, an uncorrelated product of observables will be built.
 
 
-Configuring physics factories
------------------------------
+## Configuring physics factories
 
 Physics factories can be loaded and configured using the `analysis.physics.configure_fit_factory` function, which takes a name and a dictionary (easily taken from a YAML file).
 The `pdfs` key is used to load the `PhysicsFactory` in the same way as `get_physics_factory`, but additional constraints can be imposed on the parameters.
@@ -51,7 +50,7 @@ Mimicking `ROOT.RooRealVar`, one can defined three types of variables:
 floating (bound and unbound), constant and constrained.
 
 
-### Floating variable
+#### Floating variable
 
 The floating variable can be either bound or unbound, depending whether we specify limits or not.
 The optional parameters are marked below in parenthesis:
@@ -65,7 +64,7 @@ of they are not given, the variable is unbound.
 Since this is the most used variable type, we can also simply specify `value` and the parameter configurator will interpret it as `VAR value`.
 
 
-### Constant variable
+#### Constant variable
 
 A numerical constant.
 
@@ -75,7 +74,7 @@ A numerical constant.
   + **Example**: `CONST 13.41`  
 
 
-### Constrained variable
+#### Constrained variable
 
 Currently implemented is the Gaussian constraint of a parameter.
 
@@ -87,13 +86,13 @@ Currently implemented is the Gaussian constraint of a parameter.
 This configures a `ROOT.RooRealVar` and creates a `ROOT.RooGaussian` constraint to be used during fitting.
 
 
-## Shift, scale and blind
+### Shift, scale and blind
 
 These options are used to configure the parameter as a modification of another value already defined.
 It is therefore necessary to "refer" to another variable, and this means using a *shared variable* (explained below) for this referenced value.
 
 
-### Shift variable
+#### Shift variable
 
 Define a variable as a linear shift with respect to another variable.
 The shift value can be defined as any of the other types of variables define above.
@@ -104,7 +103,7 @@ The shift value can be defined as any of the other types of variables define abo
   + **Example**: `SHIFT @muTrue VAR 500 200 900`  
 
 
-### Scale variable
+#### Scale variable
 
 Define a variable as a scale with respect to another variable.
 
@@ -114,7 +113,7 @@ Define a variable as a scale with respect to another variable.
   + **Example**: `SCALE @sigma1 VAR 3 1 5`  
 
 
-## Blinding
+### Blinding
 
 Parameter blinding is performed with `ROOT.RooUnblindPrecision`, so a string, a central value and a sigma value need to be provided.
 
@@ -126,7 +125,7 @@ Parameter blinding is performed with `ROOT.RooUnblindPrecision`, so a string, a 
 *Hint*: to blind a region of a given observable, you can use the `selection` parameter to cut it off at load time and a custom fit strategy to fit the disjoint fit range.
 
 
-## Shared variables
+### Shared variables
 
 Shared variables are normal variables that can be referenced after they have been defined, by using the syntax `@ref_name`.
 
@@ -137,3 +136,78 @@ Shared variables are normal variables that can be referenced after they have bee
 The two main types of usage are:  
   + Just the reference: `@mu1_low`  
   + Within another variable: `SHIFT @mu1_low 2701` (shift the value 2071 by @mu1_low)    
+
+
+### Loading from other files
+
+To load values from fit results (or any other configuration file), numerical values can be replaced by:
+
+	+ `file_name:key` loads file `file_name` and takes the value of `key` from it (`key` has the `key\subkey` syntax).
+	+ `path_func:name:key format` uses `get_{path_func}_path({name})` to get the file name, and then works like in the previous case.
+
+Whole sections of config files can be loaded using the `load` and `modify` syntax.
+To load a certain section of a `YAML` file, put a `load` keyword where the loaded part should be attached, giving as value the path of the file to load and the key to load, separated by a colon.
+The `modify` keyword can be used to then modify the loaded values:
+simply give the path of the key you want to modify and its new value.
+
+For example, we create a `base_model.yaml` file as follows:
+
+```yaml
+pdf:
+    sig:
+        parameters:
+            mu: CONST 5.0
+            sigma: CONST 36.2
+            alpha: CONST -0.43
+    bkg:
+        parameters:
+            lambda: CONST 3.2
+```
+
+Then, we can use it as base of a more complex configuration file:
+
+```yaml
+pdf:
+    sig:
+        load: base_model.yaml:parameters
+        modify:
+            parameters:
+                alpha: CONST 0.54
+    other_sig:
+        parameters:
+            mu: CONST 2.3
+            sigma: CONST 151
+```
+
+which will result in the *effective* configuration:
+
+```yaml
+pdf:
+    sig:
+        parameters:
+            mu: CONST 5.0
+            sigma: CONST 36.2
+                alpha: CONST 0.54
+    other_sig:
+        parameters:
+            mu: CONST 2.3
+            sigma: CONST 151
+```
+
+Alternatively, the `modify` keys can be specified as paths, *e.g.*,`parameters/alpha: CONST 0.54` could be used instead of
+
+```yaml
+parameters:
+    alpha: CONST 0.54
+```
+
+*Note that not using `modify` in order to alter a loaded configuration will raise an error!*.
+This example will fail (by design):
+
+```yaml
+pdf:
+    sig:
+        load: path/to/file/result.yaml:parameters
+        parameters:
+            alpha: CONST 0.54
+```
