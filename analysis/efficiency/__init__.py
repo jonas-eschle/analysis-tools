@@ -36,7 +36,7 @@ def register_efficiency_model(model_name, model_class):
         model_name (str): Name of the model.
         model_class (`Efficiency`): Efficiency model to register.
 
-    Returns:
+    Return:
         int: Number of registered efficiency models
 
     """
@@ -56,11 +56,11 @@ def get_efficiency_model_class(model_name):
     Arguments:
         model_name (str): Name of the efficiency model class.
 
-    Returns:
+    Return:
         `Efficiency`: Efficiency class, non-instantiated.
 
     """
-    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower(), None)
+    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower())
 
 
 def load_efficiency_model(model_name, **extra_parameters):
@@ -74,14 +74,14 @@ def load_efficiency_model(model_name, **extra_parameters):
         **extra_parameters (dict): Extra configuration parameters to override the entries
             in the `parameters` node loaded from the efficiency file.
 
-    Raises:
+    Raise:
         OSError: If the efficiency file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
     """
     path = get_efficiency_path(model_name)
     if not os.path.exists(path):
-        raise OSError("Cannot find efficiency file -> %s" % path)
+        raise OSError("Cannot find efficiency file -> {}".format(path))
     config = load_config(path, validate=('model', 'variables', 'parameters'))
     return get_efficiency_model(config, **extra_parameters)
 
@@ -97,10 +97,10 @@ def get_efficiency_model(efficiency_config, **extra_parameters):
         **extra_parameters (dict): Extra configuration parameters to override the entries
             in the `parameters` node in `efficiency_config`.
 
-    Returns:
+    Return:
         `analysis.efficiency.efficiency.Efficiency`: Efficiency object.
 
-    Raises:
+    Raise:
         KeyError: If there is a configuration error
 
     """
@@ -108,11 +108,11 @@ def get_efficiency_model(efficiency_config, **extra_parameters):
     # Check the configuration
     for key in ('model', 'variables', 'parameters'):
         if key not in efficiency_config:
-            raise KeyError("Bad configuration -> '%s' key is missing" % key)
+            raise KeyError("Bad configuration -> '{}' key is missing".format(key))
     # Now load efficiency
     model = get_efficiency_model_class(efficiency_config['model'])
     if not model:
-        raise KeyError("Unknown efficiency model -> '%s'" % efficiency_config['model'])
+        raise KeyError("Unknown efficiency model -> '{}'".format(efficiency_config['model']))
     return model(efficiency_config['variables'], efficiency_config['parameters'])
 
 
@@ -136,10 +136,10 @@ def load_acceptance(name, **extra_parameters):
                                     reconstruction={'rename-vars':{'acc_q2':'q2',
                                                                    'acc_cosThetaL':'ctl'}})
 
-    Returns:
+    Return:
         `analysis.efficiency.Acceptance`: Acceptance object.
 
-    Raises:
+    Raise:
         OSError: If the efficiecny file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
@@ -147,7 +147,7 @@ def load_acceptance(name, **extra_parameters):
     # pylint: disable=E1101
     path = get_acceptance_path(name)
     if not os.path.exists(path):
-        raise OSError("Cannot find efficiency file -> %s" % path)
+        raise OSError("Cannot find efficiency file -> {}".format(path))
     config = load_config(path, validate=('variables', 'generation', 'reconstruction'))
     config['generation'].update(extra_parameters.get('generation', {}))
     config['reconstruction'].update(extra_parameters.get('reconstruction', {}))
@@ -167,10 +167,10 @@ def get_acceptance(config):
                 to the name of the reconstruction efficiency. Any other key will be passed to `get_efficiency` as
                 `extra_parameters`
 
-    Returns:
+    Return:
         `analysis.efficiency.acceptance.Acceptance`: Acceptance object.
 
-    Raises:
+    Raise:
         analysis.utils.config.ConfigError: If the input config is missing keys.
         See `analysis.utils.config.load_config`.
 
@@ -178,7 +178,7 @@ def get_acceptance(config):
     config_keys = [key for key, _ in unfold_config(config)]
     # missing_keys should be empty if the needed keys have been provided. Otherwise complain!
     missing_keys = set(('variables', 'generation/name', 'reconstruction/name')) - set(config_keys)
-    
+
     if missing_keys:
         raise ConfigError("Missing configuration key! -> {}".format(missing_keys))
     # Load the efficiencies

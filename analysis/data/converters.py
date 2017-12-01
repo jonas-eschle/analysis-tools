@@ -26,7 +26,7 @@ def pandas_from_dataset(dataset):
     Arguments:
         dataset (`ROOT.RooDataSet`): Dataset to convert to pandas.
 
-    Returns:
+    Return:
         `pandas.DataFrame`
 
     """
@@ -42,7 +42,7 @@ def pandas_from_dataset(dataset):
     return pd.DataFrame(values)
 
 
-def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, categories=None):
+def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, categories=None, ranges=None):
     """Build RooDataset from a Pandas DataFrame.
 
     Arguments:
@@ -55,11 +55,13 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             Defaults to None.
         categories (list[`ROOT.RooCategory`], optional): Categories to separate the data in.
             Their name must correspond to a column in the `frame`.
+        ranges (dict, optional): Variables to set a range for. Defaults to `None`, in which case
+            all variables are unbounded.
 
-    Returns:
+    Return:
         ROOT.RooDataSet: Frame converted to dataset.
 
-    Raises:
+    Raise:
         KeyError: If the weight_var or the category is not present in `frame`.
 
     """
@@ -72,7 +74,7 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             var_set (ROOT.RooArgSet): Variables in the dataset.
             input_data (pandas.DataFrame): Input data.
 
-        Returns:
+        Return:
             ROOT.RooDataSet: Output data set.
 
         """
@@ -86,16 +88,16 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             dataset.add(var_set)
         return dataset
 
-    if weight_var and weight_var not in frame.columns:
-        raise KeyError("Cannot find weight variable -> %s" % weight_var)
     var_names = var_list if var_list else list(frame.columns)
+    if weight_var and weight_var not in frame.columns:
+        raise KeyError("Cannot find weight variable -> {}".format(weight_var))
     cat_names = []
     roovar_list = []
     if categories:
         for category in categories:
             cat_var = category.GetName()
             if cat_var not in frame.columns:
-                raise KeyError("Cannot find category variable -> %s" % cat_var)
+                raise KeyError("Cannot find category variable -> {}".format(cat_var))
             roovar_list.append(category)
             if cat_var in var_names:
                 var_names.pop(var_names.index(cat_var))
@@ -107,6 +109,10 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
             var_names.pop(var_names.index(super_category))
     roovar_list.extend([ROOT.RooRealVar(var_name, var_name, 0.0) for var_name in var_names])
     dataset_set = list_to_rooargset(roovar_list)
+    if ranges:
+        for var_name, (min_, max_) in ranges.items():
+            dataset_set[var_name].setMin(min_)
+            dataset_set[var_name].setMax(max_)
     dataset = fill_dataset(name, title, dataset_set, frame)
     if weight_var:
         dataset = ROOT.RooDataSet(name, title, dataset_set,

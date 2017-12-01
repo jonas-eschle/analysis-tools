@@ -27,10 +27,10 @@ def register_fit_strategy(name, fit_function):
         name (str): Name of the strategy.
         fit_function (Callable): Fit function.
 
-    Returns:
+    Return:
         int: Number of registered fit strategies.
 
-    Raises:
+    Raise:
         ValueError: If the fit function doesn't have the correct number of parameters.
 
     """
@@ -53,10 +53,10 @@ def get_fit_strategy(name):
     Arguments:
         name (str): Name of the fit strategy.
 
-    Returns:
+    Return:
         Callable: The fit function.
 
-    Raises:
+    Raise:
         KeyError: If the strategy is not registered.
 
     """
@@ -68,17 +68,25 @@ def get_fit_strategy(name):
 def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     """Fit a dataset.
 
-    Raises:
+    Raise:
         KeyError: If the fit strategy is not registered.
         ValueError: If there is a problem getting the PDF.
 
     """
     import ROOT
 
+    # Check the match between dataset and factory
+    dataset_event = dataset.get()
+    for obs in factory.get_observables():
+        dataset_obs = dataset_event[obs.GetName()]
+        if (obs.getMin(), obs.getMax()) != (dataset_obs.getMin(), dataset_obs.getMax()):
+            logger.warning("Mismatching ranges between PDF and dataset for observable %s, correcting...",
+                           obs.GetName())
+            dataset_obs.setMin(obs.getMin())
+            dataset_obs.setMax(obs.getMax())
     fit_config = [ROOT.RooFit.Save(True),
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
-    if 'Range' not in kwargs:
-        kwargs['Range'] = 'Full'
+    kwargs.setdefault('Range', 'Full')
     for command, val in kwargs.items():
         roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:
@@ -91,7 +99,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
     try:
         fit_func = get_fit_strategy(strategy)
     except KeyError:
-        raise KeyError("Unknown fit strategy -> %s" % strategy)
+        raise KeyError("Unknown fit strategy -> {}".format(strategy))
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
             if factory.is_extended() \

@@ -28,7 +28,7 @@ def get_logger(name, lvl=logging.NOTSET, format_=None):
             `logging.NOTSET`.
         format_ (str): Logger formatting string
 
-    Returns:
+    Return:
         `logging.Logger`: The requested logger.
 
     """

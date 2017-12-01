@@ -15,6 +15,7 @@ import pytest
 
 import pandas as pd
 
+from analysis.data.hdf import modify_hdf
 from analysis.data import get_data
 
 
@@ -30,7 +31,7 @@ def pandas_weights():
 def temp_file(frame):
     """Store the given frame in a temp file."""
     _, file_name = tempfile.mkstemp()
-    with pd.HDFStore(file_name) as store:
+    with modify_hdf(file_name, compress=False) as store:
         store.append('ds', frame)
     yield file_name
     os.remove(file_name)

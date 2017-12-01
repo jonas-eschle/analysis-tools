@@ -31,7 +31,7 @@ def add_pdf_paths(*paths):
     Arguments:
         *paths (list): List of paths to append.
 
-    Returns:
+    Return:
         list: Updated PDF paths.
 
     """
@@ -45,8 +45,9 @@ def add_pdf_paths(*paths):
     return get_global_var('PDF_PATHS')
 
 
-# Default PDF path
-add_pdf_paths('pdfs')
+# Default PDF paths: analysis/pdfs and module/pdfs
+add_pdf_paths(os.path.join(os.path.dirname(__file__), '..', 'pdfs'),
+              'pdfs')
 
 
 def load_pdf_by_name(name, use_mathmore=False):
@@ -59,10 +60,10 @@ def load_pdf_by_name(name, use_mathmore=False):
         use_mathmore (bool, optional): Load libMathMore before compiling.
             Defaults to False.
 
-    Returns:
+    Return:
         `ROOT.RooAbsPdf`: RooFit PDF object.
 
-    Raises:
+    Raise:
         OSError: If the .cc file corresponding to `name` cannot be found.
 
     """
@@ -71,7 +72,7 @@ def load_pdf_by_name(name, use_mathmore=False):
                       lib_dirs=get_global_var('PDF_PATHS'),
                       use_mathmore=use_mathmore)
     except OSError:
-        raise OSError("Don't know this PDF! -> %s" % name)
+        raise OSError("Don't know this PDF! -> {}".format(name))
     return getattr(ROOT, os.path.splitext(os.path.split(name)[1])[0])
 
 
