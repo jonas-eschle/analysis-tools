@@ -37,7 +37,14 @@ def modify_hdf(file_name, compress=True):
         `pandas.HDFStore`: Store to modify.
 
     """
-    mode = 'a' if os.path.exists(file_name) else 'w'
+    mode = 'w'
+    if os.path.exists(file_name):
+        with pd.HDFStore(file_name, mode='a', format='table') as test_len_file:
+            if len(test_len_file) > 0:
+                mode = 'a'
+            else:
+                logger.info("File %s exists but seems empty -> not construct with pytables?"
+                            "Overwritting existing file!", file_name)
     with pd.HDFStore(file_name, mode=mode, format='table') as data_file:
         yield data_file
     logger.debug('Compressing...')
