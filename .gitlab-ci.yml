@@ -76,7 +76,7 @@ test36:
     - coverage run -m pytest tests/
     - coverage report --omit=/*/anaconda*/*
 #   pylint check
-    - pip install pylint
+    - conda install pylint
     - pylint analysis/*/*.py || exit 0
 
 #    test build docs
@@ -93,6 +93,6 @@ run_pylint:
   image: continuumio/miniconda3:latest
   type: test
   script:
-        - conda install -y pylint
-        - pylint analysis/*/*.py
+    - conda install -y pylint
+    - pylint analysis/*/*.py || exit 0
 
