@@ -9,7 +9,7 @@ test27:
   stage: test
   script:
 #   setup env
-    - ls -la
+    - "ls -la"
     - apt install -y python-dev
     - conda config --set always_yes yes --set changeps1 no
 #    - conda update conda
@@ -43,7 +43,7 @@ test36:
   image: continuumio/miniconda3:latest
   stage: test
   script:
-    - ls -la
+    - "ls -la"
 #   setup env
     - apt install -y python3-dev
     - conda config --set always_yes yes --set changeps1 no
@@ -77,7 +77,7 @@ test36:
 
 # Pylint does not yet work, throws error for a file in analysis/data
 
- Job: run PyLint
+# Job: run PyLint
 
 run_pylint:
     type: test
