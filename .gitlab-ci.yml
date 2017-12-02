@@ -9,6 +9,7 @@ test27:
   stage: test
   script:
 #   setup env
+    - ls -la
     - apt install -y python-dev
     - conda config --set always_yes yes --set changeps1 no
 #    - conda update conda
@@ -29,9 +30,12 @@ test27:
 #    - conda install -c serge-sans-paille gcc_49
 #    - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
+
+
 #     run tests
-#    - coverage run -m pytest .
-#    - coverage report --omit=/*/anaconda*/*
+    - pytest tests/
+    - coverage run -m pytest tests/
+    - coverage report --omit=/*/anaconda*/*
 
 
 test36:
@@ -39,6 +43,7 @@ test36:
   image: continuumio/miniconda3:latest
   stage: test
   script:
+    - ls -la
 #   setup env
     - apt install -y python3-dev
     - conda config --set always_yes yes --set changeps1 no
@@ -63,21 +68,22 @@ test36:
 
     - pip install -e .
 #    run tests
-#    - coverage run -m pytest .
-#    - coverage report --omit=/*/anaconda*/*
+    - pytest tests/
+    - coverage run -m pytest tests/
+    - coverage report --omit=/*/anaconda*/*
 
 #autodoc36:
 #  image: continuumio/miniconda3:latest
 
 # Pylint does not yet work, throws error for a file in analysis/data
-#
-# Job: run PyLint
-#
-#run_pylint:
-#    type: test
-#    script:
-#        - pip install pylint
-#
-#        - pip install -U pip
-#        - pylint analysis/*/*.py
+
+ Job: run PyLint
+
+run_pylint:
+    type: test
+    script:
+        - pip install -U pip
+        - pip install pylint
+
+        - pylint analysis/*/*.py
 
