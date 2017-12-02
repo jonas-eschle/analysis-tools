@@ -15,7 +15,7 @@ test27:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test27 python=2.7 root=6 root-numpy rootpy > tmp.txt && echo 'activated'
+    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc > tmp.txt && echo 'activated'
     - source activate test27 && echo 'activated'
 #    - conda install python=2.7 root=6 root_numpy
 #   install test utilities
@@ -24,14 +24,14 @@ test27:
 #   HACK, psutil and subprocess32 fail to build currently
     - conda install psutil subprocess32 > tmp.txt && echo 'activated'
 #    HACK, install manually deps
-    - conda install h5py PyYAML seaborn root_pandas > tmp.txt && echo 'activated'
+#    - conda install h5py PyYAML seaborn root_pandas > tmp.txt && echo 'activated'
 #   HACK
 #    - conda install -c serge-sans-paille gcc_49
 #    - pip install git+https://github.com/ibab/root_pandas.git
     - pip install -e .
 #     run tests
-    - coverage run -m pytest .
-    - coverage report --omit=/*/anaconda*/*
+#    - coverage run -m pytest .
+#    - coverage report --omit=/*/anaconda*/*
 
 
 test36:
@@ -46,7 +46,7 @@ test36:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test36 python=3.6 root=6 root-numpy rootpy > tmp.txt
+    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc > tmp.txt
     - source activate test36 > tmp.txt && echo 'activated'
 #    - conda install python=3.6 root=6 root-numpy
 
@@ -57,14 +57,14 @@ test36:
     - conda install psutil > tmp.txt && echo 'activated'
 #    - pip install git+https://github.com/ibab/root_pandas.git
 # HACK: install deps manually...
-    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
+#    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
 #   HACK
 #    - conda install -c serge-sans-paille gcc_49
 
     - pip install -e .
 #    run tests
-    - coverage run -m pytest .
-    - coverage report --omit=/*/anaconda*/*
+#    - coverage run -m pytest .
+#    - coverage report --omit=/*/anaconda*/*
 
 #autodoc36:
 #  image: continuumio/miniconda3:latest
