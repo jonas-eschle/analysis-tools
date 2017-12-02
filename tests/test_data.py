@@ -41,9 +41,6 @@ def temp_file(frame):
 # pylint: disable=W0621
 def test_load_with_weights(pandas_weights):
     """Test loading data with weights."""
-    # HACK
-    assert True
-    return
     with temp_file(pandas_weights) as file_name:
         # Let's start with a simple one
         data = get_data({'name': 'Test',
