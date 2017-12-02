@@ -66,6 +66,7 @@ test36:
 #    - pip install git+https://github.com/ibab/root_pandas.git
 # HACK: install deps manually...
 #    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
+    - conda install h5py > tmp.txt && echo 'activated'
 #   HACK
 #    - conda install -c serge-sans-paille gcc_49
 
@@ -74,6 +75,10 @@ test36:
     - for folder in tests/*; do pytest $folder; done
     - coverage run -m pytest tests/
     - coverage report --omit=/*/anaconda*/*
+#   pylint check
+    - pip install pylint
+    - pylint analysis/*/*.py || exit 0
+
 #    test build docs
     - conda install sphinx sphinx_rtd_theme
     - ./docs/make_docs.sh
@@ -88,8 +93,6 @@ run_pylint:
   image: continuumio/miniconda3:latest
   type: test
   script:
-        - pip install -U pip
-        - pip install pylint
-
+        - conda install -y pylint
         - pylint analysis/*/*.py
 
