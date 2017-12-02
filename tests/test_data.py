@@ -43,6 +43,7 @@ def test_load_with_weights(pandas_weights):
     """Test loading data with weights."""
     with temp_file(pandas_weights) as file_name:
         # Let's start with a simple one
+        print("alive1!!!")
         data = get_data({'name': 'Test',
                          'source': file_name,
                          'tree': 'ds',
@@ -50,27 +51,33 @@ def test_load_with_weights(pandas_weights):
                          'input-type': 'pandas',
                          'weights-to-normalize': 'half'})
         assert data.isWeighted()
+        print("alive2!!!")
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)
         assert data.weight() == 1.0  # Since all weights are equal
         # Now product of two
+        print("alive3!!!")
         data = get_data({'name': 'Test',
                          'source': file_name,
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
                          'weights-to-normalize': ['half', 'quarter']})
+        print("alive4!!!")
         assert data.isWeighted()
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)
         assert data.weight() == 1.0  # Since all weights are equal
         # And now product of the three to make sure it's not chance
+        print("alive5!!!")
         data = get_data({'name': 'Test',
                          'source': file_name,
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
                          'weights-to-normalize': ['half', 'quarter', 'asym']})
+
+        print("alive6!!!")
         if not data.isWeighted():
             return False
         # Correct normalization
@@ -80,6 +87,8 @@ def test_load_with_weights(pandas_weights):
         assert data.weight() == 1.3333333333333333
         data.get(999)
         assert data.weight() == 0.6666666666666666
+
+        print("alive7!!!")
 
 
 # EOF
