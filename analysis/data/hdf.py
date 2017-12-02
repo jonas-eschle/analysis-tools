@@ -38,6 +38,9 @@ def modify_hdf(file_name, compress=True):
 
     """
     mode = 'a' if os.path.exists(file_name) else 'w'
+    # CRITICAL HACK START
+    mode = 'w'
+    # CRITICAL HACK END
     with pd.HDFStore(file_name, mode=mode, format='table') as data_file:
         yield data_file
     logger.debug('Compressing...')
