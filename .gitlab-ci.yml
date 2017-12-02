@@ -33,9 +33,12 @@ test27:
 
 
 #     run tests
-    - pytest tests/
+    - for folder in tests/*; do pytest $folder; done
     - coverage run -m pytest tests/
     - coverage report --omit=/*/anaconda*/*
+#    test build docs
+    - conda install sphinx sphinx_rtd_theme
+    - ./docs/make_docs.sh
 
 
 test36:
@@ -68,10 +71,12 @@ test36:
 
     - pip install -e .
 #    run tests
-    - pytest tests/
+    - for folder in tests/*; do pytest $folder; done
     - coverage run -m pytest tests/
     - coverage report --omit=/*/anaconda*/*
-
+#    test build docs
+    - conda install sphinx sphinx_rtd_theme
+    - ./docs/make_docs.sh
 #autodoc36:
 #  image: continuumio/miniconda3:latest
 
@@ -80,8 +85,9 @@ test36:
 # Job: run PyLint
 
 run_pylint:
-    type: test
-    script:
+  image: continuumio/miniconda3:latest
+  type: test
+  script:
         - pip install -U pip
         - pip install pylint
 
