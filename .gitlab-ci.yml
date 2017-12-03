@@ -16,7 +16,7 @@ test27:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc > tmp.txt && echo 'activated'
+    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'activated'
     - source activate test27 && echo 'activated'
 #    - conda install python=2.7 root=6 root_numpy
 #   install test utilities
@@ -54,7 +54,7 @@ test36:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
 #    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc > tmp.txt
+    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake> tmp.txt
     - source activate test36 > tmp.txt && echo 'activated'
 #    - conda install python=3.6 root=6 root-numpy
 
@@ -77,11 +77,11 @@ test36:
     - coverage report --omit=/*/anaconda*/*
 #   pylint check
     - conda install pylint
-    - pylint analysis/*/*.py || echo "========= Pylint run with errorcode > 0 ========"
+    - pylint analysis/*/*.py | tail -n 3
 
 
 #    test build docs
-    - conda install sphinx sphinx_rtd_theme
+    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'activated'
     - ./docs/make_docs.sh
 #autodoc36:
 #  image: continuumio/miniconda3:latest
@@ -95,5 +95,5 @@ run_pylint:
   type: test
   script:
     - conda install -y pylint
-    - pylint analysis/*/*.py || exit 0
+    - pylint analysis/*/*.py || echo "========= Pylint run with errorcode > 0 ========"
 
