@@ -40,7 +40,7 @@ test27:
     - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
 
     - echo "========== Pylint check (force pass) =========="
-    - pylint analysis/*/*.py | tail -n 3 && (exit 0)
+    - pylint --rcfile=ci/pylintrc analysis | tail -n 3 && (exit 0)
 
     - echo "========== Codestyle check (force pass) =========="
     - pycodestyle --max-line-length=1000 analysis || (exit 0)
@@ -85,7 +85,7 @@ test36:
     - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
 
     - echo "========== Pylint check (force pass) =========="
-    - pylint analysis/*/*.py | tail -n 3 && (exit 0)
+    - pylint --rcfile=ci/pylintrc analysis | tail -n 3 && (exit 0)
 
     - echo "========== Codestyle check (force pass) =========="
     - pycodestyle --max-line-length=1000 analysis || (exit 0)
