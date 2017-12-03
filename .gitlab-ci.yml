@@ -48,8 +48,8 @@ test27:
 
 #    test build docs
     - echo "========== Building docs for test =========="
-    - conda install sphinx sphinx_rtd_theme  | tail -n 1
-    - ./docs/make_docs.sh | tail -n 5
+    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'test utils installed'
+    - bash docs/make_docs.sh | tail -n 5
 
     - echo "========== All tests finished =========="
 
@@ -93,8 +93,8 @@ test36:
 
 #    test build docs
     - echo "========== Building docs for test =========="
-    - conda install sphinx sphinx_rtd_theme  | tail -n 1
-    - ./docs/make_docs.sh | tail -n 5
+    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'test utils installed'
+    - bash docs/make_docs.sh | tail -n 5
 
     - echo "========== All tests finished =========="
 
@@ -132,7 +132,7 @@ build_apidoc:
   image: continuumio/miniconda3:latest
   stage: deploy
   only:
-    - setup_simple_ci  # HACK
+    - master
   script:
     - echo "========== Building docs =========="
     - echo "NotImplementedNotImplementedNotImplementedNotImplemented"
