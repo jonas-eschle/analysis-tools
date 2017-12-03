@@ -34,7 +34,7 @@ test27:
 
 #     run tests
 #    - for folder in tests/*; do pytest -s $folder; done
-    - coverage run -m pytest tests/ -- -s --ignore=test_data.py
+    - coverage run -m pytest -k "not test_load_with_weights" tests/
     - coverage report --omit=/*/anaconda*/*
 #    test build docs
     - conda install sphinx sphinx_rtd_theme
@@ -73,11 +73,12 @@ test36:
     - pip install -e .
 #    run tests
 #    - for folder in tests/*; do pytest -s $folder; done
-    - coverage run -m pytest tests/ -- -s --ignore=test_data.py
+    - coverage run -m pytest -k "not test_load_with_weights" tests/
     - coverage report --omit=/*/anaconda*/*
 #   pylint check
     - conda install pylint
-    - pylint analysis/*/*.py || exit 0
+    - pylint analysis/*/*.py || echo "========= Pylint run with errorcode > 0 ========"
+
 
 #    test build docs
     - conda install sphinx sphinx_rtd_theme
