@@ -8,85 +8,95 @@ test27:
   image: continuumio/miniconda:latest
   stage: test
   script:
-#   setup env
-    - "ls -la"
-    - apt install -y python-dev
+    - echo "========== Setting up environment =========="
+    - apt install -y python-dev | tail -n 1
     - conda config --set always_yes yes --set changeps1 no
-#    - conda update conda
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-#    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'activated'
-    - source activate test27 && echo 'activated'
-#    - conda install python=2.7 root=6 root_numpy
-#   install test utilities
-    - conda install pytest coverage > tmp.txt && echo 'activated'
-#   install package
-#   HACK, psutil and subprocess32 fail to build currently
-    - conda install psutil subprocess32 > tmp.txt && echo 'activated'
-#    HACK, install manually deps
-    - conda install h5py pandas > tmp.txt && echo 'activated'
-#   HACK
-#    - conda install -c serge-sans-paille gcc_49
-#    - pip install git+https://github.com/ibab/root_pandas.git
-    - pip install -e .
+    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+    - source activate test27 > tmp.txt && echo 'activated'
 
-
-#     run tests
-#    - for folder in tests/*; do pytest -s $folder; done
-    - coverage run -m pytest -k "not test_load_with_weights" tests/
-    - coverage report --omit=/*/anaconda*/*
-#    test build docs
-    - conda install sphinx sphinx_rtd_theme
-    - ./docs/make_docs.sh
-
-
-test36:
-#  image: continuumio/anaconda3
-  image: continuumio/miniconda3:latest
-  stage: test
-  script:
-    - "ls -la"
-#   setup env
-    - apt install -y python3-dev
-    - conda config --set always_yes yes --set changeps1 no
-#    - conda update conda
-    - conda info -a
-    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-#    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake> tmp.txt
-    - source activate test36 > tmp.txt && echo 'activated'
-#    - conda install python=3.6 root=6 root-numpy
-
-#   install test utilities
-    - conda install pytest coverage > tmp.txt && echo 'activated'
-#   install package
 #   HACK, psutil fails to build currently
-    - conda install psutil > tmp.txt && echo 'activated'
-#    - pip install git+https://github.com/ibab/root_pandas.git
-# HACK: install deps manually...
-#    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
-    - conda install h5py pandas > tmp.txt && echo 'activated'
-#   HACK
-#    - conda install -c serge-sans-paille gcc_49
+    - echo "========== HACK install psutil (fails to build) =========="
+    - conda install psutil > tmp.txt && echo 'psutil installed'
 
+#   HACK, subprocess32 fails to build currently
+    - echo "========== HACK install subprocess32 (fails to build) =========="
+    - conda install subprocess32 > tmp.txt && echo 'subprocess32 installed'
+
+    - echo "========== Install analysis =========="
     - pip install -e .
+
+#   install test utilities
+    - echo "========== Install test utilities =========="
+    - conda install pytest coverage | tail -n 1
 #    run tests
 
     - echo "========== Running tests with coverage =========="
-#    - for folder in tests/*; do pytest -s $folder; done
-    - coverage run -m pytest -k "not test_load_with_weights" tests/
-    - coverage report --omit=/*/anaconda*/*
+    - coverage run -m pytest -k "not test_load_with_weights" tests/ | tail -n 1 # excluding a test in test_data.py
+    - coverage report analysis/*/*.py
 #   pylint check
-    - echo "========== Pylint check =========="
-    - conda install pylint
+    - echo "========== Install static checker =========="
+    - conda install pylint pycodestyle | tail -n 1
+
+    - echo "========== Pylint check (force pass) =========="
     - pylint analysis/*/*.py | tail -n 3 && (exit 0)
 
+    - echo "========== Codestyle check =========="
+    - pycodestyle --statistics -qq --max-line-length=100 analysis
+    - pycodestyle --max-line-length=1000 analysis
 
 #    test build docs
-    - echo "========== Building docs =========="
-    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'activated'
+    - echo "========== Building docs for test =========="
+    - conda install sphinx sphinx_rtd_theme  | tail -n 1
     - ./docs/make_docs.sh | tail -n 5
+
+    - echo "========== All tests finished =========="
+
+test36:
+  image: continuumio/miniconda3:latest
+  stage: test
+  script:
+    - echo "========== Setting up environment =========="
+    - apt install -y python3-dev | tail -n 1
+    - conda config --set always_yes yes --set changeps1 no
+    - conda info -a
+    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
+    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+    - source activate test36 > tmp.txt && echo 'activated'
+
+#   HACK, psutil fails to build currently
+    - echo "========== HACK install psutil (fails to build) =========="
+    - conda install psutil > tmp.txt && echo 'psutil installed'
+
+    - echo "========== Install analysis =========="
+    - pip install -e .
+
+#   install test utilities
+    - echo "========== Install test utilities =========="
+    - conda install pytest coverage | tail -n 1
+#    run tests
+
+    - echo "========== Running tests with coverage =========="
+    - coverage run -m pytest -k "not test_load_with_weights" tests/ | tail -n 1 # excluding a test in test_data.py
+    - coverage report analysis/*/*.py
+#   pylint check
+    - echo "========== Install static checker =========="
+    - conda install pylint pycodestyle | tail -n 1
+
+    - echo "========== Pylint check (force pass) =========="
+    - pylint analysis/*/*.py | tail -n 3 && (exit 0)
+
+    - echo "========== Codestyle check =========="
+    - pycodestyle --statistics -qq --max-line-length=100 analysis
+    - pycodestyle --max-line-length=1000 analysis
+
+#    test build docs
+    - echo "========== Building docs for test =========="
+    - conda install sphinx sphinx_rtd_theme  | tail -n 1
+    - ./docs/make_docs.sh | tail -n 5
+
+    - echo "========== All tests finished =========="
 
 
 test36_data_fail:
@@ -94,44 +104,45 @@ test36_data_fail:
   stage: test
   allow_failure: true
   script:
-    - "ls -la"
-#   setup env
-    - apt install -y python3-dev
+    - echo "========== Setting up environment =========="
+    - apt install -y python3-dev  | tail -n 1
     - conda config --set always_yes yes --set changeps1 no
-#    - conda update conda
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-#    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
-    - conda create -n test36_data_fail python=3.6 root=6 root-numpy libgcc gcc make cmake> tmp.txt
-    - source activate test36_data_fail > tmp.txt && echo 'activated'
-#    - conda install python=3.6 root=6 root-numpy
+    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+    - source activate test36 > tmp.txt && echo 'activated'
+
+#   HACK, psutil fails to build currently
+    - echo "========== HACK install psutil (fails to build) =========="
+    - conda install psutil > tmp.txt && echo 'psutil installed'
+
+    - echo "========== Install analysis =========="
+    - pip install -e .
 
 #   install test utilities
-    - conda install pytest coverage > tmp.txt && echo 'activated'
-#   install package
-#   HACK, psutil fails to build currently
-    - conda install psutil > tmp.txt && echo 'activated'
-#    - pip install git+https://github.com/ibab/root_pandas.git
-# HACK: install deps manually...
-#    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
-    - conda install h5py pandas > tmp.txt && echo 'activated'
-#   HACK
-#    - conda install -c serge-sans-paille gcc_49
-
-    - pip install -e .
+    - echo "========== Install test utilities =========="
+    - conda install pytest coverage | tail -n 1
 #    run tests
-#    - for folder in tests/*; do pytest -s $folder; done
-    - pytest -s tests/test_data.py
 
-# Pylint does not yet work, throws error for a file in analysis/data
+    - echo "========== Running tests with coverage =========="
+    - pytest -s tests/test_data.py  # fails for some unknown reason
+
+
+build_apidoc:
+  image: continuumio/miniconda3:latest
+  stage: deploy
+  only:
+    - master
+  script:
+    - echo "========== Building docs =========="
+    - echo "NotImplementedNotImplementedNotImplementedNotImplemented"
+    - echo "========== Finished building and deploying docs =========="
 
 # Job: run PyLint
 
-run_pylint:
-  image: continuumio/miniconda3:latest
-  type: test
-  script:
-    - conda install -y pylint
-    - pylint analysis/*/*.py || echo "========= Pylint run with errorcode > 0 ========"
-    - echo "is this still seen?"
-
+#run_pylint:
+#  image: continuumio/miniconda3:latest
+#  type: test
+#  script:
+#    - conda install -y pylint
+#    - pylint analysis/*/*.py || echo "========= Pylint run with errorcode > 0 ========"
