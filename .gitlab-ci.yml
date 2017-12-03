@@ -33,8 +33,8 @@ test27:
 
 
 #     run tests
-    - for folder in tests/*; do pytest -s $folder; done
-    - coverage run -m pytest tests/
+#    - for folder in tests/*; do pytest -s $folder; done
+    - coverage run -m pytest tests/ -- -s --ignore=test_data.py
     - coverage report --omit=/*/anaconda*/*
 #    test build docs
     - conda install sphinx sphinx_rtd_theme
@@ -72,8 +72,8 @@ test36:
 
     - pip install -e .
 #    run tests
-    - for folder in tests/*; do pytest -s $folder; done
-    - coverage run -m pytest tests/
+#    - for folder in tests/*; do pytest -s $folder; done
+    - coverage run -m pytest tests/ -- -s --ignore=test_data.py
     - coverage report --omit=/*/anaconda*/*
 #   pylint check
     - conda install pylint
