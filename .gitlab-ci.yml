@@ -33,7 +33,7 @@ test27:
 #    run tests
 
     - echo "========== Running tests with coverage =========="
-    - coverage run -m pytest -k "not test_load_with_weights" tests/ | tail -n 1 # excluding a test in test_data.py
+    - coverage run -m pytest -k "not test_load_with_weights" tests/ # excluding a test in test_data.py
     - coverage report analysis/*/*.py
 #   pylint check
     - echo "========== Install static checker =========="
@@ -49,7 +49,7 @@ test27:
 #    test build docs
     - echo "========== Building docs for test =========="
     - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'test utils installed'
-    - bash docs/make_docs.sh | tail -n 5
+    - bash docs/make_docs.sh 2>&1 | tail -n 15
 
     - echo "========== All tests finished =========="
 
@@ -78,7 +78,7 @@ test36:
 
 #    run tests
     - echo "========== Running tests with coverage =========="
-    - coverage run -m pytest -k "not test_load_with_weights" tests/ | tail -n 1 # excluding a test in test_data.py
+    - coverage run -m pytest -k "not test_load_with_weights" tests/ # excluding a test in test_data.py
     - coverage report analysis/*/*.py
 #   pylint check
     - echo "========== Install static checker =========="
@@ -93,8 +93,8 @@ test36:
 
 #    test build docs
     - echo "========== Building docs for test =========="
-    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'test utils installed'
-    - bash docs/make_docs.sh | tail -n 5
+    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'docs build utils installed'
+    - bash docs/make_docs.sh 2>&1 | tail -n 15
 
     - echo "========== All tests finished =========="
 
@@ -125,7 +125,7 @@ test36_data_fail:
 
 #    run tests
     - echo "========== Running tests with coverage =========="
-    - pytest -s tests/test_data.py  # fails for some unknown reason
+    - pytest tests/test_data.py  # fails for some unknown reason
 
 
 build_apidoc:
