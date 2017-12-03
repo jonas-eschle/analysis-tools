@@ -72,19 +72,56 @@ test36:
 
     - pip install -e .
 #    run tests
+
+    - echo "========== Running tests with coverage =========="
 #    - for folder in tests/*; do pytest -s $folder; done
     - coverage run -m pytest -k "not test_load_with_weights" tests/
     - coverage report --omit=/*/anaconda*/*
 #   pylint check
+    - echo "========== Pylint check =========="
     - conda install pylint
-    - pylint analysis/*/*.py | tail -n 3
+    - pylint analysis/*/*.py | tail -n 3 && (exit 0)
 
 
 #    test build docs
+    - echo "========== Building docs =========="
     - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'activated'
-    - ./docs/make_docs.sh
-#autodoc36:
-#  image: continuumio/miniconda3:latest
+    - ./docs/make_docs.sh | tail -n 5
+
+
+test36_data_fail:
+  image: continuumio/miniconda3:latest
+  stage: test
+  allow_failure: true
+  script:
+    - "ls -la"
+#   setup env
+    - apt install -y python3-dev
+    - conda config --set always_yes yes --set changeps1 no
+#    - conda update conda
+    - conda info -a
+    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
+#    - conda config --add channels https://conda.anaconda.org/nlesc/label/dev
+    - conda create -n test36_data_fail python=3.6 root=6 root-numpy libgcc gcc make cmake> tmp.txt
+    - source activate test36_data_fail > tmp.txt && echo 'activated'
+#    - conda install python=3.6 root=6 root-numpy
+
+#   install test utilities
+    - conda install pytest coverage > tmp.txt && echo 'activated'
+#   install package
+#   HACK, psutil fails to build currently
+    - conda install psutil > tmp.txt && echo 'activated'
+#    - pip install git+https://github.com/ibab/root_pandas.git
+# HACK: install deps manually...
+#    - conda install psutil h5py PyYAML seaborn > tmp.txt && echo 'activated'
+    - conda install h5py pandas > tmp.txt && echo 'activated'
+#   HACK
+#    - conda install -c serge-sans-paille gcc_49
+
+    - pip install -e .
+#    run tests
+#    - for folder in tests/*; do pytest -s $folder; done
+    - pytest -s tests/test_data.py
 
 # Pylint does not yet work, throws error for a file in analysis/data
 
