@@ -5,7 +5,7 @@ pip install diff_cover > tmp.txt && echo 'diff code checker installed'
 
 echo "========== Pylint check FULL =========="
 pylint --rcfile=ci/pylintrc --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" analysis > pylint_report.txt && (exit 0)
-tail -n 3
+tail -n 3 pylint_report.txt
 
 echo "========== Pylint check DIFF =========="
 diff-quality --violations=pylint --fail-under=95 pylint_report.txt --options="--rcfile=ci/pylintrc"
