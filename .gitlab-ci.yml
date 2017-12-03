@@ -9,7 +9,7 @@ test27:
   stage: test
   script:
     - echo "========== Setting up environment =========="
-    - apt install -y python-dev | tail -n 1
+    - apt install -y python-dev > tmp.txt && echo 'apt deps installed'
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
@@ -29,7 +29,7 @@ test27:
 
 #   install test utilities
     - echo "========== Install test utilities =========="
-    - conda install pytest coverage | tail -n 1
+    - conda install pytest coverage > tmp.txt && echo 'test utils installed'
 #    run tests
 
     - echo "========== Running tests with coverage =========="
@@ -37,7 +37,7 @@ test27:
     - coverage report analysis/*/*.py
 #   pylint check
     - echo "========== Install static checker =========="
-    - conda install pylint pycodestyle | tail -n 1
+    - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
 
     - echo "========== Pylint check (force pass) =========="
     - pylint analysis/*/*.py | tail -n 3 && (exit 0)
@@ -58,7 +58,7 @@ test36:
   stage: test
   script:
     - echo "========== Setting up environment =========="
-    - apt install -y python3-dev | tail -n 1
+    - apt install -y python3-dev  > tmp.txt && echo 'apt deps installed'
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
@@ -74,15 +74,15 @@ test36:
 
 #   install test utilities
     - echo "========== Install test utilities =========="
-    - conda install pytest coverage | tail -n 1
-#    run tests
+    - conda install pytest coverage > tmp.txt && echo 'test utils installed'
 
+#    run tests
     - echo "========== Running tests with coverage =========="
     - coverage run -m pytest -k "not test_load_with_weights" tests/ | tail -n 1 # excluding a test in test_data.py
     - coverage report analysis/*/*.py
 #   pylint check
     - echo "========== Install static checker =========="
-    - conda install pylint pycodestyle | tail -n 1
+    - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
 
     - echo "========== Pylint check (force pass) =========="
     - pylint analysis/*/*.py | tail -n 3 && (exit 0)
@@ -105,7 +105,7 @@ test36_data_fail:
   allow_failure: true
   script:
     - echo "========== Setting up environment =========="
-    - apt install -y python3-dev  | tail -n 1
+    - apt install -y python3-dev  > tmp.txt && echo 'apt deps installed'
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
@@ -121,9 +121,9 @@ test36_data_fail:
 
 #   install test utilities
     - echo "========== Install test utilities =========="
-    - conda install pytest coverage | tail -n 1
-#    run tests
+    - conda install pytest coverage > tmp.txt && echo 'test utils installed'
 
+#    run tests
     - echo "========== Running tests with coverage =========="
     - pytest -s tests/test_data.py  # fails for some unknown reason
 
@@ -132,7 +132,7 @@ build_apidoc:
   image: continuumio/miniconda3:latest
   stage: deploy
   only:
-    - master
+    - setup_simple_ci  # HACK
   script:
     - echo "========== Building docs =========="
     - echo "NotImplementedNotImplementedNotImplementedNotImplemented"
