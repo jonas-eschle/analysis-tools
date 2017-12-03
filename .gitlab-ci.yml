@@ -83,7 +83,7 @@ test36:
 #   pylint check
     - echo "========== Install static checker =========="
     - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
-    - pip install pip install diff_cover > tmp.txt && echo 'diff code checker installed'
+    - pip install diff_cover > tmp.txt && echo 'diff code checker installed'
 
     - echo "========== Pylint check (force pass) =========="
     - pylint --rcfile=ci/pylintrc analysis > pylint_report.txt && (exit 0)
