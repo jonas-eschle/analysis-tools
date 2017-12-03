@@ -53,6 +53,7 @@ setup(name='analysis',
                         'matplotlib',
                         'seaborn'],
       packages=['analysis'],
+      data_files=['LICENSE'],
       zip_safe=False)
 
 # EOFpi
