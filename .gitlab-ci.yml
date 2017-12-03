@@ -33,7 +33,7 @@ test27:
 
 
 #     run tests
-    - for folder in tests/*; do pytest $folder; done
+    - for folder in tests/*; do pytest -s $folder; done
     - coverage run -m pytest tests/
     - coverage report --omit=/*/anaconda*/*
 #    test build docs
@@ -72,7 +72,7 @@ test36:
 
     - pip install -e .
 #    run tests
-    - for folder in tests/*; do pytest $folder; done
+    - for folder in tests/*; do pytest -s $folder; done
     - coverage run -m pytest tests/
     - coverage report --omit=/*/anaconda*/*
 #   pylint check
