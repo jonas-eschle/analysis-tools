@@ -27,31 +27,11 @@ test27:
     - echo "========== Install analysis =========="
     - pip install -e .
 
-#   install test utilities
-    - echo "========== Install test utilities =========="
-    - conda install pytest coverage > tmp.txt && echo 'test utils installed'
-#    run tests
+    - bash ci/test_runner.sh
 
-    - echo "========== Running tests with coverage =========="
-    - coverage run -m pytest -k "not test_load_with_weights" tests/ # excluding a test in test_data.py
-    - coverage report analysis/*/*.py
-#   pylint check
     - bash ci/static_checker.sh
 
-#    - echo "========== Install static checker =========="
-#    - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
-#
-#    - echo "========== Pylint check (force pass) =========="
-#    - pylint --rcfile=ci/pylintrc analysis | tail -n 3 && (exit 0)
-#
-#    - echo "========== Codestyle check (force pass) =========="
-#    - pycodestyle --max-line-length=1000 analysis || (exit 0)
-#    - pycodestyle --statistics -qq --max-line-length=100 analysis || (exit 0)
-
-#    test build docs
-    - echo "========== Building docs for test =========="
-    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'test utils installed'
-    - bash docs/make_docs.sh 2>&1 | tail -n 15
+    - bash ci/testbuild_docs.sh
 
     - echo "========== All tests finished =========="
 
@@ -74,34 +54,12 @@ test36:
     - echo "========== Install analysis =========="
     - pip install -e .
 
-#   install test utilities
-    - echo "========== Install test utilities =========="
-    - conda install pytest coverage > tmp.txt && echo 'test utils installed'
+    - bash ci/test_runner.sh
 
-#    run tests
-    - echo "========== Running tests with coverage =========="
-    - coverage run -m pytest -k "not test_load_with_weights" tests/ # excluding a test in test_data.py
-    - coverage report analysis/*/*.py
-#   pylint check
     - bash ci/static_checker.sh
-#    - echo "========== Install static checker =========="
-#    - conda install pylint pycodestyle > tmp.txt && echo 'static code checker installed'
-#    - pip install diff_cover > tmp.txt && echo 'diff code checker installed'
-#
-#    - echo "========== Pylint check (force pass) =========="
-#    - pylint --rcfile=ci/pylintrc analysis > pylint_report.txt && (exit 0)
-#    - tail -n 3
-#    - diff-quality --violations=pylint --fail-under=80 pylint_report.txt --options="--rcfile=ci/pylintrc"
-#
-#    - echo "========== Codestyle check (force pass) =========="
-#    - pycodestyle --max-line-length=1000 analysis > report_pycodestyle.txt || (exit 0)
-#    - pycodestyle --statistics -qq --max-line-length=100 analysis || (exit 0)
-#    - diff-quality --violations=pycodestyle --fail-under=80 report_pycodestyle.txt  --options="--max-line-length=100"
 
-#    test build docs
-    - echo "========== Building docs for test =========="
-    - conda install sphinx sphinx_rtd_theme > tmp.txt && echo 'docs build utils installed'
-    - bash docs/make_docs.sh 2>&1 | tail -n 15
+    - bash ci/testbuild_docs.sh
+
 
     - echo "========== All tests finished =========="
 
