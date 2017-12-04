@@ -9,7 +9,6 @@
 from __future__ import print_function, division, absolute_import
 
 from setuptools import setup
-
 setup(name='analysis',
       version='2.0',
       description='Generic analysis package',

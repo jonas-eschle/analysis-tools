@@ -23,9 +23,9 @@ from analysis.data import get_data
 @pytest.fixture
 def pandas_weights():
     """Dataframe containing weights."""
-    return pd.DataFrame({'half': [0.5]*1000,
-                         'quarter': [0.25]*1000,
-                         'asym': [0.5]*500 + [0.25]*500})
+    return pd.DataFrame({'half': [0.5] * 1000,
+                         'quarter': [0.25] * 1000,
+                         'asym': [0.5] * 500 + [0.25] * 500})
 
 
 @contextlib.contextmanager
@@ -71,7 +71,6 @@ def test_load_with_weights(pandas_weights):
                          'output-format': 'root',
                          'input-type': 'pandas',
                          'weights-to-normalize': ['half', 'quarter', 'asym']})
-
         if not data.isWeighted():
             return False
         # Correct normalization

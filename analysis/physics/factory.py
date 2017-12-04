@@ -294,7 +294,8 @@ class BaseFactory(object):
             self._parameter_names[base_name] = new_name
         return all_good
 
-    def _add_superscript(self, name, superscript, old_first=True):
+    @staticmethod
+    def _add_superscript(name, superscript, old_first=True):
         subscript_match = re.search(r'\^{(.*?)}', name)
         if subscript_match:
             new_name = re.sub(r'\^{(.*?)}',

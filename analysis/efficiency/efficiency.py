@@ -229,6 +229,7 @@ class Efficiency(object):
             for key in sorted(list(conv.keys()), key=lambda item: -len(item)):
                 # python 2/3 compatibility layer, alt: from builtins import str
                 if sys.version_info[0] < 3:
+                    # noinspection PyCompatibility
                     escape_chars.append(unicode(key))
                 else:
                     escape_chars.append(str(key))
