@@ -9,15 +9,12 @@
 
 from collections import OrderedDict
 import copy
-import os
-import warnings
 
 import numpy as np
-import pandas as pd
 
 from analysis.utils.config import load_config, write_config, ConfigError
 from analysis.utils.root import iterate_roocollection
-from analysis.utils.paths import get_fit_result_path, get_toy_fit_path
+from analysis.utils.paths import get_fit_result_path
 
 _SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
 
@@ -169,124 +166,6 @@ class FitResult(object):
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
         return self
 
-    @ensure_non_initialized
-    def from_toy_hdf(self, name, iloc=None):  # TODO: which path func?
-        """Initialize from a hdf file.
-
-        Arguments:
-            name (str): name of the hdf file
-            iloc (int): The Index based LOCation of the fit result, as
-                in :py:meth:`pd.DataFrame.iloc`
-
-        Return:
-            self
-
-        """
-        result = {}
-        # obtain dataframe
-        with pd.HDFStore(get_toy_fit_path(name), mode='r') as store:  # TODO: is toy fit path right?
-            toy_results = store['fit_results']
-        fit_results = toy_results['fit_results']
-
-        # extract the right fit
-        if iloc:
-            fit_result = fit_results.iloc[iloc]
-        elif False:
-            pass
-        else:
-            raise ValueError("No matching key is given for the toy fit result.")
-
-        fit_result = dict(fit_result)
-
-        # extract jobid, fitnum
-        jobid = fit_result.pop('jobid')
-        fitnum = fit_result.pop('fitnum')
-
-        # obtain covariance matrix
-        cov_matrix_path = os.path.join('covariance', str(jobid), str(fitnum))
-        with pd.HDFStore(get_toy_fit_path(name), mode='r') as store:
-            cov_matrix = store[cov_matrix_path]
-
-        # get toy specific values
-        seed = fit_result.pop('seed')
-        fit_strategy = fit_result.pop('fit_strategy')
-        model_name = fit_result.pop('model_name')
-
-        # store results
-        self.from_plain_dict(plain_dict=fit_result, skip_cov=True)  # skip as we have matrix, not A1
-
-        # store covariance matrix
-        self._result['covariance-matrix']['matrix'] = cov_matrix
-
-        # store toy specific values
-        self._result['jobid'] = jobid
-        self._result['fitnum'] = fitnum
-        self._result['seed'] = seed
-        self._result['fit_strategy'] = fit_strategy
-        self._result['model_name'] = model_name
-
-        self._result = result
-
-        return self
-
-    @ensure_non_initialized
-    def from_plain_dict(self, plain_dict, skip_cov=True):
-        """Initialize from a dict *plain_dict*, inverse to :py:func:`~FitResult.to_plain_dict`
-
-        Arguments:
-            plain_dict (dict): Dict containing the fit result as created by
-                :py:func:`~FitResult.to_plain_dict`
-            skip_cov (bool): If True, the covariance matrix is not stored.
-
-        Return:
-            self
-
-        """
-        # TODO: dirty extraction: relies on order: parameters, consts, other stuff
-
-        result = {}
-        plain_dict = plain_dict.copy()
-
-        # extract the parameters
-        # TODO: better extraction method?
-        possible_params = list(plain_dict.keys())
-        fit_parameters = OrderedDict()
-        while (len(possible_params) >= len(_SUFFIXES) and
-                   all(isinstance(p, str) for p in possible_params[:len(_SUFFIXES)])):
-            if len(_SUFFIXES) == 0:
-                break
-            param_name = possible_params[0][:max(len(possible_params[0]) - len(_SUFFIXES[0]), 0)]
-            if all((param_name + suf == p for p, suf in zip(possible_params, _SUFFIXES))):
-                fit_parameters[param_name] = (plain_dict.pop(name) for name in possible_params[:len(_SUFFIXES)])
-                possible_params = possible_params[len(_SUFFIXES):]
-        result['fit-parameters'] = fit_parameters
-
-        n_const_params = result.index('status_migrad')  # TODO: better limit the const params
-        result['const-parameters'] = OrderedDict(plain_dict.popitem(last=False)
-                                                 for _ in range(n_const_params))
-
-        # TODO: parameter-initial missing (not stored in hdf currently)
-
-        fit_status = {'MIGRAD', plain_dict.pop('status_migrad'),
-                      'HESSE', plain_dict.pop('status_hesse'),
-                      'MINOS', plain_dict.pop('status_minos')}
-        result['status'] = fit_status
-        result['edm'] = plain_dict.pop('edm')
-        result['covariance-matrix'] = {'quality': plain_dict.pop('cov_quality')}
-        if skip_cov:
-            plain_dict.pop('cov_matrix', None)  # to see whats left over
-        else:
-            # TODO: convert cov_matrix as it is given as A1 in to_plain_dict
-            result['covariance-matrix']['matrix'] = plain_dict['cov_matrix']
-
-        if plain_dict:  # TODO: warning? or even assert?
-            warnings.warn('Possible information loss! The following information '
-                          'was contained in the HDF but is not in the FitResult: '
-                          '{}'.format(plain_dict))
-
-        self._result = result
-        return self
-
     @ensure_initialized
     def to_yaml(self):
         """Convert fit result to YAML format.
@@ -335,11 +214,9 @@ class FitResult(object):
             pandas.DataFrame
 
         """
-        # do NOT change order below
         pandas_dict = OrderedDict(((param_name + suffix, val)
                                    for param_name, param in self._result['fit-parameters'].items()
                                    for val, suffix in zip(param, _SUFFIXES)))
-        # do NOT change order below
         pandas_dict.update(OrderedDict((param_name, val) for param_name, val
                             in self._result['const-parameters'].items()))
         pandas_dict['status_migrad'] = self._result['status'].get('MIGRAD', -1)
