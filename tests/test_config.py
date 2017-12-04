@@ -11,12 +11,16 @@ import contextlib
 import tempfile
 import os
 import atexit
+import sys
 
 import yaml
 import yamlordereddictloader
 import pytest
 
 from analysis.utils.config import load_config, ConfigError
+
+if sys.version_info[0] < 3:
+    FileNotFoundError = OSError  # PY2 "backport"
 
 
 def create_tempfile(suffix=None):
@@ -109,6 +113,7 @@ def result_simple_signal():
     filename = dump_yaml_str(result_str)
     return filename
 
+
 @pytest.fixture
 def config_simple_load(result_simple):
     config_str = """
@@ -126,7 +131,8 @@ def config_simple_load(result_simple):
         background:
             pdf:
                 mass:
-                    load: {yaml_res}:result/bkg_pdf""".format(yaml_res=result_simple)  # tempfile name
+                    load: {yaml_res}:result/bkg_pdf""".format(
+        yaml_res=result_simple)  # tempfile name
     filename = dump_yaml_str(config_str)
 
     return filename
@@ -147,10 +153,12 @@ def config_simple_load_signal(result_simple_signal):
                             n1: 5.6689 2 9
         background:
             pdf:
-                load: {yaml_res}:background/pdf""".format(yaml_res=result_simple_signal)  # tempfile name
+                load: {yaml_res}:background/pdf""".format(
+        yaml_res=result_simple_signal)  # tempfile name
     filename = dump_yaml_str(config_str)
 
     return filename
+
 
 @pytest.fixture
 def config_simple_fail_noload(result_simple):
@@ -166,7 +174,8 @@ def config_simple_fail_noload(result_simple):
         background:
             pdf:
                 mass:
-                    load: {yaml_res}:result/bkg_pdf""".format(yaml_res=result_simple)  # tempfile name
+                    load: {yaml_res}:result/bkg_pdf""".format(
+        yaml_res=result_simple)  # tempfile name
     filename = dump_yaml_str(config_str)
 
     return filename
@@ -205,9 +214,11 @@ def test_simple(config_simple_load, config_simple_load_target):
     config = load_config(config_simple_load)
     assert config == config_simple_load_target
 
+
 def test_simple_signal(config_simple_load_signal, config_simple_load_target):
     config = load_config(config_simple_load_signal)
     assert config == config_simple_load_target
+
 
 def test_fails_loudly(config_simple_fail_noload):
     with pytest.raises(ConfigError) as error_info:
