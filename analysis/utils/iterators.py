@@ -5,6 +5,9 @@
 # @date   09.07.2013
 # =============================================================================
 """Various iterators for python sequences."""
+from __future__ import print_function, division, absolute_import
+
+import sys
 
 
 def pairwise(iterable):
@@ -23,7 +26,10 @@ def pairwise(iterable):
     # pylint: disable=C0103
     a, b = itertools.tee(iterable)
     next(b, None)
-    return itertools.izip(a, b)
+    if sys.version_info[0] < 3:
+        return itertools.izip(a, b)
+    else:
+        return zip(a, b)
 
 
 def chunks(iterable, chunk_size):
@@ -37,7 +43,11 @@ def chunks(iterable, chunk_size):
         sequence: chunk_size-sized chunk of ``iterable``.
 
     """
-    for index in xrange(0, len(iterable), int(chunk_size)):
+    if sys.version_info[0] < 3:
+        iter_range = xrange
+    else:
+        iter_range = range
+    for index in iter_range(0, len(iterable), int(chunk_size)):
         yield iterable[index:index+int(chunk_size)]
 
 # EOF

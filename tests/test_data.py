@@ -6,6 +6,7 @@
 # @date   16.05.2017
 # =============================================================================
 """Test data-related funcionality."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import tempfile
@@ -22,9 +23,9 @@ from analysis.data import get_data
 @pytest.fixture
 def pandas_weights():
     """Dataframe containing weights."""
-    return pd.DataFrame({'half': [0.5]*1000,
-                         'quarter': [0.25]*1000,
-                         'asym': [0.5]*500 + [0.25]*500})
+    return pd.DataFrame({'half': [0.5] * 1000,
+                         'quarter': [0.25] * 1000,
+                         'asym': [0.5] * 500 + [0.25] * 500})
 
 
 @contextlib.contextmanager
@@ -47,7 +48,7 @@ def test_load_with_weights(pandas_weights):
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': 'half'})
+                         'weights-to-normalize': 'half'})
         assert data.isWeighted()
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)
@@ -58,32 +59,18 @@ def test_load_with_weights(pandas_weights):
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': ['half', 'quarter'],
-                         'weight_var': 'weight'})
+                         'weights-to-normalize': ['half', 'quarter']})
         assert data.isWeighted()
         assert data.sumEntries() == 1000.0  # Correct normalization
         data.get(0)
         assert data.weight() == 1.0  # Since all weights are equal
-        # This should fail
-        try:
-            data = get_data({'name': 'Test',
-                             'source': file_name,
-                             'tree': 'ds',
-                             'output-format': 'root',
-                             'input-type': 'pandas',
-                             'weights': ['half', 'quarter']})
-        except KeyError:
-            pass
-        else:
-            assert False
         # And now product of the three to make sure it's not chance
         data = get_data({'name': 'Test',
                          'source': file_name,
                          'tree': 'ds',
                          'output-format': 'root',
                          'input-type': 'pandas',
-                         'weights': ['half', 'quarter', 'asym'],
-                         'weight_var': 'weight'})
+                         'weights-to-normalize': ['half', 'quarter', 'asym']})
         if not data.isWeighted():
             return False
         # Correct normalization
@@ -93,6 +80,5 @@ def test_load_with_weights(pandas_weights):
         assert data.weight() == 1.3333333333333333
         data.get(999)
         assert data.weight() == 0.6666666666666666
-
 
 # EOF

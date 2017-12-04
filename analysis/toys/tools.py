@@ -6,6 +6,7 @@
 # @date   14.03.2017
 # =============================================================================
 """Common tools for managing toys."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import contextlib2

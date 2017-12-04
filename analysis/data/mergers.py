@@ -6,6 +6,7 @@
 # @date   26.04.2017
 # =============================================================================
 """Merge datasets."""
+from __future__ import print_function, division, absolute_import
 
 import pandas as pd
 import ROOT
@@ -48,7 +49,7 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
 
     Arguments:
         name (str): Dataset name.
-        name (str): Dataset title.
+        title (str): Dataset title.
         data_list (list[ROOT.RooDataSet]): Datasets to merge.
 
     Return:
@@ -73,6 +74,10 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
         output_ds.append(data)
         if destruct_data:
             destruct_object(data)
+    if name:
+        output_ds.SetName(name)
+    if title:
+        output_ds.SetTitle(title)
     return output_ds
 
 

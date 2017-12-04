@@ -16,6 +16,7 @@ The structure is fixed:
 These may just be soft links, depending on how they have been run.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import os
 import inspect
@@ -92,7 +93,11 @@ def register_path(path_type,
     # Checks
     if extension and not extension.startswith('.'):
         extension = '.' + extension
-    if len(inspect.getargspec(name_transformation).args) != 3:
+    try:  # PY3
+        name_transformation_args = inspect.getfullargspec(name_transformation).args
+    except AttributeError:  # PY2
+        name_transformation_args = inspect.getargspec(name_transformation).args
+    if len(name_transformation_args) != 3:
         raise ValueError("The name transformation function needs to have 3 arguments")
     # Register the partialled function in globals
     func_name = 'get_' + path_type + '_path'
@@ -127,7 +132,13 @@ get_efficiency_path = register_path('efficiency', ['data_files', 'efficiency'], 
 get_acceptance_path = register_path('acceptance', ['data_files', 'acceptance'], 'yaml')
 get_genlevel_mc_path = register_path('genlevel_mc', ['data_files', 'mc'], '',
                                      lambda name, args, kwargs:
-                                     os.path.join(str(kwargs['evt_type']), name))
+                                     os.path.join('{}_{}_{}_Mag{}{}'.format(str(kwargs['evt_type']),
+                                                                            kwargs['sim_version'].title(),
+                                                                            str(kwargs['year']),
+                                                                            kwargs['magnet_polarity'].title(),
+                                                                            '_with_detector'
+                                                                            if not kwargs['remove_detector'] else ''),
+                                                  name))
 get_plot_style_path = register_path('plot_style', ['data_files', 'styles'], 'mplstyle',
                                     lambda name, args, kwargs: 'matplotlib_' + name)
 get_fit_result_path = register_path('fit_result', ['data_files', 'fit'], 'yaml')

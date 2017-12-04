@@ -6,6 +6,7 @@
 # @date   16.01.2017
 # =============================================================================
 """Fit-related utils."""
+from __future__ import print_function, division, absolute_import
 
 import pandas as pd
 
