@@ -288,11 +288,12 @@ def configure_model(config, shared_vars=None, external_vars=None):
                     sh_vars['parameters'].update(shared_vars['parameters'])
                 else:
                     sh_vars['parameters'] = shared_vars['parameters']
-                new_factory = configure_factory(pdf_obs, pdf_config, sh_vars)
+                new_factory = configure_factory(observable=pdf_obs, config=pdf_config,
+                                                shared_vars=sh_vars)
 
     __copy_config_locked -= 1
     if initial_config:
-        new_factory.set_initial_config(config)  # Dummy method
+        new_factory.set_initial_config(config)
 
     if new_factory is None:
         raise RuntimeError()
