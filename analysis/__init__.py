@@ -6,10 +6,14 @@
 # @date   11.01.2017
 # =============================================================================
 """Generic analysis configuration."""
+from __future__ import print_function, division, absolute_import
 
 import os
 from collections import defaultdict
 
+# TODO: automative version and author
+__version__ = '3.0'
+__author__ = 'Albert Piug'
 
 __GLOBAL_VARIABLES = {}
 

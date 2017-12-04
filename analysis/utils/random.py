@@ -6,7 +6,6 @@
 # @date   07.11.2017
 # =============================================================================
 """Random generation tools."""
-
 from __future__ import print_function, division, absolute_import
 
 import sys

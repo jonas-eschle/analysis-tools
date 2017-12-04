@@ -6,6 +6,7 @@
 # @date   15.04.2017
 # =============================================================================
 """Physics factory classes."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import re
@@ -81,7 +82,7 @@ class BaseFactory(object):
         # Now, build parameters
         missing_parameters = []
         for parameter_name in self.PARAMETERS:
-            if parameter_name not in param_dict:
+            if parameter_name not in list(param_dict):
                 missing_parameters.append(parameter_name)
                 continue
             self._create_parameter(parameter_name,
@@ -293,14 +294,14 @@ class BaseFactory(object):
             self._parameter_names[base_name] = new_name
         return all_good
 
-    def _add_superscript(self, name, superscript, old_first=True):
+    @staticmethod
+    def _add_superscript(name, superscript, old_first=True):
         subscript_match = re.search(r'\^{(.*?)}', name)
-        sub_func = lambda match, name=superscript: '^{{{},{}}}'.format(match.groups()[0], name) \
-            if old_first \
-            else lambda match, name=superscript: '^{{{},{}}}'.format(name, match.groups()[0])
         if subscript_match:
             new_name = re.sub(r'\^{(.*?)}',
-                              sub_func,
+                              lambda match, name=superscript: '^{{{};{}}}'.format(match.groups()[0], name)
+                              if old_first
+                              else lambda match, name=superscript: '^{{{};{}}}'.format(name, match.groups()[0]),
                               name)
         else:
             new_name = '{}^{{{}}}'.format(name, superscript)
@@ -308,10 +309,12 @@ class BaseFactory(object):
 
     def rename_children_parameters(self, naming_scheme=None):
         if not naming_scheme:
-            naming_scheme = self._children.viewitems()
+            naming_scheme = list(self._children.items())
+            # TODO py23: reasonable performance loss from items?
+            # naming_scheme = self._children.viewitems()
         for label, factory in list(naming_scheme):
             # Recursively rename children
-            factory.rename_children_parameters(('{},{}'.format(label, child_name), child)
+            factory.rename_children_parameters(('{};{}'.format(label, child_name), child)
                                                for child_name, child in factory.get_children().items())
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
@@ -760,9 +763,9 @@ class SumPhysicsFactory(BaseFactory):
         self._children = factories
         # Set observables
         observables = {obs.getStringAttribute('originalName'): obs
-                       for obs in self._children.values()[0].get_observables()}
+                       for obs in list(self._children.values())[0].get_observables()}
         for obs_name, obs in observables.items():
-            for child in self._children.values()[1:]:
+            for child in list(self._children.values())[1:]:
                 child.set_observable(obs_name, obs=obs)
         # Set yields
         yield_ = None
@@ -778,7 +781,7 @@ class SumPhysicsFactory(BaseFactory):
                 child.set_yield_var(children_yields[child_name])
         elif (len(factories) - len(children_yields)) == 1:
             # Check order is correct
-            if self._children.keys()[-1] in children_yields.keys():
+            if list(self._children.keys())[-1] in children_yields.keys():
                 logger.error("The last child should not be in `children_keys` to ensure consistency.")
                 raise ValueError("Wrong PDF ordering")
             # Store the fractions and propagate
@@ -791,7 +794,7 @@ class SumPhysicsFactory(BaseFactory):
                     yield_val.SetTitle(yield_val.GetTitle().replace('Yield', 'Fraction'))
             self['Fractions'] = yield_values
             for child_name, child in self._children.items():
-                if child_name in children_yields.keys():
+                if child_name in children_yields:
                     child_yield, child_constraint = children_yields[child_name]
                     child['Fraction'] = child_yield
                     child._constraints.add(child_constraint)
@@ -853,7 +856,7 @@ class SumPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        return self._children.values()[0].get_observables()
+        return list(self._children.values())[0].get_observables()
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         for child in self._children.values():
@@ -923,7 +926,7 @@ class SumPhysicsFactory(BaseFactory):
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
-        return self._children.values()[0].transform_dataset(dataset)
+        return list(self._children.values())[0].transform_dataset(dataset)
 
 
 # Sum physics factory
@@ -1006,7 +1009,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
         """
         obs_list = OrderedDict()
-        for child in self._children.values():
+        for child in list(self._children.values()):
             for child_obs in child.get_observables():
                 if child_obs.GetName() not in self._objects:
                     obs_list[child_obs.GetName()] = self.set(child_obs.GetName(), child_obs)
@@ -1050,7 +1053,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for param in factory.get_fit_parameters(extended))
 
     def transform_dataset(self, dataset):
@@ -1080,7 +1083,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
             cat_var = 'category'
             if cat_var not in dataset.columns:
                 raise KeyError("Category var not found in dataset -> {}".format(self._category.GetName()))
-        categories = dataset.groupby(cat_var).indices.keys()
+        categories = list(dataset.groupby(cat_var).indices.keys())
         # A simple check
         if not set(categories).issubset(set(self._children.keys())):
             raise ValueError("Dataset contains categories not defined in the SimultaneousPhysicsFactory")

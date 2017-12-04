@@ -6,6 +6,7 @@
 # @date   11.07.2017
 # =============================================================================
 """Test the fit module."""
+from __future__ import print_function, division, absolute_import
 
 import pytest
 

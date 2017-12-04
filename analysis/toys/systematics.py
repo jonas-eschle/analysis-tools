@@ -6,6 +6,7 @@
 # @date   30.10.2017
 # =============================================================================
 """Systematic uncertainty toy generators."""
+from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict, defaultdict
 
@@ -226,7 +227,7 @@ class FixedParamsSyst(SystematicToys):
                 column = column+mat.shape[1]
             return output_mat
 
-        super(FixedParamsSyst, self).__init__(model, acceptance, config=config)
+        super(FixedParamsSyst, self).__init__(model, config=config, acceptance=acceptance)
         cov_matrices = []
         central_values = []
         self._param_translation = OrderedDict()

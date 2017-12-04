@@ -6,6 +6,7 @@
 # @date   16.04.2017
 # =============================================================================
 """Physics utilities."""
+from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict
 import traceback
@@ -96,7 +97,7 @@ def rename_on_recursion_end(func):
             raise RuntimeError("rename_on_recursion_end used on a non-compliant function.")
         if len([frame[2]
                 for frame in traceback.extract_stack()
-                if frame[2] == func.func_name]) == 0:
+                if frame[2] == func.__name__]) == 0:
             res_factory.rename_children_parameters()
         return res_factory
     return wrapped
@@ -139,8 +140,8 @@ def configure_model(config, shared_vars=None, external_vars=None):
         #         factory_config['parameters'] = {}
         #     factory_config['parameters'].update(params)
         if len(config['pdf']) == 1:
-            observable = config['pdf'].keys()[0]
-            factory_config = config['pdf'].values()[0]
+            observable = list(config['pdf'].keys())[0]
+            factory_config = list(config['pdf'].values())[0]
             return configure_factory(observable, factory_config, shared_vars['pdf'][observable])
         else:
             # Check the yields
@@ -190,7 +191,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         logger.debug("Found yields -> %s", yields)
         if len(factories) == 1:
             # Set the yield
-            factory_name, factory_obj = factories.items()[0]
+            factory_name, factory_obj = list(factories.items())[0]
             if factory_name in yields:
                 factory_obj.set_yield_var(yields[factory_name])
             output_factory = factory_obj
@@ -199,7 +200,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
             if (len(factories) - len(yields)) > 1:
                 raise ConfigError("Missing at least one yield in sum factory definition")
             elif (len(factories) - len(yields)) == 1:
-                if yields.keys()[-1] == factories.keys()[-1]:  # The last one should not have a yield!
+                if list(yields.keys())[-1] == list(factories.keys())[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
                 if 'yield' in config:
                     yield_ = config.pop('yield')
