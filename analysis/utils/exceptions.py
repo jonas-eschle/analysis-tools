@@ -18,10 +18,17 @@ class ConfigError(Exception):
 
 
 class DataError(Exception):
-    """Error happens in handling data."""
+    """Error in handling data."""
 
     def __init__(self, message):
         super(DataError, self).__init__(message)
+
+
+class InvalidRequestError(Exception):
+    """Invalid request made."""
+
+    def __init__(self, message):
+        super(InvalidRequestError, self).__init__(message)
 
 
 class FactoryError(Exception):
@@ -33,4 +40,3 @@ class FactoryError(Exception):
 
 class NotInitializedError(Exception):
     """Use when an object has not been initialized."""
-
