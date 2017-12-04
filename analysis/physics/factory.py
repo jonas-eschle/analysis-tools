@@ -6,8 +6,10 @@
 # @date   15.04.2017
 # =============================================================================
 """Physics factory classes."""
+from __future__ import print_function, division, absolute_import
 
 import copy
+import os
 import re
 from collections import OrderedDict
 
@@ -82,7 +84,7 @@ class BaseFactory(object):
         # Now, build parameters
         missing_parameters = []
         for parameter_name in self.PARAMETERS:
-            if parameter_name not in param_dict:
+            if parameter_name not in list(param_dict):
                 missing_parameters.append(parameter_name)
                 continue
             self._create_parameter(parameter_name,
@@ -146,7 +148,7 @@ class BaseFactory(object):
         if recursive:
             obj = self._find_object(key)
         else:
-            obj = self._objects.get(key, None)
+            obj = self._objects.get(key)
         return obj if obj else default
 
     def __getitem__(self, key):
@@ -229,6 +231,35 @@ class BaseFactory(object):
                                                 'originalName',
                                                 parameter_name))
 
+    def get_parameter(self, param_path):
+        """Recursively get a parameter.
+
+        Recursion can be specified using a path-like structure, eg,
+        `f.get_parameter('label1/signal/mass/mu')` is equivalent to
+        `f.get_children()['label1'].get_children()['signal'].get_children()['mass'].get('mu')`
+
+        Arguments:
+            param_path (str): Parameter identifier string.
+
+        Return:
+            `ROOT.RooRealVar` or `None`
+
+        Raise:
+            KeyError: If some part of the path does not exist.
+
+        """
+        path, param_name = os.path.split(param_path)
+        current_obj = self
+
+        for path_element in path.split('/'):
+            try:
+                current_obj = current_obj.get_children()[path_element]
+            except KeyError as error:
+
+                logger.error("Unknown child %s in path -> %s", path_element, path.split()[0])
+                raise
+        return current_obj.get(param_name)
+
     def get_parameter_name(self, param_id):
         """Get the name of the parameter according to the configuration.
 
@@ -265,14 +296,14 @@ class BaseFactory(object):
             self._parameter_names[base_name] = new_name
         return all_good
 
-    def _add_superscript(self, name, superscript, old_first=True):
+    @staticmethod
+    def _add_superscript(name, superscript, old_first=True):
         subscript_match = re.search(r'\^{(.*?)}', name)
-        sub_func = lambda match, name=superscript: '^{{{},{}}}'.format(match.groups()[0], name) \
-            if old_first \
-            else lambda match, name=superscript: '^{{{},{}}}'.format(name, match.groups()[0])
         if subscript_match:
             new_name = re.sub(r'\^{(.*?)}',
-                              sub_func,
+                              lambda match, name=superscript: '^{{{};{}}}'.format(match.groups()[0], name)
+                              if old_first
+                              else lambda match, name=superscript: '^{{{};{}}}'.format(name, match.groups()[0]),
                               name)
         else:
             new_name = '{}^{{{}}}'.format(name, superscript)
@@ -280,10 +311,12 @@ class BaseFactory(object):
 
     def rename_children_parameters(self, naming_scheme=None):
         if not naming_scheme:
-            naming_scheme = self._children.viewitems()
+            naming_scheme = list(self._children.items())
+            # TODO py23: reasonable performance loss from items?
+            # naming_scheme = self._children.viewitems()
         for label, factory in list(naming_scheme):
             # Recursively rename children
-            factory.rename_children_parameters(('{},{}'.format(label, child_name), child)
+            factory.rename_children_parameters(('{};{}'.format(label, child_name), child)
                                                for child_name, child in factory.get_children().items())
             parameters_to_set = {}
             for param_id in factory.PARAMETERS + ['Yield', 'Fraction']:
@@ -335,9 +368,7 @@ class BaseFactory(object):
             raise ValueError("Requested non-extended PDF, "
                              "but the factory needs to be extended")
         pdf_name = 'pdf_{}'.format(name)
-        return self.get(pdf_name) \
-            if pdf_name in self \
-            else self.set(pdf_name, self.get_unbound_pdf(name, title))
+        return self.get(pdf_name, self.set(pdf_name, self.get_unbound_pdf(name, title)))
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
@@ -367,16 +398,20 @@ class BaseFactory(object):
             logger.warning("Specified yield value but it's already defined. Ignoring.")
         # Avoid name clashes
         pdf_name = 'pdfext_{}'.format(name)
-        return self.get(pdf_name) \
-            if pdf_name in self \
-            else self.set(pdf_name, self.get_unbound_extended_pdf(name, title))
+        return self.get(pdf_name, self.set(pdf_name, self.get_unbound_extended_pdf(name, title)))
 
     def get_unbound_extended_pdf(self, name, title):
         """Get an extedned physics PDF."""
         raise NotImplementedError()
 
     def is_extended(self):
-        return 'Yield' in self
+        """Check if the factory is extended.
+
+        Return:
+            bool
+
+        """
+        return 'Yield' in self and 'Fraction' not in self
 
     def has_to_be_extended(self):
         raise NotImplementedError()
@@ -385,14 +420,13 @@ class BaseFactory(object):
         """Get the physics observables.
 
         """
-        return tuple((self.get(obs_id)
-                      if obs_id in self
-                      else self.set(obs_id, execute_and_return_self(ROOT.RooRealVar(obs_name, obs_title,
-                                                                                    obs_min, obs_max,
-                                                                                    unit),
-                                                                    'setStringAttribute',
-                                                                    'originalName',
-                                                                    obs_id)))
+        return tuple((self.get(obs_id,
+                               self.set(obs_id, execute_and_return_self(ROOT.RooRealVar(obs_name, obs_title,
+                                                                                        obs_min, obs_max,
+                                                                                        unit),
+                                                                        'setStringAttribute',
+                                                                        'originalName',
+                                                                        obs_id))))
                      for obs_id, (obs_name, obs_title, obs_min, obs_max, unit)
                      in self.OBSERVABLES.items())
 
@@ -455,17 +489,39 @@ class BaseFactory(object):
         raise NotImplementedError()
 
     def get_yield_var(self):
-        return self._objects.get('Yield', None)
+        return self._objects.get('Yield')
 
     def set_yield_var(self, yield_):
         raise NotImplementedError()
+
+    def get_yield_vars(self):
+        """Recursively get the factory's yield variables.
+
+        Order is determined by child order.
+
+        Return:
+            list[`ROOT.RooRealVar`]
+
+        Raise:
+            ValueError: If the model is not extended.
+
+        """
+        if not self.is_extended():
+            raise ValueError("Non-extended model doesn't have yields")
+        yields = []
+        if self.get_yield_var():
+            yields.append(self.get_yield_var())
+        for child in self._children.values():
+            if child.is_extended():
+                yields.extend(child.get_yield_vars())
+        return yields  # TODO: may return dict with name?
 
     def get_category_var(self):
         return self._category
 
     def get_category_vars(self):
         if not self._category:
-            return None
+            return []
         if isinstance(self._category, ROOT.RooSuperCategory):
             cats = []
             cat_iter = self._category.serverIterator()
@@ -512,7 +568,7 @@ class PhysicsFactory(BaseFactory):
     def __init__(self, config, parameters=None):
         super(PhysicsFactory, self).__init__(config, parameters)
         # Configure yields
-        if 'yield' in parameters:
+        if parameters and 'yield' in parameters:
             self.set_yield_var(parameters['yield'])
 
     def get_unbound_pdf(self, name, title):
@@ -537,7 +593,7 @@ class PhysicsFactory(BaseFactory):
         return ROOT.RooExtendPdf(name,
                                  title,
                                  self.get_pdf(name+'_{noext}', title+'_{noext}'),
-                                 self._objects['Yield'])
+                                 self['Yield'])
 
     def has_to_be_extended(self):
         return False
@@ -552,7 +608,7 @@ class PhysicsFactory(BaseFactory):
         params = self.PARAMETERS[:]
         if extended and 'Yield' in self:
             params.append('Yield')
-        return tuple(self.get(param_name) for param_name in params)
+        return tuple(self.get(param_name) for param_name in params)  # Remove default? should fail if not found
 
     def get_gen_parameters(self):
         """Get all the necessary generation parameters.
@@ -571,13 +627,13 @@ class PhysicsFactory(BaseFactory):
         else:
             if isinstance(yield_, (list, tuple)):
                 yield_ = yield_[0]
-            if isinstance(self._objects['Yield'], ROOT.RooRealVar):
+            if isinstance(self['Yield'], ROOT.RooRealVar):
                 if isinstance(yield_, ROOT.RooRealVar):
-                    self._objects['Yield'].setVal(yield_.getVal())
-                    self._objects['Yield'].SetName(yield_.GetName())
-                    self._objects['Yield'].SetTitle(yield_.GetTitle())
+                    self['Yield'].setVal(yield_.getVal())
+                    self['Yield'].SetName(yield_.GetName())
+                    self['Yield'].SetTitle(yield_.GetTitle())
                 elif isinstance(yield_, (float, int)):
-                    self._objects['Yield'].setVal(yield_)
+                    self['Yield'].setVal(yield_)
             else:
                 logger.warning("Trying to set a yield that cannot be overriden")
 
@@ -623,7 +679,7 @@ class ProductPhysicsFactory(BaseFactory):
         return ROOT.RooExtendPdf(name,
                                  title,
                                  self.get_pdf(name+'_{noext}', title+'_{noext}'),
-                                 self._objects['Yield'])
+                                 self['Yield'])
 
     def has_to_be_extended(self):
         return False
@@ -686,14 +742,14 @@ class ProductPhysicsFactory(BaseFactory):
         if isinstance(yield_, (list, tuple)):
             yield_, constraint = yield_
         if 'Yield' not in self._objects:
-            self._objects['Yield'] = yield_
+            self['Yield'] = yield_
             if constraint:
                 self._constraints.add(constraint)
         else:
-            if isinstance(self._objects['Yield'], ROOT.RooRealVar):
-                self._objects['Yield'].setVal(yield_.getVal())
-                self._objects['Yield'].SetName(yield_.GetName())
-                self._objects['Yield'].SetTitle(yield_.GetTitle())
+            if isinstance(self['Yield'], ROOT.RooRealVar):
+                self['Yield'].setVal(yield_.getVal())
+                self['Yield'].SetName(yield_.GetName())
+                self['Yield'].SetTitle(yield_.GetTitle())
             else:
                 logger.warning("Trying to set a yield that cannot be overriden")
 
@@ -742,9 +798,9 @@ class SumPhysicsFactory(BaseFactory):
         self._children = factories
         # Set observables
         observables = {obs.getStringAttribute('originalName'): obs
-                       for obs in self._children.values()[0].get_observables()}
+                       for obs in list(self._children.values())[0].get_observables()}
         for obs_name, obs in observables.items():
-            for child in self._children.values()[1:]:
+            for child in list(self._children.values())[1:]:
                 child.set_observable(obs_name, obs=obs)
         # Set yields
         yield_ = None
@@ -754,13 +810,13 @@ class SumPhysicsFactory(BaseFactory):
         if len(factories) == len(children_yields):  # Extended
             if yield_ is not None:
                 raise KeyError("Specified yield on a sum of RooExtendPdf")
-            self._objects['Yield'] = ROOT.RooAddition("Yield", "Yield", list_to_rooarglist(yield_values))
+            self['Yield'] = ROOT.RooAddition("Yield", "Yield", list_to_rooarglist(yield_values))
             self._constraints.update({constraint for _, constraint in children_yields.values()})
             for child_name, child in self._children.items():
                 child.set_yield_var(children_yields[child_name])
         elif (len(factories) - len(children_yields)) == 1:
             # Check order is correct
-            if self._children.keys()[-1] in children_yields.keys():
+            if list(self._children.keys())[-1] in children_yields.keys():
                 logger.error("The last child should not be in `children_keys` to ensure consistency.")
                 raise ValueError("Wrong PDF ordering")
             # Store the fractions and propagate
@@ -771,9 +827,9 @@ class SumPhysicsFactory(BaseFactory):
                 if yield_val.getStringAttribute('shared') != 'true':
                     yield_val.SetName(yield_val.GetName().replace('Yield', 'Fraction'))
                     yield_val.SetTitle(yield_val.GetTitle().replace('Yield', 'Fraction'))
-            self._objects['Fractions'] = yield_values
+            self['Fractions'] = yield_values
             for child_name, child in self._children.items():
-                if child_name in children_yields.keys():
+                if child_name in children_yields:
                     child_yield, child_constraint = children_yields[child_name]
                     child['Fraction'] = child_yield
                     child._constraints.add(child_constraint)
@@ -806,7 +862,7 @@ class SumPhysicsFactory(BaseFactory):
             pdfs.add(child.get_pdf(new_name, new_name))
         return ROOT.RooAddPdf(name, title,
                               pdfs,
-                              list_to_rooarglist(self._objects['Fractions']))
+                              list_to_rooarglist(self['Fractions']))
 
     def get_unbound_extended_pdf(self, name, title):
         if 'Fractions' in self:
@@ -814,7 +870,7 @@ class SumPhysicsFactory(BaseFactory):
             return ROOT.RooExtendPdf(name,
                                      title,
                                      self.get_pdf(name+'_{noext}', title+'_{noext}'),
-                                     self._objects['Yield'])
+                                     self['Yield'])
         else:
             pdfs = ROOT.RooArgList()
             for child_name, child in self._children.items():
@@ -835,7 +891,7 @@ class SumPhysicsFactory(BaseFactory):
             NotInitializedError: If `__call__` has not been called.
 
         """
-        return self._children.values()[0].get_observables()
+        return list(self._children.values())[0].get_observables()
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
         for child in self._children.values():
@@ -882,13 +938,13 @@ class SumPhysicsFactory(BaseFactory):
                                                     child['Fraction'].GetTitle().replace('Fraction', 'Yield'),
                                                     list_to_rooarglist([yield_, child['Fraction']])))
         else:
-            if isinstance(self._objects['Yield'], ROOT.RooRealVar):
+            if isinstance(self['Yield'], ROOT.RooRealVar):
                 if isinstance(yield_, ROOT.RooRealVar):
-                    self._objects['Yield'].setVal(yield_.getVal())
-                    self._objects['Yield'].SetName(yield_.GetName())
-                    self._objects['Yield'].SetTitle(yield_.GetTitle())
+                    self['Yield'].setVal(yield_.getVal())
+                    self['Yield'].SetName(yield_.GetName())
+                    self['Yield'].SetTitle(yield_.GetTitle())
                 elif isinstance(yield_, (float, int)):
-                    self._objects['Yield'].setVal(yield_)
+                    self['Yield'].setVal(yield_)
             else:
                 logger.warning("Trying to set a yield that cannot be overriden")
 
@@ -905,7 +961,7 @@ class SumPhysicsFactory(BaseFactory):
             `pandas.DataFrame`: Input dataset with the transformation applied.
 
         """
-        return self._children.values()[0].transform_dataset(dataset)
+        return list(self._children.values())[0].transform_dataset(dataset)
 
 
 # Sum physics factory
@@ -924,8 +980,8 @@ class SimultaneousPhysicsFactory(BaseFactory):
         # Check observable compatibility
         super(SimultaneousPhysicsFactory, self).__init__({}, None)
         self._category = category_var
-        self._children = {';'.join(label): factory
-                          for label, factory in factories.items()}
+        self._children = OrderedDict((';'.join(label), factory)
+                                     for label, factory in factories.items())
 
     def get_unbound_pdf(self, name, title):
         sim_pdf = ROOT.RooSimultaneous(name, title, self._category)
@@ -947,10 +1003,22 @@ class SimultaneousPhysicsFactory(BaseFactory):
                            if category.count(';') > 0
                            else category)
             yields.add(child.get_yield_var())
-        self._objects['Yield'] = ROOT.RooAddition('Yield', 'Yield', yields)
+        self['Yield'] = ROOT.RooAddition('Yield', 'Yield', yields)
         return sim_pdf
 
     def is_extended(self):
+        """Check if the factory is extended.
+
+        Children are checked. They must all be extended.
+
+        Return:
+            bool
+
+        Raise:
+            ValueError: If children are inconsistent (some extended
+                and some non-extended)
+
+        """
         children_are_extended = (child.is_extended()
                                  for child in self.get_children().values())
         if all(children_are_extended):
@@ -976,12 +1044,12 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
         """
         obs_list = OrderedDict()
-        for child in self._children.values():
+        for child in list(self._children.values()):
             for child_obs in child.get_observables():
                 if child_obs.GetName() not in self._objects:
                     obs_list[child_obs.GetName()] = self.set(child_obs.GetName(), child_obs)
                 elif child_obs.GetName() not in obs_list:
-                    obs_list[child_obs.GetName()] = self.get(child_obs.GetName())
+                    obs_list[child_obs.GetName()] = self[child_obs.GetName()]  # Should fail if not there?
         return tuple(obs_list.values())
 
     def set_observable(self, obs_id, obs=None, name=None, title=None, limits=None, units=None):
@@ -1020,7 +1088,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
 
         """
         return tuple(param
-                     for factory in self._children.values()
+                     for factory in list(self._children.values())
                      for param in factory.get_fit_parameters(extended))
 
     def transform_dataset(self, dataset):
@@ -1050,7 +1118,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
             cat_var = 'category'
             if cat_var not in dataset.columns:
                 raise KeyError("Category var not found in dataset -> {}".format(self._category.GetName()))
-        categories = dataset.groupby(cat_var).indices.keys()
+        categories = list(dataset.groupby(cat_var).indices.keys())
         # A simple check
         if not set(categories).issubset(set(self._children.keys())):
             raise ValueError("Dataset contains categories not defined in the SimultaneousPhysicsFactory")

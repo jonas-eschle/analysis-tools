@@ -6,6 +6,7 @@
 # @date   31.05.2017
 # =============================================================================
 """Batch managing utils."""
+from __future__ import print_function, division, absolute_import
 
 
 def get_batch_system(name=None):
@@ -27,7 +28,7 @@ def get_batch_system(name=None):
     """
     from analysis.batch.batch_system import BATCH_SYSTEMS
     if name:
-        batch_system = BATCH_SYSTEMS.get(name, None)
+        batch_system = BATCH_SYSTEMS.get(name)
         if batch_system:
             return batch_system
     else:

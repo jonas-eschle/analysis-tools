@@ -6,6 +6,7 @@
 # @date   13.01.2017
 # =============================================================================
 """Utilities for interacting with ROOT."""
+from __future__ import print_function, division, absolute_import
 
 import os
 
@@ -51,7 +52,7 @@ def load_library(name, lib_dirs=None, debug=False, force=False, use_mathmore=Fal
         if name == file_name:
             break
     if not os.path.exists(name):
-        raise OSError("Cannot locate library")
+        raise OSError("Cannot locate library -> {}".format(name))
     options = 'k'
     if force:
         options += "f"

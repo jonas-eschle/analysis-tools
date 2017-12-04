@@ -6,6 +6,7 @@
 # @date   16.04.2017
 # =============================================================================
 """Physics utilities."""
+from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict
 import copy
@@ -98,7 +99,7 @@ def rename_on_recursion_end(func):
             raise RuntimeError("rename_on_recursion_end used on a non-compliant function.")
         if len([frame[2]
                 for frame in traceback.extract_stack()
-                if frame[2] == func.func_name]) == 0:
+                if frame[2] == func.__name__]) == 0:
             res_factory.rename_children_parameters()
         return res_factory
     return wrapped
@@ -141,8 +142,8 @@ def configure_model(config, shared_vars=None, external_vars=None):
         #         factory_config['parameters'] = {}
         #     factory_config['parameters'].update(params)
         if len(config['pdf']) == 1:
-            observable = config['pdf'].keys()[0]
-            factory_config = config['pdf'].values()[0]
+            observable = list(config['pdf'].keys())[0]
+            factory_config = list(config['pdf'].values())[0]
             return configure_factory(observable, factory_config, shared_vars['pdf'][observable])
         else:
             # Check the yields
@@ -170,6 +171,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
+        global_yield = config.pop('yield', None)
         for pdf_name, pdf_config in config.items():
             # Disable parameter propagation
             # if 'parameters' not in pdf_config:
@@ -184,23 +186,23 @@ def configure_model(config, shared_vars=None, external_vars=None):
                 if pdf_name not in yields:
                     yields[pdf_name] = sanitize_parameter(yield_, 'Yield', 'Yield')
                     # yields[pdf_name][0].setStringAttribute('shared', 'true')
-            if isinstance(pdf_config.get('pdf', None), str):
+            if isinstance(pdf_config.get('pdf'), str):
                 factories[pdf_name] = configure_model({pdf_name: pdf_config}, shared_vars)
             else:
                 factories[pdf_name] = configure_model(pdf_config, shared_vars[pdf_name])
         logger.debug("Found yields -> %s", yields)
         if len(factories) == 1:
             # Set the yield
-            factory_name, factory_obj = factories.items()[0]
+            factory_name, factory_obj = list(factories.items())[0]
             if factory_name in yields:
                 factory_obj.set_yield_var(yields[factory_name])
-            return factory_obj
+            output_factory = factory_obj
         else:
             parameters = {}
             if (len(factories) - len(yields)) > 1:
                 raise ConfigError("Missing at least one yield in sum factory definition")
             elif (len(factories) - len(yields)) == 1:
-                if yields.keys()[-1] == factories.keys()[-1]:  # The last one should not have a yield!
+                if list(yields.keys())[-1] == list(factories.keys())[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
                 if 'yield' in config:
                     yield_ = config.pop('yield')
@@ -208,7 +210,10 @@ def configure_model(config, shared_vars=None, external_vars=None):
                         parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
                 # if 'yield' in parameters:
                 #     parameters['yield'][0].setStringAttribute('shared', 'true')
-            return factory.SumPhysicsFactory(factories, yields, parameters)
+            output_factory = factory.SumPhysicsFactory(factories, yields, parameters)
+        if global_yield:
+            output_factory.set_yield_var(global_yield)
+        return output_factory
 
     def configure_simul_factory(config, shared_vars):
         logger.debug("Configuring simultaneous -> %s", dict(config))
@@ -231,10 +236,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
         for cat_label in config['pdf'].keys():
             for cat_iter, cat_sublabel in enumerate(cat_label.split(',')):
                 cat_sublabel = cat_sublabel.strip()
-                if cat_sublabel not in labels[cat_iter]:
-                    logger.debug("Registering label for %s -> %s", cat_list[cat_iter].GetName(), cat_sublabel)
-                    cat_list[cat_iter].defineType(cat_sublabel)
-                labels[cat_iter].add(cat_sublabel)
+                try:
+                    if cat_sublabel not in labels[cat_iter]:
+                        logger.debug("Registering label for %s -> %s", cat_list[cat_iter].GetName(), cat_sublabel)
+                        cat_list[cat_iter].defineType(cat_sublabel)
+                    labels[cat_iter].add(cat_sublabel)
+                except IndexError:
+                    logger.error("Mismatch between declared number of categories and label '%s'", cat_label)
+                    raise ConfigError("Badly defined category label '{}'".format(cat_label))
         sim_factory = factory.SimultaneousPhysicsFactory(OrderedDict((tuple(cat_label.replace(' ', '').split(',')),
                                                                       configure_model(cat_config,
                                                                                       shared_vars['pdf'][cat_label]))
@@ -269,7 +278,14 @@ def configure_model(config, shared_vars=None, external_vars=None):
         new_factory = configure_simul_factory(config, shared_vars)
     else:
         if 'pdf' not in config:
-            if isinstance(config.values()[0].get('pdf', None), str):
+            indices = list(range(len(config)))
+            try:  # remove 'yield'
+                indices.pop(list(config.keys()).index('yield'))
+            except ValueError:  # no yield defined
+                index = 0
+            else:
+                index = indices[0]
+            if isinstance(list(config.values())[index].get('pdf'), str):
                 shared = {'pdf': shared_vars}
                 new_factory = configure_prod_factory({'pdf': config}, shared)
             else:
@@ -278,8 +294,8 @@ def configure_model(config, shared_vars=None, external_vars=None):
             if len(config['pdf']) > 1:
                 new_factory = configure_prod_factory(config, shared_vars)
             else:
-                pdf_obs = config['pdf'].keys()[0]
-                pdf_config = config['pdf'].values()[0]
+                pdf_obs = list(config['pdf'].keys())[0]
+                pdf_config = list(config['pdf'].values())[0]
                 if 'parameters' not in pdf_config:
                     pdf_config['parameters'] = OrderedDict()
                 pdf_config['parameters'].update(config.get('parameters', {}))

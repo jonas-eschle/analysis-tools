@@ -6,6 +6,7 @@
 # @date   28.03.2017
 # =============================================================================
 """Efficiency expansion with Legendre polynomials."""
+from __future__ import print_function, division, absolute_import
 
 import operator
 import functools
@@ -116,8 +117,8 @@ class LegendreEfficiency(Efficiency):
                         var_name2: [min_var2, max_var2]},
              'symmetric-variables': [var_1]}
 
-        The range is used to rescale the data in the `fit` method. If it's not
-        given, it's assumed it is [-1, 1].
+        The range is used to rescale the data in the `fit` method. If no range
+        is given, the data is assumed to be already in the range [-1, 1].
 
         Arguments:
             var_list (list): List of observables to apply the efficiency to.
@@ -182,6 +183,37 @@ class LegendreEfficiency(Efficiency):
             coeffs = np.polynomial.legendre.legval(data[var_name].values, coeffs, tensor=first)
             first = False
         return pd.Series(coeffs, name="efficiency")
+
+    def _get_efficiency_error(self, data):
+        """Calculate the efficiency error.
+
+        Note:
+            No variable checking is performed.
+
+        Arguments:
+            data (`pandas.DataFrame`): Data to calculate the efficiency errors of.
+
+        """
+        raise NotImplementedError()
+
+    def randomize(self):
+        """Return randomized version of itself.
+
+        Return:
+            LegendreEfficiency
+
+        Raise:
+            ValueError: If the covariance matrix had not been calculated.
+
+        """
+        if not np.any(self._covariance):
+            raise ValueError("No covariance matrix has been calculated")
+        # pylint: disable=E1101
+        coeffs = np.random.multivariate_normal(self._coefficients.flatten(),
+                                               self._covariance).reshape(self._coefficients.shape)
+        config = self._config.copy()
+        config['coefficients'] = coeffs
+        return LegendreEfficiency(self._var_list, config)
 
     # pylint: disable=R0914,W0221
     @staticmethod
@@ -284,7 +316,7 @@ class LegendreEfficiency(Efficiency):
         var_pos = self.get_variables().index(var_name)
         x = np.linspace(-1, 1, n_points)
         y = np.zeros(1000)
-        coeff_iter = [range(order) for order in self._coefficients.shape]
+        coeff_iter = [list(range(order)) for order in self._coefficients.shape]
         for non_int_order in range(self._coefficients.shape[var_pos]):
             coeff_iter[var_pos] = [non_int_order]
             current_coeff = np.zeros(len(self._coefficients.shape), dtype=np.int8)
@@ -398,6 +430,37 @@ class LegendreEfficiency1D(Efficiency):
         for var_number, var_name in enumerate(self.get_variables()):
             effs *= np.polynomial.legendre.legval(data[var_name].values, coeffs[var_number])
         return pd.Series(effs, name="efficiency")
+
+    def _get_efficiency_error(self, data):
+        """Calculate the efficiency error.
+
+        Note:
+            No variable checking is performed.
+
+        Arguments:
+            data (`pandas.DataFrame`): Data to calculate the efficiency errors of.
+
+        """
+        raise NotImplementedError()
+
+    def randomize(self):
+        """Return randomized version of itself.
+
+        Return:
+            LegendreEfficiency1D
+
+        Raise:
+            ValueError: If the covariance matrix had not been calculated.
+
+        """
+        if not np.any(self._covariance):
+            raise ValueError("No covariance matrix has been calculated")
+        # pylint: disable=E1101
+        coeffs = np.random.multivariate_normal(self._coefficients.flatten(),
+                                               self._covariance).reshape(self._coefficients.shape)
+        config = self._config.copy()
+        config['coefficients'] = coeffs
+        return LegendreEfficiency(self._var_list, config)
 
     # pylint: disable=R0914,W0221
     @staticmethod

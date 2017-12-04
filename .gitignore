@@ -12,3 +12,7 @@
 .cache
 # Egg
 analysis.egg-info
+# coverage.py report
+*.coverage
+*.xml
+*.gitignore

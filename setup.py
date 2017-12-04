@@ -6,6 +6,7 @@
 # @date   16.02.2017
 # =============================================================================
 """Generic analysis package."""
+from __future__ import print_function, division, absolute_import
 
 from setuptools import setup
 setup(name='analysis',

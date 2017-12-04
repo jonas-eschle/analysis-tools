@@ -11,6 +11,7 @@ Note that the default efficiency models are not loaded into the global variables
 until this module is imported.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import os
 
@@ -60,7 +61,7 @@ def get_efficiency_model_class(model_name):
         `Efficiency`: Efficiency class, non-instantiated.
 
     """
-    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower(), None)
+    return get_global_var('EFFICIENCY_MODELS').get(model_name.lower())
 
 
 def load_efficiency_model(model_name, **extra_parameters):
