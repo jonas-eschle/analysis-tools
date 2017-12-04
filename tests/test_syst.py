@@ -6,6 +6,7 @@
 # @date   10.11.2017
 # =============================================================================
 """Test systematics classes."""
+from __future__ import print_function, division, absolute_import
 
 from test_physics import factory, factory_with_yield
 from test_physics import prod_factory

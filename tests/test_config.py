@@ -5,6 +5,8 @@
 # @date   24.11.2017
 # =============================================================================
 """Test configuration related functionality/manipulations"""
+from __future__ import print_function, division, absolute_import
+
 import contextlib
 import tempfile
 import os
