@@ -6,8 +6,7 @@
 # @date   13.01.2017
 # =============================================================================
 """Configuration files."""
-
-from __future__ import absolute_import
+from __future__ import print_function, division, absolute_import
 
 import os
 import random
@@ -220,7 +219,7 @@ def unfold_config(dictionary):
 
     """
     output_list = []
-    for key, val in dictionary.viewitems():
+    for key, val in dictionary.items():
         if isinstance(val, dict):
             for sub_key, sub_val in unfold_config(val):
                 # convert non-hashable values to hashable (approximately)
@@ -396,7 +395,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
             else:
                 if action in ('SHIFT', 'SCALE'):
                     second_var = ROOT.RooFit.RooConst(float(second_var))
-        except KeyError, error:
+        except KeyError as error:
             raise ValueError("Missing parameter definition -> {}".format(error))
         if action == 'SHIFT':
             parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))

@@ -6,6 +6,7 @@
 # @date   16.05.2017
 # =============================================================================
 """Test data-related funcionality."""
+from __future__ import print_function, division, absolute_import
 
 import os
 import tempfile
@@ -22,9 +23,9 @@ from analysis.data import get_data
 @pytest.fixture
 def pandas_weights():
     """Dataframe containing weights."""
-    return pd.DataFrame({'half': [0.5]*1000,
-                         'quarter': [0.25]*1000,
-                         'asym': [0.5]*500 + [0.25]*500})
+    return pd.DataFrame({'half': [0.5] * 1000,
+                         'quarter': [0.25] * 1000,
+                         'asym': [0.5] * 500 + [0.25] * 500})
 
 
 @contextlib.contextmanager
@@ -79,6 +80,5 @@ def test_load_with_weights(pandas_weights):
         assert data.weight() == 1.3333333333333333
         data.get(999)
         assert data.weight() == 0.6666666666666666
-
 
 # EOF

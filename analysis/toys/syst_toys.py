@@ -10,6 +10,7 @@
 These generate and fit in one go with some random variation of one or more parameters.
 
 """
+from __future__ import print_function, division, absolute_import
 
 import argparse
 from collections import defaultdict

@@ -6,6 +6,7 @@
 # @date   16.11.2017
 # =============================================================================
 """Useful decorators."""
+from __future__ import print_function, division, absolute_import
 
 
 # pylint: disable=R0903,C0103

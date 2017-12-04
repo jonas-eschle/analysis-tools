@@ -6,6 +6,7 @@
 # @date   19.05.2017
 # =============================================================================
 """Analyze and store fit results."""
+from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict
 import copy
