@@ -71,6 +71,7 @@ def test_load_with_weights(pandas_weights):
                          'output-format': 'root',
                          'input-type': 'pandas',
                          'weights-to-normalize': ['half', 'quarter', 'asym']})
+
         if not data.isWeighted():
             return False
         # Correct normalization
@@ -80,6 +81,5 @@ def test_load_with_weights(pandas_weights):
         assert data.weight() == 1.3333333333333333
         data.get(999)
         assert data.weight() == 0.6666666666666666
-
 
 # EOF
