@@ -75,8 +75,8 @@ def load_toy_fits(*toys, **kwargs):
                            '_{gen}' in col and not col.startswith('N^'),
                            '_{nominal}' in col))]
         merged_result.set_index(indices, inplace=True)
-    results['fit_result'] = merged_result
-    results['cov_matrix'] = fit_cov_matrices
+    results['fit_results'] = merged_result
+    results['cov_matrices'] = fit_cov_matrices
     return results
 
 # EOF
