@@ -48,6 +48,7 @@ def load_toy_fits(*toys, **kwargs):
     # Check that toys exist
     if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toys):
         raise OSError("Cannot load all toys")
+    results = {}
     with contextlib2.ExitStack() as toy_stack:
         # toy_results = []
         fit_cov_matrices = []
@@ -74,6 +75,8 @@ def load_toy_fits(*toys, **kwargs):
                            '_{gen}' in col and not col.startswith('N^'),
                            '_{nominal}' in col))]
         merged_result.set_index(indices, inplace=True)
-    return merged_result, fit_cov_matrices
+    results['fit_result'] = merged_result
+    results['cov_matrix'] = fit_cov_matrices
+    return results
 
 # EOF
