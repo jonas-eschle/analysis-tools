@@ -19,7 +19,7 @@ from analysis.utils.logging_color import get_logger
 _logger = get_logger('analysis.toys.tools')
 
 
-def load_toy_fits(*toy_list, **kwargs):
+def load_toy_fits(*toys, **kwargs):
     """Load toy fit results.
 
     If several files are given, all the tables are merged.
@@ -29,7 +29,7 @@ def load_toy_fits(*toy_list, **kwargs):
         is returned.
 
     Arguments:
-        *toy_list (list): List of toy names to load.
+        *toys (str): Toy names to load.
         **kwargs (dict): Extra options:
             + `index` (bool, optional): Index the data frame? Defaults
             to `True`.
@@ -46,13 +46,13 @@ def load_toy_fits(*toy_list, **kwargs):
 
     """
     # Check that toys exist
-    if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toy_list):
+    if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toys):
         raise OSError("Cannot load all toys")
     with contextlib2.ExitStack() as toy_stack:
         # toy_results = []
         fit_cov_matrices = []
         fit_results = []
-        for toy_name in toy_list:
+        for toy_name in toys:
             toy_result = toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))
             fit_result = toy_result['fit_results']
             fit_results.append(fit_result)
