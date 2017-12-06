@@ -13,9 +13,9 @@ for rest_file in parsed_args.files:
             continue
         replacement = first_word.split('.')[-1]
         underline = f.readline()[0] * len(replacement)
-        lower_file = f.read() 
+        lower_file = f.read()
     with open(rest_file, 'w') as f:
         f.write("\n".join((replacement, underline, lower_file)))
     n_files += 1
 
-print("finished sucessfully parsing {} files".format(n_files))
+print("finished successfully parsing {} files".format(n_files))

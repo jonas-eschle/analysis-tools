@@ -322,7 +322,7 @@ class FitResult(object):
 
     @ensure_initialized
     def has_converged(self):
-        """Determine wether the fit has converged properly.
+        """Determine whether the fit has converged properly.
 
         All steps have to have converged and the covariance matrix quality needs to be
         good.

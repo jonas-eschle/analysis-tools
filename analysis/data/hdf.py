@@ -44,7 +44,7 @@ def modify_hdf(file_name, compress=True):
                 mode = 'a'
             else:
                 logger.info("File %s exists but seems empty -> not construct with pytables?"
-                            "Overwritting existing file!", file_name)
+                            "Overwriting existing file!", file_name)
     with pd.HDFStore(file_name, mode=mode, format='table') as data_file:
         yield data_file
     logger.debug('Compressing...')

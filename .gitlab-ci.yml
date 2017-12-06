@@ -110,4 +110,4 @@ build_apidoc:
 #  type: test
 #  script:
 #    - conda install -y pylint
-#    - pylint analysis/*/*.py || echo "========= Pylint run with errorcode > 0 ========"
+#    - pylint analysis/*/*.py || echo "========= Pylint run with error code > 0 ========"

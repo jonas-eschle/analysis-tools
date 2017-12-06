@@ -91,7 +91,6 @@ echo "------------------------------------------------------------------------"
         Arguments:
             job_name (str): Job name.
             script (str): Commands to run.
-            script_args (list): List of arguments passed to the script.
             log_file (str): Logfile location.
             extra_config (dict, optional): Extra configuration for 'script'. Defaults
                 to `None`.

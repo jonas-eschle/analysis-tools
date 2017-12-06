@@ -141,7 +141,7 @@ def load_acceptance(name, **extra_parameters):
         `analysis.efficiency.Acceptance`: Acceptance object.
 
     Raise:
-        OSError: If the efficiecny file does not exist.
+        OSError: If the efficiency file does not exist.
         analysis.utils.config.ConfigError: If there is a problem with the efficiency model.
 
     """

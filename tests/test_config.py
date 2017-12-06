@@ -33,7 +33,7 @@ def create_tempfile(suffix=None):
     try:
         os_handle, filename = tempfile.mkstemp(suffix=suffix)
     except Exception:  # aiming at interruptions
-        print("Exception occured while creating a temp-file")
+        print("Exception occurred while creating a temp-file")
         raise
     finally:
         atexit.register(cleanup_file, filename)
