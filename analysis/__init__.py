@@ -11,7 +11,7 @@ from __future__ import print_function, division, absolute_import
 import os
 from collections import defaultdict
 
-# TODO: automative version and author
+# TODO: automate version and author
 __version__ = '3.0'
 __author__ = 'Albert Piug'
 

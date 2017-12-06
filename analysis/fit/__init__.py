@@ -113,7 +113,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
         logger.error("Problem getting the PDF -> %s", error)
         raise
     if kwargs.get('Extended', False) != factory.is_extended():
-        logger.warning("Requested fit with Extended=%s fit on %sextended PDF. Check this is what you want.",
+        logger.warning("Requested fit with Extended=%s fit on %s extended PDF. Check this is what you want.",
                        kwargs.get('Extended', False),
                        'an ' if factory.is_extended() else 'a non-')
     return fit_func(model, dataset, fit_config)

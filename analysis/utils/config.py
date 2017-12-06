@@ -416,7 +416,7 @@ def get_shared_vars(config, external_vars=None):
 
         @id/name/title/config
 
-    where config follows the conventions of `configure_parameter`. In further occurences,
+    where config follows the conventions of `configure_parameter`. In further occurrences,
     `@id` is enough.
 
     Arguments:
@@ -426,12 +426,12 @@ def get_shared_vars(config, external_vars=None):
             over the configuration. Defaults to None.
 
     Return:
-        dict: Shared parameters build in the same parameter hierachy as the model they
+        dict: Shared parameters build in the same parameter hierarchy as the model they
             are included in.
 
     Raise:
         ValueError: If one of the parameters is badly configured.
-        KeyError: If a parameter is refered to but never configured.
+        KeyError: If a parameter is referred to but never configured.
 
     """
     # Create shared vars

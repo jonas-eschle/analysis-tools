@@ -42,7 +42,7 @@ class BaseFactory(object):
             **config (dict): Configuration of the factory.
 
         Raise:
-            KeyError: When parameters or observables are missingo or there is an
+            KeyError: When parameters or observables are missing or there is an
                 inconsistency in the configuration.
 
         """
@@ -198,7 +198,7 @@ class BaseFactory(object):
             key (str): Object identifier.
 
         Return:
-            bool: Wether the object is in the workspace.
+            bool: Whether the object is in the workspace.
 
         """
         return key in self._objects
@@ -366,7 +366,7 @@ class BaseFactory(object):
         return self.get(pdf_name, self.set(pdf_name, self.get_unbound_extended_pdf(name, title)))
 
     def get_unbound_extended_pdf(self, name, title):
-        """Get an extedned physics PDF."""
+        """Get an extended physics PDF."""
         raise NotImplementedError()
 
     def is_extended(self):
@@ -600,7 +600,7 @@ class PhysicsFactory(BaseFactory):
                 elif isinstance(yield_, (float, int)):
                     self['Yield'].setVal(yield_)
             else:
-                logger.warning("Trying to set a yield that cannot be overriden")
+                logger.warning("Trying to set a yield that cannot be overridden")
 
 
 # Product Physics Factory
@@ -716,7 +716,7 @@ class ProductPhysicsFactory(BaseFactory):
                 self['Yield'].SetName(yield_.GetName())
                 self['Yield'].SetTitle(yield_.GetTitle())
             else:
-                logger.warning("Trying to set a yield that cannot be overriden")
+                logger.warning("Trying to set a yield that cannot be overridden")
 
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
@@ -911,7 +911,7 @@ class SumPhysicsFactory(BaseFactory):
                 elif isinstance(yield_, (float, int)):
                     self['Yield'].setVal(yield_)
             else:
-                logger.warning("Trying to set a yield that cannot be overriden")
+                logger.warning("Trying to set a yield that cannot be overridden")
 
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
@@ -1059,7 +1059,7 @@ class SimultaneousPhysicsFactory(BaseFactory):
     def transform_dataset(self, dataset):
         """Transform dataset according to the factory configuration.
 
-        The category nane is used as column name to determine each of the
+        The category name is used as column name to determine each of the
         samples to transform.
 
         Note:

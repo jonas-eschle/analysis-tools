@@ -126,7 +126,7 @@ class LegendreEfficiency(Efficiency):
 
         Raise:
             KeyError: On missing coefficients.
-            ValueError: On bad range or bad symmetric variable defintion.
+            ValueError: On bad range or bad symmetric variable definition.
 
         """
         super(LegendreEfficiency, self).__init__(var_list, config)

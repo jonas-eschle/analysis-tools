@@ -51,6 +51,7 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
         name (str): Dataset name.
         title (str): Dataset title.
         data_list (list[ROOT.RooDataSet]): Datasets to merge.
+        destruct_data (bool): Destruct the ROOT objects afterwards.
 
     Return:
         ROOT.RooDataSet: Merged dataset.
@@ -67,7 +68,7 @@ def merge_root(data_list, name=None, title=None, destruct_data=True):
         raise ValueError("Incompatible observables")
     # Check weights
     if len(set(data.isWeighted() for data in data_list)) > 1:
-        raise ValueError("Input dataset list contains weighted and uneweighted datasets.")
+        raise ValueError("Input dataset list contains weighted and unweighted datasets.")
     # Merge by append, since we don't know the original weight situation
     output_ds = data_list.pop(0)
     for data in data_list:

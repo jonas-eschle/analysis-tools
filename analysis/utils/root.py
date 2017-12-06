@@ -120,7 +120,7 @@ def list_to_rooabscollection(iterable, collection_type):
 
 
 def list_to_rooarglist(iterable):
-    """Convert a list into a RooArgSet.
+    """Convert a list into a RooArgList.
 
     Arguments:
         iterable (iterable): Iterable to convert.

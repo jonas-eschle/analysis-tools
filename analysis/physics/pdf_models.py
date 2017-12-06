@@ -209,7 +209,7 @@ class ArgusConvGaussPdfMixin(object):
         usual PDF instantiations.
 
         Note:
-            The Argus and Gaussian PDFs are created new everytime the RooFFTConvPdf is
+            The Argus and Gaussian PDFs are created new every time the RooFFTConvPdf is
             instantiated.
 
         Return:
@@ -336,7 +336,7 @@ class RooWorkspaceMixin(object):
             raise KeyError("PDF name ('workspace-pdf-name') is missing")
         tfile = ROOT.TFile.Open(workspace_path)
         if not tfile:
-            raise KeyError("Cannot open wokspace file -> {}".format(workspace_path))
+            raise KeyError("Cannot open workspace file -> {}".format(workspace_path))
         workspace = tfile.Get(workspace_name)
         if not workspace:
             raise KeyError("Cannot get workspace from file -> {}".format(workspace_name))

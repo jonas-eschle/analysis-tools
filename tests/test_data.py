@@ -5,7 +5,7 @@
 # @author Albert Puig (albert.puig@cern.ch)
 # @date   16.05.2017
 # =============================================================================
-"""Test data-related funcionality."""
+"""Test data-related functionality."""
 from __future__ import print_function, division, absolute_import
 
 import os

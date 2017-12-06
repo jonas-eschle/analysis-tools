@@ -104,7 +104,7 @@ class Efficiency(object):
         return self._get_efficiency(data[var_list].copy()).clip(lower=0.0)
 
     def get_randomized_efficiency(self, data):
-        """Get the efficiency for the given event or dataset Gaussianly randomized by its uncertainty.
+        """Get the efficiency for the given event or dataset Gaussian randomized by its uncertainty.
 
         Arguments:
             data (`pandas.DataFrame` or Sequence): Data to calculate the efficiency of.
