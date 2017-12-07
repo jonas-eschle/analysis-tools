@@ -66,6 +66,7 @@ def _parse_key_val(key, val, index_sep=" "):
 
     Returns:
         (str, str): cleaned key and extracted val.
+    Raises: TODO
     """
     if index_sep and isinstance(key, str) and key.endswith(']'):  # parse indexing
         key = key[:-1]  # remove ']'
