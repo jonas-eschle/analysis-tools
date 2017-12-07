@@ -19,7 +19,7 @@ from analysis.utils.logging_color import get_logger
 _logger = get_logger('analysis.toys.tools')
 
 
-def load_toy_fits(*toy_list, **kwargs):
+def load_toy_fits(*toys, **kwargs):
     """Load toy fit results.
 
     If several files are given, all the tables are merged.
@@ -29,7 +29,7 @@ def load_toy_fits(*toy_list, **kwargs):
         is returned.
 
     Arguments:
-        *toy_list (list): List of toy names to load.
+        *toys (str): Toy names to load.
         **kwargs (dict): Extra options:
             + `index` (bool, optional): Index the data frame? Defaults
             to `True`.
@@ -46,11 +46,22 @@ def load_toy_fits(*toy_list, **kwargs):
 
     """
     # Check that toys exist
-    if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toy_list):
+    if not all(os.path.exists(get_toy_fit_path(toy_name)) for toy_name in toys):
         raise OSError("Cannot load all toys")
+    results = {}
     with contextlib2.ExitStack() as toy_stack:
-        fit_results = [toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))['fit_results']
-                       for toy_name in toy_list]
+        # toy_results = []
+        fit_cov_matrices = []
+        fit_results = []
+        for toy_name in toys:
+            toy_result = toy_stack.enter_context(pd.HDFStore(get_toy_fit_path(toy_name), mode='r'))
+            fit_result = toy_result['fit_results']
+            fit_results.append(fit_result)
+            cov_matrices = []
+            for row in fit_result.iterrows():
+                cov_path = os.path.join('covariance', row[1]['jobid'], row[1]['fit_num'])
+                cov_matrices.append(toy_result[cov_path])
+            fit_cov_matrices.append(cov_matrices)
         if not all(all(fit_result.columns == fit_results[0].columns)
                    for fit_result in fit_results):
             if kwargs.get('fail_on_incompatible', True):
@@ -64,6 +75,8 @@ def load_toy_fits(*toy_list, **kwargs):
                            '_{gen}' in col and not col.startswith('N^'),
                            '_{nominal}' in col))]
         merged_result.set_index(indices, inplace=True)
-    return merged_result
+    results['fit_results'] = merged_result
+    results['cov_matrices'] = fit_cov_matrices
+    return results
 
 # EOF

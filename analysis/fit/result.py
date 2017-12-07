@@ -161,20 +161,6 @@ class FitResult(object):
         except ConfigError as error:
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
 
-    @staticmethod
-    @memoize
-    def from_hdf(name):  # TODO: which path func?
-        """Initialize from a hdf file.
-
-        Arguments:
-            name (str):
-
-        Return:
-            self
-
-        """
-        raise NotImplementedError()
-
     @ensure_initialized
     def to_yaml(self):
         """Convert fit result to YAML format.
