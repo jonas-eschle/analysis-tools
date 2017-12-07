@@ -129,12 +129,15 @@ executes an object and returns it again.
 
 The following converters are implemented:
 
-- Python list to RooAbsCollection
-- Python list to RooArgList
-- Python list to RooArgSet
+- Python list to 
+    - RooAbsCollection
+    - RooArgList
+    - RooArgSet
 
-- RooArgSet to Python set
-- RooArgList to Python list
+- RooArgSet to
+    - Python set
+- RooArgList to
+    - Python list
 
 The following iterators are implemented:
 
