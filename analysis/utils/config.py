@@ -54,6 +54,47 @@ def _parse_load(val, splitter=':'):
     return file_name, val
 
 
+def _parse_key_val(key, val, index_sep=" "):
+    """Parse a key for special commands like indexing and apply to value.
+
+    Examples:
+        - indexing:
+            - key=key1[3], val="3 5 2 6"
+              return: key1, "6"
+            - key=key1[1], val=(1, 2, 3)
+              return: key1, 2
+
+    Returns:
+        (str, str): cleaned key and extracted val.
+    """
+    if index_sep and isinstance(key, str) and key.endswith(']'):  # parse indexing
+        key = key[:-1]  # remove ']'
+        stripped_key, index = key.rsplit('[', 1)
+        try:
+            index = int(index)
+        except ValueError as err:
+            print("{i} is not a valid (implemented) index for attributes.".format(i=index))
+            raise err
+
+        # Get the value
+        if isinstance(val, str):
+            try:
+                parsed_val = val.split(index_sep)[index]
+            except IndexError as err:
+                logger.error("{i} is not a valid index for {key}".format(i=index, key=stripped_key))
+                raise # TODO: ConfigSyntaxError?
+
+        elif isinstance(val, (list, tuple)):  # use elif! Only one parsing per function call
+            try:
+                parsed_val = val[index]
+            except IndexError as err:
+                logger.error("{i} is not a valid index for {key}".format(i=index, key=stripped_key))
+                raise  # TODO: ConfigSyntaxError?
+
+    return stripped_key, parsed_val
+
+
+
 def load_config(*file_names, **options):
     """Load configuration from YAML files.
 
