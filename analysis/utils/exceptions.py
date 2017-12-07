@@ -17,6 +17,14 @@ class ConfigError(Exception):
         super(ConfigError, self).__init__(message)
 
 
+class ConfigSyntaxError(ConfigError):
+    """Syntax error in config file."""
+
+
+class ConfigValueError(ConfigError):
+    """Invalid Value in configuration."""
+
+
 class DataError(Exception):
     """Error in handling data."""
 
