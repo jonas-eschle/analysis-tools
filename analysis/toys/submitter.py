@@ -47,7 +47,7 @@ class ToySubmitter(object):
     NTOYS_KEY = None
     NTOYS_PER_JOB_KEY = None
 
-    def __init__(self, config_files, link_from, extend, overwrite):
+    def __init__(self, config_files, link_from, extend, overwrite, verbose=False):
         """Configure the toy submitter.
 
         Arguments:
@@ -96,6 +96,7 @@ class ToySubmitter(object):
         self.link_from = link_from
         self.extend = extend
         self.overwrite = overwrite
+        self.verbose = verbose
         # Get the batch system
         self.batch_system = get_batch_system()
 
@@ -152,6 +153,8 @@ class ToySubmitter(object):
         script_args = []
         if self.config['link-from']:
             script_args.append('--link-from={}'.format(self.config['link-from']))
+        if self.verbose:
+            script_args.append('--verbose')
         script_args.append(config_file_dest)
         # Prepare paths
         # pylint: disable=E1101
