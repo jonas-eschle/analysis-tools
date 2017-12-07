@@ -60,9 +60,14 @@ def modify_hdf(file_name, compress=True):
             out = subprocess.check_output(cmd)
             if not os.path.exists(compressed_file):  # Something went wrong
                 raise subprocess.CalledProcessError(0, ' '.join(cmd), output=out)
-            shutil.move(compressed_file, file_name)
         except subprocess.CalledProcessError as error:
             logger.warning("Error compressing -> %s", error.output)
+        else:
+            try:
+                shutil.move(compressed_file, file_name)
+            except IOError as error:
+                logger.warning("Error moving (copying) compressed file -> %s", error)
+        finally:
             if os.path.exists(compressed_file):
                 os.remove(compressed_file)
 
