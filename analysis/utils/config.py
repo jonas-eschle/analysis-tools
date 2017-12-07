@@ -23,6 +23,37 @@ from analysis.utils.logging_color import get_logger
 logger = get_logger('analysis.utils.config')
 
 
+def _parse_load(val, splitter=':'):
+    """Parse filename:val or path_func:name:val and return (filename, val).
+
+    Args:
+        val (str):
+        splitter (str):
+
+    Returns:
+        (str, str): Parsed filename and val.
+
+    Raises:
+        TODO
+    """
+    if splitter not in val:
+        raise ValueError("Value {} has to contain the splitter {}.".format(val, splitter))
+    split_val = val.split(":")
+    if len(split_val) == 2:  # file_name:key format
+        file_name, val = split_val
+    elif len(split_val) == 3:  # path_func:name:key format
+        path_name, name, val = split_val
+        import analysis.utils.paths as _paths
+        try:
+            path_func = getattr(_paths, 'get_{}_path'.format(path_name))
+        except AttributeError:
+            raise ConfigError("Unknown path getter type -> {}".format(path_name))
+        file_name = path_func(name)
+    else:
+        raise ConfigError("Malformed 'load' key")
+    return file_name, val
+
+
 def load_config(*file_names, **options):
     """Load configuration from YAML files.
 
@@ -75,19 +106,7 @@ def load_config(*file_names, **options):
     for key, val in unfolded_data:
         command = key.split('/')[-1]
         if command == 'load':  # An input requirement has been made
-            split_val = val.split(":")
-            if len(split_val) == 2:  # file_name:key format
-                file_name_result, required_key = split_val
-            elif len(split_val) == 3:  # path_func:name:key format
-                path_name, name, required_key = split_val
-                import analysis.utils.paths as _paths
-                try:
-                    path_func = getattr(_paths, 'get_{}_path'.format(path_name))
-                except AttributeError:
-                    raise ConfigError("Unknown path getter type -> {}".format(path_name))
-                file_name_result = path_func(name)
-            else:
-                raise ConfigError("Malformed 'load' key")
+            file_name_result, required_key = _parse_load(val)
             try:
                 root = key.rsplit('/load')[0]
                 for new_key, new_val in unfold_config(load_config(file_name_result, root=required_key)):
@@ -319,7 +338,7 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         value_error = None
         if ':' in action_params[0]:  # We want to load a fit result
             from analysis.fit.result import FitResult
-            fit_name, var_name = action_params[0].split(':')
+            fit_name, var_name = _parse_load(action_params[0])
             result = FitResult.from_yaml_file(fit_name)
             try:
                 value, value_error, _, _ = result.get_fit_parameter(var_name)
