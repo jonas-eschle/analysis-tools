@@ -257,7 +257,7 @@ def main():
                              ", ".join('{}: {}'.format(*val) for val in values.items()))
                 # Write temp_file
                 with tempfile.NamedTemporaryFile(delete=False) as file_:
-                    file_name = file_.nameCan
+                    file_name = file_.name
                 _config.write_config(_config.fold_config(list(temp_config.items())), file_name)
                 config_files.append(file_name)
         else:
