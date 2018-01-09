@@ -19,7 +19,7 @@ from analysis.utils.decorators import memoize
 import analysis.utils.paths as _paths
 
 
-_SUFFIXES = ('', '_err_hesse', '_err_plus', '_err_minus')
+_SUFFIXES = ('', '_err_hesse', '_err_minus', '_err_plus')
 
 
 def ensure_initialized(method):
