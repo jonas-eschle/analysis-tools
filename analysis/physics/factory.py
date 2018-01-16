@@ -15,6 +15,7 @@ from collections import OrderedDict
 import ROOT
 
 from analysis.utils.config import configure_parameter
+from analysis.utils.exceptions import InvalidRequestError
 from analysis.utils.root import execute_and_return_self, list_to_rooargset, list_to_rooarglist
 from analysis.utils.logging_color import get_logger
 
@@ -330,8 +331,8 @@ class BaseFactory(object):
 
         """
         if self.has_to_be_extended():
-            raise ValueError("Requested non-extended PDF, "
-                             "but the factory needs to be extended")
+            raise InvalidRequestError("Requested non-extended PDF, "
+                                      "but the factory needs to be extended")
         pdf_name = 'pdf_{}'.format(name)
         return self.get(pdf_name, self.set(pdf_name, self.get_unbound_pdf(name, title)))
 
@@ -357,7 +358,7 @@ class BaseFactory(object):
         # Configure yield
         if not self.is_extended():
             if yield_val is None:
-                raise ValueError("Yield value not given -> {}".format(self))
+                raise InvalidRequestError("Yield value not given -> {}".format(self))
             self.set_yield_var(yield_val)
         elif yield_val is not None:
             logger.warning("Specified yield value but it's already defined. Ignoring.")
@@ -472,7 +473,7 @@ class BaseFactory(object):
 
         """
         if not self.is_extended():
-            raise ValueError("Non-extended model doesn't have yields")
+            raise InvalidRequestError("Non-extended model doesn't have yields")
         yields = []
         if self.get_yield_var():
             yields.append(self.get_yield_var())
@@ -747,14 +748,14 @@ class SumPhysicsFactory(BaseFactory):
         In this case, the children are a map of PDF name -> Factory.
 
         Raise:
-            ValueError: When the observables of the factories are incompatible.
+            InvalidRequestError: When the observables of the factories are incompatible.
             KeyError: On configuration error.
 
         """
         # Check observable compatibility
         if len({tuple([obs.GetName() for obs in factory.get_observables()])
                 for factory in factories.values()}) != 1:
-            raise ValueError("Incompatible observables")
+            raise InvalidRequestError("Incompatible observables")
         # Check children yields type
         if not isinstance(children_yields, OrderedDict):
             raise ValueError("children_yields must be an ordered dictionary")
@@ -897,7 +898,7 @@ class SumPhysicsFactory(BaseFactory):
             yield_ = self._create_parameter('Yield', yield_)
             for child in self._children.values():
                 if 'Yield' in child:
-                    raise ValueError("Inconsistent state: trying to set the yield of an already configured Factory.")
+                    raise InvalidRequestError("Inconsistent state: trying to set the yield of an already configured Factory.")
                 # Again, not very good heuristics
                 child.set_yield_var(ROOT.RooProduct(child['Fraction'].GetName().replace('Fraction', 'Yield'),
                                                     child['Fraction'].GetTitle().replace('Fraction', 'Yield'),
