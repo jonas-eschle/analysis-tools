@@ -12,7 +12,6 @@ import sys
 
 if sys.version_info[0] < 3:
 
-
     class FileNotFoundError(OSError):
         """ File not found. """
 
@@ -23,3 +22,7 @@ if sys.version_info[0] < 3:
                 pass
             message = " *unstable message, do not rely on it* " + str(message)
             super(FileNotFoundError, self).__init__(message)
+
+
+else:
+    from builtins import FileNotFoundError
