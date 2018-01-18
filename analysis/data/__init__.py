@@ -10,8 +10,10 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
+from analysis.utils.backports import FileNotFoundError
 from analysis import get_global_var
 from analysis.utils.config import load_config
+from analysis.utils.exceptions import DataError
 from analysis.utils.logging_color import get_logger
 import analysis.utils.paths as paths
 
@@ -54,13 +56,13 @@ def load_data(config_file, key=None, **kwargs):
         object: Data object.
 
     Raise:
-        OSError: If the config file cannot be loaded.
+        FileNotFoundError: If the config file cannot be loaded.
         ConfigError: If the validation of the ConfigFile fails.
 
     """
     config_file = os.path.abspath(config_file)
     if not os.path.exists(config_file):
-        raise OSError("Cannot find config file -> {}".format(config_file))
+        raise FileNotFoundError("Cannot find config file -> {}".format(config_file))
     return get_data(load_config(config_file,
                                 root=key,
                                 validate=['source', 'tree', 'output-format']),
@@ -85,7 +87,7 @@ def get_data(data_config, **kwargs):
     Raise:
         AttributeError: If the specified source type is unknown.
         KeyError: If the input file extension is not recognized.
-        OSError: If the input file can't be found.
+        FileNotFoundError: If the input file can't be found.
         ValueError: If the requested output format is not available for the input.
 
     """
@@ -107,9 +109,10 @@ def get_data(data_config, **kwargs):
         file_name = source_name if not source_type \
             else getattr(paths, 'get_{}_path'.format(source_type))(source_name)
         if not os.path.exists(file_name):
-            raise OSError("Cannot find input file -> {}".format(file_name))
-    except AttributeError:
-        raise AttributeError("Unknown source type -> {}".format(source_type))
+            raise FileNotFoundError("Cannot find input file -> {}".format(file_name))
+    except AttributeError as error:
+            logger.error("Unknows source type -> %s, original error %s", source_type, error)
+            raise DataError("Unknown source type -> {}".format(source_type))
     tree_name = data_config.pop('tree', '')
     output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches

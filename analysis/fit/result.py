@@ -13,11 +13,11 @@ import copy
 
 import numpy as np
 
-from analysis.utils.config import load_config, write_config, ConfigError
-from analysis.utils.root import iterate_roocollection
+from analysis.utils.config import load_config, write_config
+from analysis.utils.exceptions import NotInitializedError, ConfigError
 from analysis.utils.decorators import memoize
 import analysis.utils.paths as _paths
-
+from analysis.utils.root import iterate_roocollection
 
 _SUFFIXES = ('', '_err_hesse', '_err_minus', '_err_plus')
 
@@ -103,6 +103,7 @@ class FitResult(object):
         result['status'] = OrderedDict((roofit_result.statusLabelHistory(cycle), roofit_result.statusCodeHistory(cycle))
                                        for cycle in range(roofit_result.numStatusHistory()))
         result['edm'] = roofit_result.edm()
+        result['min_nll'] = roofit_result.minNll()
         return FitResult(result)
 
     @staticmethod
@@ -219,6 +220,7 @@ class FitResult(object):
         pandas_dict['status_minos'] = self._result['status'].get('MINOS', -1)
         pandas_dict['cov_quality'] = self._result['covariance-matrix']['quality']
         pandas_dict['edm'] = self._result['edm']
+        pandas_dict['min_nll'] = self._result['min_nll']
         if not skip_cov:
             pandas_dict['cov_matrix'] = self._result['covariance-matrix']['matrix'].getA1()
         return pandas_dict
@@ -307,6 +309,16 @@ class FitResult(object):
         return self._result['edm']
 
     @ensure_initialized
+    def get_min_nll(self):
+        """Get the fit Minimum NLL.
+
+        Return:
+            float
+
+        """
+        return self._result['min_nll']
+
+    @ensure_initialized
     def has_converged(self):
         """Determine whether the fit has converged properly.
 
@@ -344,13 +356,5 @@ class FitResult(object):
             for name, param in self.get_const_parameters().items():
                 output[name] = param
         return output
-
-
-class AlreadyInitializedError(Exception):
-    """Used when the internal fit result has already been initialized."""
-
-
-class NotInitializedError(Exception):
-    """Use when the FitResult has not been initialized."""
 
 # EOF
