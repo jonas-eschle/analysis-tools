@@ -428,6 +428,8 @@ class BaseFactory(object):
                 new_config[3] = max_
                 if obs_id in self:
                     self._objects[obs_id].setRange(range_name, min_, max_)
+                    self._objects[obs_id].setMin(min_)
+                    self._objects[obs_id].setMax(max_)
             if units:
                 new_config[4] = units
                 if obs_id in self:
