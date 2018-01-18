@@ -153,12 +153,13 @@ class FitResult(object):
 
         """
         try:
-            return FitResult(dict(load_config(_paths.get_fit_result_path(name),
-                                              validate=('fit-parameters',
-                                                        'fit-parameters-initial',
-                                                        'covariance-matrix/quality',
-                                                        'covariance-matrix/matrix',
-                                                        'status'))))
+            yaml_config = load_config(_paths.get_fit_result_path(name),
+                                      validate=('fit-parameters',
+                                                'fit-parameters-initial',
+                                                'covariance-matrix/quality',
+                                                'covariance-matrix/matrix',
+                                                'status'))
+            return FitResult.from_yaml(yaml_config)
         except ConfigError as error:
             raise KeyError("Missing keys in input file -> {}".format(','.join(error.missing_keys)))
 
