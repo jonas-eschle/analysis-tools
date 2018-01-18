@@ -111,7 +111,7 @@ def run(config_files, link_from, verbose):
     # Set seed
     job_id = get_job_id()
     # Start looping
-    fit_results = defaultdict(list)
+    data_res = []
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
@@ -135,13 +135,13 @@ def run(config_files, link_from, verbose):
         except ValueError:
             raise RuntimeError()
         except Exception:
-            logger.exception()
+            #logger.exception()
             raise RuntimeError()  # TODO: provide more information?
         # Now results are in fit_parameters
         result = FitResult.from_roofit(fit_result).to_plain_dict()
         result['fitnum'] = fit_num
         result['seed'] = seed
-        fit_results[fit_num].append(result)
+        data_res.append(result)
         _root.destruct_object(fit_result)
         _root.destruct_object(dataset)
         logger.debug("Cleaning up")
@@ -149,7 +149,7 @@ def run(config_files, link_from, verbose):
     logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/nfits)
     logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/nfits)
     logger.info("Saving to disk")
-    data_frame = pd.DataFrame(fit_results)
+    data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([data_frame,
                                   pd.concat([pd.DataFrame({'jobid': [job_id]})]
                                             * data_frame.shape[0]).reset_index(drop=True)],
@@ -163,7 +163,7 @@ def run(config_files, link_from, verbose):
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
                 # Generator info
-                hdf_file.append('input_values', pd.DataFrame([systematic.get_input_values()]))
+                hdf_file.append('input_values', pd.DataFrame(systematic.get_input_values()))
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
