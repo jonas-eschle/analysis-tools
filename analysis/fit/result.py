@@ -53,7 +53,7 @@ class FitResult(object):
         """
         if result is not None and not isinstance(result, (dict, OrderedDict)):
             raise ValueError("result is not of the proper type")
-        if 'const-parameters' not in result:
+        if result and 'const-parameters' not in result:
             result['const-parameters'] = OrderedDict()
         self._result = result
 
