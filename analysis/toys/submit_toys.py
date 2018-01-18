@@ -197,6 +197,9 @@ def main():
         return list(sum(list_, typ_))
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose',
+                        action='store_true',
+                        help="Verbose output")
     parser.add_argument('--link-from',
                         action='store', type=str,
                         help="Folder to actually store the toy files")
@@ -210,6 +213,9 @@ def main():
                         action='store', type=str, nargs='+',
                         help="Configuration file")
     args = parser.parse_args()
+    if args.verbose:
+        get_logger('analysis').setLevel(1)
+        logger.setLevel(1)
     try:
         config = _config.load_config(*args.config)
         # Which type of toy are we running?
@@ -250,9 +256,8 @@ def main():
                              temp_config['name'],
                              ", ".join('{}: {}'.format(*val) for val in values.items()))
                 # Write temp_file
-                file_ = tempfile.NamedTemporaryFile(delete=False)
-                file_name = file_.name
-                file_.close()
+                with tempfile.NamedTemporaryFile(delete=False) as file_:
+                    file_name = file_.name
                 _config.write_config(_config.fold_config(list(temp_config.items())), file_name)
                 config_files.append(file_name)
         else:
@@ -266,10 +271,11 @@ def main():
                                      'toys',
                                      script_to_run)
         for config_file in config_files:
-            submitter([config_file],
-                      args.link_from,
-                      args.extend,
-                      args.overwrite).run(script_to_run)
+            submitter(config_files=[config_file],
+                      link_from=args.link_from,
+                      extend=args.extend,
+                      overwrite=args.overwrite,
+                      verbose=args.verbose).run(script_to_run,)
             if scan_config:
                 os.remove(config_file)
         exit_status = 0

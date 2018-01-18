@@ -207,6 +207,9 @@ def main():
 
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose',
+                        action='store_true',
+                        help="Verbose output")
     parser.add_argument('--link-from',
                         action='store', type=str, default='',
                         help="Folder to actually store the toy files")
@@ -214,6 +217,9 @@ def main():
                         action='store', type=str, nargs='+',
                         help="Configuration files")
     args = parser.parse_args()
+    if args.verbose:
+        get_logger('analysis').setLevel(1)
+        logger.setLevel(1)
     try:
         run(args.config, args.link_from)
         exit_status = 0
