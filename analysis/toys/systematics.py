@@ -232,7 +232,7 @@ class FixedParamsSyst(SystematicToys):
         central_values = []
         self._param_translation = OrderedDict()
         # Load fit results and their covariance matrices
-        syst = config['syst']
+        syst = config['params']
         if not isinstance(syst, (list, tuple)):
             syst = [syst]
         for result_config in syst:

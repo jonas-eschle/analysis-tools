@@ -211,9 +211,9 @@ For example,
 syst:
 	type: fixed_params
 	params:
-        - result: MCFit1
-          param_names:
-                mc_fit1_param1: mymodel_param1
+    - result: MCFit1
+      param_names:
+        mc_fit1_param1: mymodel_param1
 				mc_fit1_param2: mymodel_param2
 		- result: MCFit2
 		  param_names:

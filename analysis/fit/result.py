@@ -53,6 +53,8 @@ class FitResult(object):
         """
         if result is not None and not isinstance(result, (dict, OrderedDict)):
             raise ValueError("result is not of the proper type")
+        if 'const-parameters' not in result:
+            result['const-parameters'] = OrderedDict()
         self._result = result
 
     def get_result(self):
@@ -120,7 +122,6 @@ class FitResult(object):
         """
         if not set(yaml_dict.keys()).issuperset({'fit-parameters',
                                                  'fit-parameters-initial',
-                                                 'const-parameters',
                                                  'covariance-matrix',
                                                  'status'}):
             raise KeyError("Missing keys in YAML input")
@@ -154,7 +155,6 @@ class FitResult(object):
             return FitResult(dict(load_config(_paths.get_fit_result_path(name),
                                               validate=('fit-parameters',
                                                         'fit-parameters-initial',
-                                                        'const-parameters',
                                                         'covariance-matrix/quality',
                                                         'covariance-matrix/matrix',
                                                         'status'))))
