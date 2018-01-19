@@ -14,7 +14,6 @@ from __future__ import print_function, division, absolute_import
 
 import argparse
 import os
-from collections import defaultdict
 from timeit import default_timer
 
 import pandas as pd
@@ -112,7 +111,7 @@ def run(config_files, link_from, verbose):
     # Set seed
     job_id = get_job_id()
     # Start looping
-    fit_results = defaultdict()
+    fit_results = {}
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
