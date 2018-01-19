@@ -243,7 +243,7 @@ class FixedParamsSyst(SystematicToys):
                                            for param in self._param_translation.keys()])
         # Check that there is a correspondence between the fit result and parameters in the generation PDF
         self._cov_matrix = make_block(*cov_matrices)
-        self._central_values = central_values
+        self._central_values = np.array(central_values)
         self._pdf_index = {}
         for fit_param in self._param_translation.values():
             found = False
@@ -253,7 +253,8 @@ class FixedParamsSyst(SystematicToys):
                         self._pdf_index[fit_param] = (label, pdf_num)
                         found = True
                         break
-                if found: break
+                if found:
+                    break
             if not found:
                 raise RuntimeError("Cannot find parameter {} in the physics model".format(fit_param))
 
