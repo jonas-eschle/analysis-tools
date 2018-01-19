@@ -82,6 +82,7 @@ def run(config_files, link_from, verbose):
     # Load fit model
     try:
         fit_model = configure_model(model_config)
+        syst_model = configure_model(model_config)
     except KeyError:
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
@@ -105,7 +106,7 @@ def run(config_files, link_from, verbose):
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
     # Load systematic configuration
-    systematic = get_systematic(config['syst'])(model=fit_model,
+    systematic = get_systematic(config['syst'])(model=syst_model,
                                                 config=config['syst'],
                                                 acceptance=acceptance)
     # Set seed
