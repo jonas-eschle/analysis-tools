@@ -230,22 +230,22 @@ class FixedParamsSyst(SystematicToys):
         super(FixedParamsSyst, self).__init__(model, config=config, acceptance=acceptance)
         cov_matrices = []
         central_values = []
-        self._param_translation = OrderedDict()
+        param_translation = OrderedDict()
         # Load fit results and their covariance matrices
         syst = config['params']
         if not isinstance(syst, (list, tuple)):
             syst = [syst]
         for result_config in syst:
             fit_result = FitResult.from_yaml_file(result_config['result'])
-            self._param_translation.update(result_config['param_names'])
-            cov_matrices.append(fit_result.get_covariance_matrix(self._param_translation.keys()))
+            param_translation.update(result_config['param_names'])
+            cov_matrices.append(fit_result.get_covariance_matrix(param_translation.keys()))
             central_values.extend([float(fit_result.get_fit_parameter(param)[0])
-                                           for param in self._param_translation.keys()])
+                                           for param in param_translation.keys()])
         # Check that there is a correspondence between the fit result and parameters in the generation PDF
         self._cov_matrix = make_block(*cov_matrices)
         self._central_values = np.array(central_values)
         self._pdf_index = {}
-        for fit_param in self._param_translation.values():
+        for fit_param in param_translation.values():
             found = False
             for label, pdf_list in self._gen_pdfs.items():
                 for pdf_num, pdf in enumerate(pdf_list):
