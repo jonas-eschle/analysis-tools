@@ -13,7 +13,7 @@ These generate and fit in one go with some random variation of one or more param
 from __future__ import print_function, division, absolute_import
 
 import argparse
-from collections import defaultdict
+import os
 from timeit import default_timer
 
 import pandas as pd
@@ -111,7 +111,7 @@ def run(config_files, link_from, verbose):
     # Set seed
     job_id = get_job_id()
     # Start looping
-    fit_results = defaultdict(list)
+    fit_results = {}
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
@@ -135,13 +135,16 @@ def run(config_files, link_from, verbose):
         except ValueError:
             raise RuntimeError()
         except Exception:
-            logger.exception()
+            #logger.exception()
             raise RuntimeError()  # TODO: provide more information?
         # Now results are in fit_parameters
-        result = FitResult.from_roofit(fit_result).to_plain_dict()
+        result_roofit = FitResult.from_roofit(fit_result)
+        result = result_roofit.to_plain_dict()
+        result['cov_matrix'] = result_roofit.get_covariance_matrix()
+        result['param_names'] = result_roofit.get_fit_parameters().keys()
         result['fitnum'] = fit_num
         result['seed'] = seed
-        fit_results[fit_num].append(result)
+        fit_results[fit_num] = result
         _root.destruct_object(fit_result)
         _root.destruct_object(dataset)
         logger.debug("Cleaning up")
@@ -149,7 +152,21 @@ def run(config_files, link_from, verbose):
     logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/nfits)
     logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/nfits)
     logger.info("Saving to disk")
-    data_frame = pd.DataFrame(fit_results)
+    data_res = []
+    cov_matrices = {}
+    # Get covariance matrices
+    for fit_num, fit_res in fit_results.items():
+        fit_res = fit_res.copy()
+        fit_res['model_name'] = model_name # needed for indexing
+        fit_res['fit_strategy'] = fit_strategy
+        
+        cov_folder = os.path.join(str(job_id), str(fit_res['fitnum']))
+        param_names = fit_res.pop('param_names')
+        cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'),
+                                                index=param_names,
+                                                columns=param_names)
+        data_res.append(fit_res)
+    data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([data_frame,
                                   pd.concat([pd.DataFrame({'jobid': [job_id]})]
                                             * data_frame.shape[0]).reset_index(drop=True)],
@@ -162,8 +179,13 @@ def run(config_files, link_from, verbose):
             with modify_hdf(toy_fit_file) as hdf_file:
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
+                # Save covarinance matrix under 'covariance/jobid/fitnum
+                for cov_folder, cov_matrix in cov_matrices.items():
+                    cov_path = os.path.join('covariance', cov_folder)
+                    hdf_file.append(cov_path, cov_matrix)
                 # Generator info
-                hdf_file.append('input_values', pd.DataFrame([systematic.get_input_values()]))
+                hdf_file.append('input_values', pd.DataFrame(systematic.get_input_values()))
+                
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])

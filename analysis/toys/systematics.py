@@ -117,7 +117,7 @@ class SystematicToys(object):
         """
         # TODO: Add weights?
         if randomize:
-            self.logger("Applying randomization")
+            logger.debug("Applying randomization")
             self.randomize()
         obs = list_to_rooargset(self._model.get_observables())
         datasets_to_merge = []
@@ -175,8 +175,8 @@ class SystematicToys(object):
 
         """
         if self._input_values is None:
-            self._input_values = {var.GetName(): [var.getVal()]
-                                  for var in self._model.get_gen_parameters() + self._model.get_yield_vars()}
+            self._input_values = {"{}_gen".format(var.GetName()): [var.getVal()]
+                                  for var in list(self._model.get_gen_parameters()) + self._model.get_yield_vars()}
         return self._input_values
 
 
@@ -230,27 +230,30 @@ class FixedParamsSyst(SystematicToys):
         super(FixedParamsSyst, self).__init__(model, config=config, acceptance=acceptance)
         cov_matrices = []
         central_values = []
-        self._param_translation = OrderedDict()
+        param_translation = OrderedDict()
         # Load fit results and their covariance matrices
         syst = config['params']
         if not isinstance(syst, (list, tuple)):
             syst = [syst]
         for result_config in syst:
             fit_result = FitResult.from_yaml_file(result_config['result'])
-            self._param_translation.update(result_config['param_names'])
-            cov_matrices.append(fit_result.get_covariance_matrix(self._param_translation.keys()))
-            central_values.append(np.diag([float(fit_result.get_fit_parameter(param)[0])
-                                           for param in self._param_translation.keys()]))
+            param_translation.update(result_config['param_names'])
+            cov_matrices.append(fit_result.get_covariance_matrix(param_translation.keys()))
+            central_values.extend([float(fit_result.get_fit_parameter(param)[0])
+                                           for param in param_translation.keys()])
         # Check that there is a correspondence between the fit result and parameters in the generation PDF
         self._cov_matrix = make_block(*cov_matrices)
-        self._central_values = make_block(*central_values)
+        self._central_values = np.array(central_values)
         self._pdf_index = {}
-        for fit_param in self._param_translation.values():
+        for fit_param in param_translation.values():
             found = False
-            for pdf_num, pdf in enumerate(self._gen_pdfs):
-                if fit_param in [var.GetName() for var in iterate_roocollection(pdf.getVariables())]:
-                    self._pdf_index[fit_param] = pdf_num
-                    found = True
+            for label, pdf_list in self._gen_pdfs.items():
+                for pdf_num, pdf in enumerate(pdf_list):
+                    if fit_param in [var.GetName() for var in iterate_roocollection(pdf.getVariables())]:
+                        self._pdf_index[fit_param] = (label, pdf_num)
+                        found = True
+                        break
+                if found:
                     break
             if not found:
                 raise RuntimeError("Cannot find parameter {} in the physics model".format(fit_param))
@@ -267,7 +270,8 @@ class FixedParamsSyst(SystematicToys):
         """
         random_values = np.random.multivariate_normal(self._central_values, self._cov_matrix)
         for param_num, (param_name, pdf_index) in enumerate(self._pdf_index.items()):
-            self._gen_pdfs[pdf_index].getVariables[param_name].setVal(random_values[param_num])
+            pdf_label, pdf_num = pdf_index
+            self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].setVal(random_values[param_num])
         return len(random_values)
 
 
