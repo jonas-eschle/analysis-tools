@@ -282,11 +282,8 @@ class FixedParamsSyst(SystematicToys):
             dict: param_name, param_value pairs
 
         """
-        random_params = {}
-        for param_name, pdf_index in self._pdf_index.items():
-            pdf_label, pdf_num = pdf_index
-            random_params[param_name] = self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].getVal()
-        return random_params
+        return {param_name: self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].getVal()
+                for param_name, (pdf_label, pdf_num) in self._pdf_index.items()}
 
 
 class AcceptanceSyst(SystematicToys):
