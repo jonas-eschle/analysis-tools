@@ -171,6 +171,28 @@ class ExponentialPdfMixin(object):
 
 
 # pylint: disable=R0903
+class LinearPdfMixin(object):
+    """Linear mass PDF.
+
+    Parameter names:
+        - 'a1'
+
+    """
+
+    MANDATORY_PARAMETERS = ('a1',)
+
+    def get_unbound_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Return:
+            ROOT.RooPolynomial.
+
+        """
+        return ROOT.RooPolynomial(name, title,
+                                  *(self.get_observables()+(ROOT.RooArgList(*self.get_fit_parameters()),)))
+
+
+# pylint: disable=R0903
 class ArgusConvGaussPdfMixin(object):
     """Partially reconstructed background mass PDF.
 
