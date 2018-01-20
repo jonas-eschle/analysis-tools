@@ -15,6 +15,7 @@ from __future__ import print_function, division, absolute_import
 import argparse
 import os
 from timeit import default_timer
+import copy
 
 import pandas as pd
 import numpy as np
@@ -81,7 +82,8 @@ def run(config_files, link_from, verbose):
         raise KeyError("Missing model configuration")
     # Load fit model
     try:
-        fit_model = configure_model(model_config)
+        fit_model = configure_model(copy.deepcopy(model_config))
+        syst_model = configure_model(copy.deepcopy(model_config))
     except KeyError:
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
@@ -105,7 +107,7 @@ def run(config_files, link_from, verbose):
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
     # Load systematic configuration
-    systematic = get_systematic(config['syst'])(model=fit_model,
+    systematic = get_systematic(config['syst'])(model=syst_model,
                                                 config=config['syst'],
                                                 acceptance=acceptance)
     # Set seed
@@ -156,10 +158,10 @@ def run(config_files, link_from, verbose):
     cov_matrices = {}
     # Get covariance matrices
     for fit_num, fit_res in fit_results.items():
-        fit_res = fit_res.copy()
+        fit_res = copy.deepcopy(fit_res)
         fit_res['model_name'] = model_name # needed for indexing
         fit_res['fit_strategy'] = fit_strategy
-        
+
         cov_folder = os.path.join(str(job_id), str(fit_res['fitnum']))
         param_names = fit_res.pop('param_names')
         cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'),
@@ -185,7 +187,7 @@ def run(config_files, link_from, verbose):
                     hdf_file.append(cov_path, cov_matrix)
                 # Generator info
                 hdf_file.append('input_values', pd.DataFrame(systematic.get_input_values()))
-                
+
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])
