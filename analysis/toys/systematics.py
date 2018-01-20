@@ -244,7 +244,7 @@ class FixedParamsSyst(SystematicToys):
         # Check that there is a correspondence between the fit result and parameters in the generation PDF
         self._cov_matrix = make_block(*cov_matrices)
         self._central_values = np.array(central_values)
-        self._pdf_index = {}
+        self._pdf_index = OrderedDict()
         for fit_param in param_translation.values():
             found = False
             for label, pdf_list in self._gen_pdfs.items():
@@ -273,6 +273,20 @@ class FixedParamsSyst(SystematicToys):
             pdf_label, pdf_num = pdf_index
             self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].setVal(random_values[param_num])
         return len(random_values)
+
+    def get_randomized_values(self):
+        """Get a dictionary of (param_name, param_value) pairs for those
+        parameters that have been randomized.
+
+        Return:
+            dict: param_name, param_value pairs
+
+        """
+        random_params = {}
+        for param_name, pdf_index in self._pdf_index.items():
+            pdf_label, pdf_num = pdf_index
+            random_params[param_name] = self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].getVal()
+        return random_params
 
 
 class AcceptanceSyst(SystematicToys):

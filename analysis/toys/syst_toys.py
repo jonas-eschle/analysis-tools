@@ -146,6 +146,7 @@ def run(config_files, link_from, verbose):
         result['param_names'] = result_roofit.get_fit_parameters().keys()
         result['fitnum'] = fit_num
         result['seed'] = seed
+        result['gen_values'] = systematic.get_randomized_values()
         fit_results[fit_num] = result
         _root.destruct_object(fit_result)
         _root.destruct_object(dataset)
@@ -167,6 +168,8 @@ def run(config_files, link_from, verbose):
         cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'),
                                                 index=param_names,
                                                 columns=param_names)
+        for param, gen_value in fit_res.pop('gen_values').items():
+            fit_res["{}_gen".format(param)] = gen_value
         data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([data_frame,
