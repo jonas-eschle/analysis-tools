@@ -146,7 +146,7 @@ def run(config_files, link_from, verbose):
                                   verbose,
                                   Extended=do_extended,
                                   Minos=do_minos)
-            # randomizer.reset_values()  # Not really needed, but cleaner
+            randomizer.reset_values()  # Needed to avoid generating unphysical values
         except ValueError:
             raise RuntimeError()
         except Exception:
