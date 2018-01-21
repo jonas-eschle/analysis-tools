@@ -107,9 +107,9 @@ def run(config_files, link_from, verbose):
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
     # Load randomizer configuration
-    randomizer = get_randomizer(config['syst'])(model=randomizer_model,
-                                                config=config['syst'],
-                                                acceptance=acceptance)
+    randomizer = get_randomizer(config['randomizer'])(model=randomizer_model,
+                                                      config=config['randomizer'],
+                                                      acceptance=acceptance)
     # Set seed
     job_id = get_job_id()
     # Start looping
@@ -158,11 +158,13 @@ def run(config_files, link_from, verbose):
         # Save the results of the randomized fit
         result_roofit_rand = FitResult.from_roofit(fit_result_rand)
         result['param_names'] = result_roofit_rand.get_fit_parameters().keys()
-        result['rand'] = result_roofit_rand.to_plain_dict(skip_cov=False)
+        result['rand'] = result_roofit_rand.to_plain_dict()
+        result['rand_cov'] = result_roofit_rand.get_covariance_matrix()
         _root.destruct_object(fit_result_rand)
         # Save the results of the nominal fit
         result_roofit_nominal = FitResult.from_roofit(fit_result_nominal)
-        result['nominal'] = result_roofit_nominal.to_plain_dict(skip_cov=False)
+        result['nominal'] = result_roofit_nominal.to_plain_dict()
+        result['nominal_cov'] = result_roofit_nominal.get_covariance_matrix()
         result['gen'] = gen_values
         _root.destruct_object(result_roofit_nominal)
         _root.destruct_object(dataset)
@@ -175,26 +177,26 @@ def run(config_files, link_from, verbose):
     data_res = []
     cov_matrices = {}
     # Get covariance matrices
-    for fit_num, fit_res in fit_results.items():
-        fit_res = {'fitnum': fit_res['fit_num'],
-                   'seed': fit_res['seed'],
+    for fit_num, fit_res_i in fit_results.items():
+        fit_res = {'fitnum': fit_res_i['fitnum'],
+                   'seed': fit_res_i['seed'],
                    'model_name': model_name,
                    'fit_strategy': fit_strategy}
-        param_names = fit_res.pop('param_names')
+        param_names = fit_res_i['param_names']
         cov_folder_rand = os.path.join(str(job_id), str(fit_res['fitnum']), 'rand')
-        cov_matrices[cov_folder_rand] = pd.DataFrame(fit_res['rand'].pop('cov_matrix'),
+        cov_matrices[cov_folder_rand] = pd.DataFrame(fit_res_i['rand_cov'],
                                                      index=param_names,
                                                      columns=param_names)
         cov_folder_nominal = os.path.join(str(job_id), str(fit_res['fitnum']), 'nominal')
-        cov_matrices[cov_folder_nominal] = pd.DataFrame(fit_res['nominal'].pop('cov_matrix'),
+        cov_matrices[cov_folder_nominal] = pd.DataFrame(fit_res_i['nominal_cov'],
                                                         index=param_names,
                                                         columns=param_names)
-        for res_name, res_value in result['rand'].items():
-            fit_res['{}_rand' % res_name] = res_value
-        for res_name, res_value in result['nominal'].items():
-            fit_res['{}_nominal' % res_name] = res_value
-        for res_name, res_value in result['gen'].items():
-            fit_res['{}_gen' % res_name] = res_value
+        for res_name, res_value in fit_res_i['rand'].items():
+            fit_res['{}_rand'.format(res_name)] = res_value
+        for res_name, res_value in fit_res_i['nominal'].items():
+            fit_res['{}_nominal'.format(res_name)] = res_value
+        for res_name, res_value in fit_res_i['gen'].items():
+            fit_res['{}_gen'.format(res_name)] = res_value
         data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([data_frame,
@@ -214,7 +216,7 @@ def run(config_files, link_from, verbose):
                     cov_path = os.path.join('covariance', cov_folder)
                     hdf_file.append(cov_path, cov_matrix)
                 # Generator info
-                hdf_file.append('input_values', pd.DataFrame(randomizer.get_input_values()))
+                hdf_file.append('input_values', pd.DataFrame.from_dict(randomizer.get_input_values(), orient='index'))
 
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
