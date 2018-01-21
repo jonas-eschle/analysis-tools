@@ -50,6 +50,8 @@ def set_global_var(name, value):
 
 
 # Initialize global variables
+set_global_var('ANALYSIS_PATH',
+               os.path.abspath(os.path.join(os.path.dirname(__file__))))
 set_global_var('BASE_PATH',
                os.path.abspath(os.path.join(os.path.dirname(__file__))))
 set_global_var('STYLE_PATH',

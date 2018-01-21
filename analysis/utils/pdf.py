@@ -47,7 +47,7 @@ def add_pdf_paths(*paths):
 
 
 # Default PDF paths: analysis/pdfs and module/pdfs
-add_pdf_paths(os.path.join(os.path.dirname(__file__), '..', 'pdfs'),
+add_pdf_paths(os.path.join(get_global_var('ANALYSIS_PATH'), 'pdfs'),
               'pdfs')
 
 
