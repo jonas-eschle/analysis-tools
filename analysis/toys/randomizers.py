@@ -95,7 +95,7 @@ class ToyRandomizer(object):
         self._gen_pdfs = get_pdfs_to_generate(model, config)
         logger.debug("Determined split PDFs to generate -> %s", self._gen_pdfs)
         self._model = model
-        self._input_values = None
+        self._input_values = self.get_current_values()
         self._config = config
         self._gen_acceptance = acceptance
         self._fit_acceptance = acceptance
@@ -173,9 +173,6 @@ class ToyRandomizer(object):
             dict
 
         """
-        if self._input_values is None:
-            self._input_values = {"{}_input".format(var.GetName()): [var.getVal()]
-                                  for var in list(self._model.get_gen_parameters()) + self._model.get_yield_vars()}
         return self._input_values
 
     def get_current_values(self):
@@ -185,10 +182,19 @@ class ToyRandomizer(object):
             dict: param_name, param_value pairs
 
         """
-        return {"{}_gen".format(param.GetName()): param.getVal()
+        return {param.GetName(): param.getVal()
                 for pdf_list in self._gen_pdfs.values()
                 for pdf in pdf_list
                 for param in iterate_roocollection(pdf.getVariables())}
+
+    def reset_values(self):
+        """Reset randomized parameters to their input values.
+
+        Return:
+            bool: Successful?
+
+        """
+        raise NotImplementedError("reset_values needs to be implemented for each randomizer")
 
 
 class FixedParamsRandomizer(ToyRandomizer):
@@ -284,6 +290,23 @@ class FixedParamsRandomizer(ToyRandomizer):
             pdf_label, pdf_num = pdf_index
             self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].setVal(random_values[param_num])
         return len(random_values)
+
+    def reset_values(self):
+        """Reset randomized parameters to their input values.
+
+        Return:
+            bool: Successful?
+
+        """
+        for pdf_list in self._gen_pdfs.values():
+            for pdf in pdf_list:
+                for param in iterate_roocollection(pdf.getVariables()):
+                    try:
+                        param.setVal(self._input_values[param.GetName()])
+                    except KeyError:
+                        logger.error("Can't find parameter -> %s", param.GetName())
+                        return False
+        return True
 
 
 class AcceptanceRandomizer(ToyRandomizer):
