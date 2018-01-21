@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file   systematics.py
+# @file   randomizers.py
 # @author Albert Puig (albert.puig@cern.ch)
 # @date   30.10.2017
 # =============================================================================
-"""Systematic uncertainty toy generators."""
+"""Randomized toy generators."""
 from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict, defaultdict
@@ -21,14 +21,14 @@ from analysis.data.mergers import merge_root
 from analysis.data.converters import pandas_from_dataset, dataset_from_pandas
 from analysis.utils.logging_color import get_logger
 
-logger = get_logger('analysis.toys.systematics')
+logger = get_logger('analysis.toys.randomizers')
 
 
-class SystematicToys(object):
-    """Base class for systematics."""
+class ToyRandomizer(object):
+    """Base class for toy randomizers."""
 
     def __init__(self, model, config=None, acceptance=None):
-        """Configure systematic.
+        """Configure randomizer.
 
         The physics model needs to be extended. In case it isn't, `yield` needs to
         be specified in `config`. For simultaneous PDFs, `yield` needs to be a
@@ -70,12 +70,12 @@ class SystematicToys(object):
                     if pdf_model.is_simultaneous():
                         if set(pdf_model.get_children.keys()) != set(pdf_config['yield'].keys()):
                             raise ValueError("PDF labels don't match yield labels")
-                        return {label: [child.get_extended_pdf("GenSystPdf_{}".format(label),
-                                                               "GenSystPdf_{}".format(label),
+                        return {label: [child.get_extended_pdf("GenRandPdf_{}".format(label),
+                                                               "GenRandPdf_{}".format(label),
                                                                pdf_config['yield'][label])]
                                 for label, child in pdf_model.get_children().items()}
                     else:
-                        return {None: [pdf_model.get_extended_pdf("GenSystPdf", "GenSystPdf", config['yield'])]}
+                        return {None: [pdf_model.get_extended_pdf("GenRandPdf", "GenRandPdf", config['yield'])]}
                 except (KeyError, AttributeError):
                     raise ValueError("Yield badly specified")
             else:
@@ -88,7 +88,7 @@ class SystematicToys(object):
                         else:
                             output[None].extend(get_pdfs_to_generate(child, None)[None])
                     return output
-                return {None: [pdf_model.get_extended_pdf("GenSystPdf", "GenSystPdf")]}
+                return {None: [pdf_model.get_extended_pdf("GenRandPdf", "GenRandPdf")]}
 
         if config is None:
             config = {}
@@ -108,8 +108,7 @@ class SystematicToys(object):
         is added as weight.
 
         Arguments:
-            randomize (bool, optional): Randomize the parameters according to the systematic.
-                Defaults to `True`.
+            randomize (bool, optional): Randomize the parameters? Defaults to `True`.
 
         Return:
             `ROOT.RooDataSet`.
@@ -156,7 +155,7 @@ class SystematicToys(object):
         return merge_root(datasets_to_merge, 'GenData', 'GenData')
 
     def randomize(self):
-        """Randomize the parameters relevant for the systematic calculation.
+        """Randomize the desired parameters.
 
         This function modifies the internal parameters of the generator PDF, so
         it doesn't return their values but the number of randomized parameters.
@@ -165,7 +164,7 @@ class SystematicToys(object):
             int: Number of randomized parameters.
 
         """
-        raise NotImplementedError("randomize needs to be implemented by each systematics class")
+        raise NotImplementedError("randomize needs to be implemented by each randomizer class")
 
     def get_input_values(self):
         """Get the original values of the input model.
@@ -175,16 +174,28 @@ class SystematicToys(object):
 
         """
         if self._input_values is None:
-            self._input_values = {"{}_gen".format(var.GetName()): [var.getVal()]
+            self._input_values = {"{}_input".format(var.GetName()): [var.getVal()]
                                   for var in list(self._model.get_gen_parameters()) + self._model.get_yield_vars()}
         return self._input_values
 
+    def get_current_values(self):
+        """Get the current values of the generation PDF parameters.
 
-class FixedParamsSyst(SystematicToys):
-    """Systematic for parameters fixed from simulation or other models."""
+        Return:
+            dict: param_name, param_value pairs
+
+        """
+        return {"{}_gen".format(param.GetName()): param.getVal()
+                for pdf_list in self._gen_pdfs.values()
+                for pdf in pdf_list
+                for param in iterate_roocollection(pdf.getVariables())}
+
+
+class FixedParamsRandomizer(ToyRandomizer):
+    """Randomizer for parameters fixed from simulation or other models."""
 
     def __init__(self, model, acceptance, config):
-        """Configure systematic.
+        """Configure randomizer.
 
         To specify where the parameters come from, `config` needs a `params` key which contains
         a list of results and parameter name correspondences to be used to translate from the
@@ -201,7 +212,7 @@ class FixedParamsSyst(SystematicToys):
             config (dict): Configuration.
 
         Raise:
-            KeyError: If some systematic configuration parameter is missing.
+            KeyError: If some configuration parameter is missing.
             RuntimeError: If the parameter names are badly specified.
             ValueError: If no yield is specified, either through the PDF model or the
                 configuration.
@@ -227,20 +238,20 @@ class FixedParamsSyst(SystematicToys):
                 column = column+mat.shape[1]
             return output_mat
 
-        super(FixedParamsSyst, self).__init__(model, config=config, acceptance=acceptance)
+        super(FixedParamsRandomizer, self).__init__(model, config=config, acceptance=acceptance)
         cov_matrices = []
         central_values = []
         param_translation = OrderedDict()
         # Load fit results and their covariance matrices
-        syst = config['params']
-        if not isinstance(syst, (list, tuple)):
-            syst = [syst]
-        for result_config in syst:
+        rand_config = config['params']
+        if not isinstance(rand_config, (list, tuple)):
+            rand_config = [rand_config]
+        for result_config in rand_config:
             fit_result = FitResult.from_yaml_file(result_config['result'])
             param_translation.update(result_config['param_names'])
             cov_matrices.append(fit_result.get_covariance_matrix(param_translation.keys()))
             central_values.extend([float(fit_result.get_fit_parameter(param)[0])
-                                           for param in param_translation.keys()])
+                                   for param in param_translation.keys()])
         # Check that there is a correspondence between the fit result and parameters in the generation PDF
         self._cov_matrix = make_block(*cov_matrices)
         self._central_values = np.array(central_values)
@@ -274,20 +285,10 @@ class FixedParamsSyst(SystematicToys):
             self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].setVal(random_values[param_num])
         return len(random_values)
 
-    def get_randomized_values(self):
-        """Get a dictionary of (param_name, param_value) pairs for those
-        parameters that have been randomized.
 
-        Return:
-            dict: param_name, param_value pairs
+class AcceptanceRandomizer(ToyRandomizer):
+    """Toy randomizer for acceptance parameters."""
 
-        """
-        return {param_name: self._gen_pdfs[pdf_label][pdf_num].getVariables()[param_name].getVal()
-                for param_name, (pdf_label, pdf_num) in self._pdf_index.items()}
-
-
-class AcceptanceSyst(SystematicToys):
-    """Systematic toys for acceptance parameters."""
     def randomize(self):
         """Randomize the acceptance function.
 
@@ -304,14 +305,14 @@ class AcceptanceSyst(SystematicToys):
             self._gen_acceptance = self._fit_acceptance.randomize()
         except NotImplementedError:
             logger.error("Randomization not supported by the acceptance")
-            raise ValueError("Error randomizing systematic")
+            raise ValueError("Error randomizing")
         except ValueError as error:
             logger.error("Error randomizing acceptance -> %s", str(error))
-            raise ValueError("Error randomizing systematic")
+            raise ValueError("Error randomizing")
         return 2
 
 
-SYSTEMATIC_TOYS = {'fixed_params': FixedParamsSyst,
-                   'acceptance': AcceptanceSyst}
+TOY_RANDOMIZERS = {'fixed_params': FixedParamsRandomizer,
+                   'acceptance': AcceptanceRandomizer}
 
 # EOF

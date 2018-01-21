@@ -31,7 +31,7 @@ from analysis.efficiency import get_acceptance
 from analysis.fit import fit
 from analysis.fit.result import FitResult
 from analysis.batch import get_job_id
-from analysis.toys import get_systematic
+from analysis.toys import get_randomizer
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
@@ -107,7 +107,7 @@ def run(config_files, link_from, verbose):
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
     # Load systematic configuration
-    systematic = get_systematic(config['syst'])(model=syst_model,
+    systematic = get_randomizer(config['syst'])(model=syst_model,
                                                 config=config['syst'],
                                                 acceptance=acceptance)
     # Set seed
@@ -126,7 +126,7 @@ def run(config_files, link_from, verbose):
         np.random.seed(seed=seed)
         ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
-            dataset = systematic.get_dataset()
+            dataset = systematic.get_dataset(randomize=True)
             fit_result = fit(fit_model,
                              model_name,
                              fit_strategy,
@@ -137,7 +137,7 @@ def run(config_files, link_from, verbose):
         except ValueError:
             raise RuntimeError()
         except Exception:
-            #logger.exception()
+            # logger.exception()
             raise RuntimeError()  # TODO: provide more information?
         # Now results are in fit_parameters
         result_roofit = FitResult.from_roofit(fit_result)
@@ -146,7 +146,7 @@ def run(config_files, link_from, verbose):
         result['param_names'] = result_roofit.get_fit_parameters().keys()
         result['fitnum'] = fit_num
         result['seed'] = seed
-        result['gen_values'] = systematic.get_randomized_values()
+        result['gen_values'] = systematic.get_current_values()
         fit_results[fit_num] = result
         _root.destruct_object(fit_result)
         _root.destruct_object(dataset)
@@ -160,7 +160,7 @@ def run(config_files, link_from, verbose):
     # Get covariance matrices
     for fit_num, fit_res in fit_results.items():
         fit_res = copy.deepcopy(fit_res)
-        fit_res['model_name'] = model_name # needed for indexing
+        fit_res['model_name'] = model_name  # needed for indexing
         fit_res['fit_strategy'] = fit_strategy
 
         cov_folder = os.path.join(str(job_id), str(fit_res['fitnum']))
