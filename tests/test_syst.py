@@ -13,7 +13,7 @@ from test_physics import prod_factory
 from test_physics import sum_factory, sum_factory_frac
 from test_physics import sim_factory
 
-from analysis.toys.systematics import SystematicToys
+from analysis.toys.randomizers import ToyRandomizer
 from analysis.utils.root import list_to_rooargset
 
 
@@ -21,18 +21,18 @@ from analysis.utils.root import list_to_rooargset
 def test_factory_split(factory, factory_with_yield):
     """Test function splitting is done properly."""
     try:
-        SystematicToys(factory)
+        ToyRandomizer(factory)
     except ValueError:
         pass
     # Manual yield
-    syst_fac = SystematicToys(factory, {'yield': 100})
+    syst_fac = ToyRandomizer(factory, {'yield': 100})
     assert list(syst_fac._gen_pdfs.keys()) == [None]
     assert len(syst_fac._gen_pdfs[None]) == 1
     assert syst_fac._gen_pdfs[None][0].expectedEvents(
         list_to_rooargset(
             factory.get_observables())) == 100
     # Yield from config
-    syst_fac = SystematicToys(factory_with_yield)
+    syst_fac = ToyRandomizer(factory_with_yield)
     assert list(syst_fac._gen_pdfs.keys()) == [None]
     assert len(syst_fac._gen_pdfs[None]) == 1
     assert syst_fac._gen_pdfs[None][0].expectedEvents(
@@ -43,7 +43,7 @@ def test_factory_split(factory, factory_with_yield):
 # pylint: disable=W0621
 def test_prodfactory_split(prod_factory):
     """Test function splitting is done properly."""
-    syst_fac = SystematicToys(prod_factory)
+    syst_fac = ToyRandomizer(prod_factory)
     assert list(syst_fac._gen_pdfs.keys()) == [None]
     assert len(syst_fac._gen_pdfs[None]) == 1
     assert syst_fac._gen_pdfs[None][0].expectedEvents(
@@ -55,7 +55,7 @@ def test_prodfactory_split(prod_factory):
 def test_sumfactory_factory_split(sum_factory, sum_factory_frac):
     """Test function splitting is done properly."""
     # With yields
-    syst_fac = SystematicToys(sum_factory)
+    syst_fac = ToyRandomizer(sum_factory)
     assert list(syst_fac._gen_pdfs.keys()) == [None]
     assert len(syst_fac._gen_pdfs[None]) == 2
     assert syst_fac._gen_pdfs[None][0].expectedEvents(
@@ -65,7 +65,7 @@ def test_sumfactory_factory_split(sum_factory, sum_factory_frac):
         list_to_rooargset(
             sum_factory.get_observables())) == 999
     # With fraction
-    syst_fac = SystematicToys(sum_factory_frac, {'yield': 100})
+    syst_fac = ToyRandomizer(sum_factory_frac, {'yield': 100})
     assert list(syst_fac._gen_pdfs.keys()) == [None]
     assert len(syst_fac._gen_pdfs[None]) == 1
     assert syst_fac._gen_pdfs[None][0].expectedEvents(
@@ -77,7 +77,7 @@ def test_sumfactory_factory_split(sum_factory, sum_factory_frac):
 def test_simfactory_factory_split(sim_factory):
     """Test function splitting is done properly."""
     # With yields
-    syst_fac = SystematicToys(sim_factory)
+    syst_fac = ToyRandomizer(sim_factory)
     assert list(syst_fac._gen_pdfs.keys()) == ['label1', 'label2']
     assert len(syst_fac._gen_pdfs['label1']) == 2
     assert syst_fac._gen_pdfs['label1'][0].expectedEvents(
