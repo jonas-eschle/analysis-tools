@@ -74,6 +74,7 @@ def run(config_files, link_from, verbose):
         raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
+        raise
     model_name = config['fit'].get('model', 'model')  # TODO: 'model' returns name?
     try:
         model_config = config[model_name]
