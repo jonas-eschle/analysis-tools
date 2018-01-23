@@ -59,13 +59,13 @@ def run(config_files, link_from, verbose):
     """
     try:
         config = _config.load_config(*config_files,
-                                     validate=['fit/nfits',
+                                     validate=['syst/nfits',
                                                'name',
                                                'randomizer'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
     except _config.ConfigError as error:
-        if 'fit/nfits' in error.missing_keys:
+        if 'syst/nfits' in error.missing_keys:
             logger.error("Number of fits not specified")
         if 'name' in error.missing_keys:
             logger.error("No name was specified in the config file!")
@@ -75,7 +75,7 @@ def run(config_files, link_from, verbose):
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
         raise
-    model_name = config['fit'].get('model', 'model')  # TODO: 'model' returns name?
+    model_name = config['syst'].get('model', 'model')  # TODO: 'model' returns name?
     try:
         model_config = config[model_name]
     except KeyError as error:
@@ -89,9 +89,9 @@ def run(config_files, link_from, verbose):
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
     # Some info
-    nfits = config['fit'].get('nfits-per-job', config['fit']['nfits'])
+    nfits = config['syst'].get('nfits-per-job', config['syst']['nfits'])
     logger.info("Doing %s generate/fit sequences", nfits)
-    logger.info("Fit job name: %s", config['name'])
+    logger.info("Systematics job name: %s", config['name'])
     if link_from:
         config['link-from'] = link_from
     if 'link-from' in config:
@@ -106,7 +106,7 @@ def run(config_files, link_from, verbose):
     except _config.ConfigError as error:
         raise KeyError("Error loading acceptance -> {}".format(error))
     # Fit strategy
-    fit_strategy = config['fit'].get('strategy', 'simple')
+    fit_strategy = config['syst'].get('strategy', 'simple')
     # Load randomizer configuration
     randomizer = get_randomizer(config['randomizer'])(model=randomizer_model,
                                                       config=config['randomizer'],
@@ -118,8 +118,8 @@ def run(config_files, link_from, verbose):
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
-    do_extended = config['fit'].get('extended', False)
-    do_minos = config['fit'].get('minos', False)
+    do_extended = config['syst'].get('extended', False)
+    do_minos = config['syst'].get('minos', False)
     for fit_num in range(nfits):
         # Logging
         if (fit_num+1) % 20 == 0:
