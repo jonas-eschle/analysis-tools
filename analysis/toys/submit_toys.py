@@ -94,7 +94,7 @@ class SystematicsSubmitter(ToySubmitter):
 
 TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
              'fit': (FitSubmitter, 'fit_toys.py'),
-             'syst': (SystematicsSubmitter, 'sysy_toys.py')}
+             'syst': (SystematicsSubmitter, 'syst_toys.py')}
 
 
 # Scan function
