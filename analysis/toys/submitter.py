@@ -36,7 +36,8 @@ class ToySubmitter(object):
         VALIDATION (dict, optional): Pairs of key, message to validate the input
             configuration. If the key is not present, KeyError is raised and the
             message logged.
-        ALLOWED_CONFIG_DIFFS (list(str), optional):
+        ALLOWED_CONFIG_DIFFS (list(str), optional): Allowed differences between new and
+            stored configurations.
 
     """
 
@@ -91,6 +92,8 @@ class ToySubmitter(object):
             raise ValueError()
         # Store infotmation
         self.config = config
+        self.allowed_config_diffs = set([self.NTOYS_KEY, self.NTOYS_PER_JOB_KEY, 'batch/runtime']
+                                        + self.ALLOWED_CONFIG_DIFFS)
         # Assign link-from giving priority to the argument
         self.config['link-from'] = link_from if link_from else config.get('link-from')
         self.link_from = link_from
@@ -122,7 +125,7 @@ class ToySubmitter(object):
         # First check the config (we may have already checked)
         if os.path.exists(config_file_dest):  # It exists, check they match
             config_dest = _config.load_config(config_file_dest)
-            if _config.compare_configs(flat_config, config_dest).difference(set(self.ALLOWED_CONFIG_DIFFS)):
+            if _config.compare_configs(flat_config, config_dest).difference(self.allowed_config_diffs):
                 logger.error("Non-matching configuration already exists with that name!")
                 raise AttributeError()
         # Now check output

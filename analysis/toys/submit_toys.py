@@ -20,6 +20,9 @@ Then, according to the type of job, there's a few extra mandatory keys:
     - Generation toys:
         + gen/nevents: Total number of events to produce.
         + gen/nevents-per-job: Number of events produced per job.
+    - Systematic toys:
+        + fit/nfits: Total number of generate/fit loops to perform.
+        + fit/nfits-per-job: Number of fits produced per job.
 
 Optional configuration keys:
     - batch/runtime: In the HH:MM:SS format. Defaults to 08:00:00.
@@ -54,9 +57,6 @@ class FitSubmitter(ToySubmitter):
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_fit_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_fit_config_path)
-    ALLOWED_CONFIG_DIFFS = ['gen/nevents',
-                            'gen/nevents-per-job',
-                            'batch/runtime']
     NTOYS_KEY = 'fit/nfits'
     NTOYS_PER_JOB_KEY = 'fit/nfits-per-job'
 
@@ -72,15 +72,29 @@ class GenerationSubmitter(ToySubmitter):
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_config_path)
-    ALLOWED_CONFIG_DIFFS = ['gen/nevents',
-                            'gen/nevents-per-job',
-                            'batch/runtime']
     NTOYS_KEY = 'gen/nevents'
     NTOYS_PER_JOB_KEY = 'gen/nevents-per-job'
 
 
+# pylint: disable=too-few-public-methods
+class SystematicsSubmitter(ToySubmitter):
+    """Specialization of ToySubmitter to submit toys for systematic studies."""
+
+    VALIDATION = {'name': "No name was specified in the config file!",
+                  'fit/nfits': "Number of fits not specified!",
+                  # 'fit/nfits-per-job': "Number of fits per job not specified!",
+                  'model': "No model was specified in the config file!",
+                  'randomizer': "No randomizer was specified in the config file!"}
+    # pylint: disable=E1101
+    TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
+    TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_config_path)
+    NTOYS_KEY = 'fit/nfits'
+    NTOYS_PER_JOB_KEY = 'fit/nfits-per-job'
+
+
 TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
-             'fit': (FitSubmitter, 'fit_toys.py')}
+             'fit': (FitSubmitter, 'fit_toys.py'),
+             'syst': (SystematicsSubmitter, 'sysy_toys.py')}
 
 
 # Scan function
