@@ -31,7 +31,7 @@ from analysis.efficiency import get_acceptance
 from analysis.fit import fit
 from analysis.fit.result import FitResult
 from analysis.batch import get_job_id
-from analysis.toys import get_systematic
+from analysis.toys import get_randomizer
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
@@ -61,7 +61,7 @@ def run(config_files, link_from, verbose):
         config = _config.load_config(*config_files,
                                      validate=['fit/nfits',
                                                'name',
-                                               'syst'])
+                                               'randomizer'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
     except _config.ConfigError as error:
@@ -69,11 +69,12 @@ def run(config_files, link_from, verbose):
             logger.error("Number of fits not specified")
         if 'name' in error.missing_keys:
             logger.error("No name was specified in the config file!")
-        if 'syst' in error.missing_keys:
-            logger.error("No systematics configuration specified in config file!")
+        if 'randomizer' in error.missing_keys:
+            logger.error("No randomizer configuration specified in config file!")
         raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
+        raise
     model_name = config['fit'].get('model', 'model')  # TODO: 'model' returns name?
     try:
         model_config = config[model_name]
@@ -83,7 +84,7 @@ def run(config_files, link_from, verbose):
     # Load fit model
     try:
         fit_model = configure_model(copy.deepcopy(model_config))
-        syst_model = configure_model(copy.deepcopy(model_config))
+        randomizer_model = configure_model(copy.deepcopy(model_config))
     except KeyError:
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
@@ -106,10 +107,10 @@ def run(config_files, link_from, verbose):
         raise KeyError("Error loading acceptance -> {}".format(error))
     # Fit strategy
     fit_strategy = config['fit'].get('strategy', 'simple')
-    # Load systematic configuration
-    systematic = get_systematic(config['syst'])(model=syst_model,
-                                                config=config['syst'],
-                                                acceptance=acceptance)
+    # Load randomizer configuration
+    randomizer = get_randomizer(config['randomizer'])(model=randomizer_model,
+                                                      config=config['randomizer'],
+                                                      acceptance=acceptance)
     # Set seed
     job_id = get_job_id()
     # Start looping
@@ -117,6 +118,8 @@ def run(config_files, link_from, verbose):
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
+    do_extended = config['fit'].get('extended', False)
+    do_minos = config['fit'].get('minos', False)
     for fit_num in range(nfits):
         # Logging
         if (fit_num+1) % 20 == 0:
@@ -126,29 +129,47 @@ def run(config_files, link_from, verbose):
         np.random.seed(seed=seed)
         ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
-            dataset = systematic.get_dataset()
-            fit_result = fit(fit_model,
-                             model_name,
-                             fit_strategy,
-                             dataset,
-                             verbose,
-                             Extended=config['fit'].get('extended', False),
-                             Minos=config['fit'].get('minos', False))
+            # Get a randomized dataset and fit it with the nominal fit
+            dataset = randomizer.get_dataset(randomize=True)
+            gen_values = randomizer.get_current_values()
+            fit_result_nominal = fit(fit_model,
+                                     model_name,
+                                     fit_strategy,
+                                     dataset,
+                                     verbose,
+                                     Extended=do_extended,
+                                     Minos=do_minos)
+            # Fit the randomized dataset with the randomized values as nominal
+            fit_result_rand = fit(randomizer_model,
+                                  model_name,
+                                  fit_strategy,
+                                  dataset,
+                                  verbose,
+                                  Extended=do_extended,
+                                  Minos=do_minos)
+            randomizer.reset_values()  # Needed to avoid generating unphysical values
         except ValueError:
             raise RuntimeError()
         except Exception:
-            #logger.exception()
+            # logger.exception()
             raise RuntimeError()  # TODO: provide more information?
-        # Now results are in fit_parameters
-        result_roofit = FitResult.from_roofit(fit_result)
-        result = result_roofit.to_plain_dict()
-        result['cov_matrix'] = result_roofit.get_covariance_matrix()
-        result['param_names'] = result_roofit.get_fit_parameters().keys()
+        result = {}
         result['fitnum'] = fit_num
         result['seed'] = seed
-        fit_results[fit_num] = result
-        _root.destruct_object(fit_result)
+        # Save the results of the randomized fit
+        result_roofit_rand = FitResult.from_roofit(fit_result_rand)
+        result['param_names'] = result_roofit_rand.get_fit_parameters().keys()
+        result['rand'] = result_roofit_rand.to_plain_dict()
+        result['rand_cov'] = result_roofit_rand.get_covariance_matrix()
+        _root.destruct_object(fit_result_rand)
+        # Save the results of the nominal fit
+        result_roofit_nominal = FitResult.from_roofit(fit_result_nominal)
+        result['nominal'] = result_roofit_nominal.to_plain_dict()
+        result['nominal_cov'] = result_roofit_nominal.get_covariance_matrix()
+        result['gen'] = gen_values
+        _root.destruct_object(result_roofit_nominal)
         _root.destruct_object(dataset)
+        fit_results[fit_num] = result
         logger.debug("Cleaning up")
     logger.info("Fitting loop over")
     logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/nfits)
@@ -157,16 +178,26 @@ def run(config_files, link_from, verbose):
     data_res = []
     cov_matrices = {}
     # Get covariance matrices
-    for fit_num, fit_res in fit_results.items():
-        fit_res = copy.deepcopy(fit_res)
-        fit_res['model_name'] = model_name # needed for indexing
-        fit_res['fit_strategy'] = fit_strategy
-
-        cov_folder = os.path.join(str(job_id), str(fit_res['fitnum']))
-        param_names = fit_res.pop('param_names')
-        cov_matrices[cov_folder] = pd.DataFrame(fit_res.pop('cov_matrix'),
-                                                index=param_names,
-                                                columns=param_names)
+    for fit_num, fit_res_i in fit_results.items():
+        fit_res = {'fitnum': fit_res_i['fitnum'],
+                   'seed': fit_res_i['seed'],
+                   'model_name': model_name,
+                   'fit_strategy': fit_strategy}
+        param_names = fit_res_i['param_names']
+        cov_folder_rand = os.path.join(str(job_id), str(fit_res['fitnum']), 'rand')
+        cov_matrices[cov_folder_rand] = pd.DataFrame(fit_res_i['rand_cov'],
+                                                     index=param_names,
+                                                     columns=param_names)
+        cov_folder_nominal = os.path.join(str(job_id), str(fit_res['fitnum']), 'nominal')
+        cov_matrices[cov_folder_nominal] = pd.DataFrame(fit_res_i['nominal_cov'],
+                                                        index=param_names,
+                                                        columns=param_names)
+        for res_name, res_value in fit_res_i['rand'].items():
+            fit_res['{}_rand'.format(res_name)] = res_value
+        for res_name, res_value in fit_res_i['nominal'].items():
+            fit_res['{}_nominal'.format(res_name)] = res_value
+        for res_name, res_value in fit_res_i['gen'].items():
+            fit_res['{}_gen'.format(res_name)] = res_value
         data_res.append(fit_res)
     data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([data_frame,
@@ -186,7 +217,7 @@ def run(config_files, link_from, verbose):
                     cov_path = os.path.join('covariance', cov_folder)
                     hdf_file.append(cov_path, cov_matrix)
                 # Generator info
-                hdf_file.append('input_values', pd.DataFrame(systematic.get_input_values()))
+                hdf_file.append('input_values', pd.DataFrame.from_dict(randomizer.get_input_values(), orient='index'))
 
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
