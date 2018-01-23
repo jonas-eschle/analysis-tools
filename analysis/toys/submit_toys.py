@@ -81,15 +81,15 @@ class SystematicsSubmitter(ToySubmitter):
     """Specialization of ToySubmitter to submit toys for systematic studies."""
 
     VALIDATION = {'name': "No name was specified in the config file!",
-                  'fit/nfits': "Number of fits not specified!",
+                  'syst/ntoys': "Number of toys not specified!",
                   # 'fit/nfits-per-job': "Number of fits per job not specified!",
                   'model': "No model was specified in the config file!",
                   'randomizer': "No randomizer was specified in the config file!"}
     # pylint: disable=E1101
     TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_config_path)
-    NTOYS_KEY = 'fit/nfits'
-    NTOYS_PER_JOB_KEY = 'fit/nfits-per-job'
+    NTOYS_KEY = 'syst/ntoys'
+    NTOYS_PER_JOB_KEY = 'syst/ntoys-per-job'
 
 
 TOY_TYPES = {'gen': (GenerationSubmitter, 'generate_toys.py'),
