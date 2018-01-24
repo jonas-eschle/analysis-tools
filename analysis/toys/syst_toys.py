@@ -24,7 +24,7 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.utils.random import get_urandom_int
+from analysis.utils.random_numbers import get_urandom_int
 from analysis.data.hdf import modify_hdf
 from analysis.physics import configure_model
 from analysis.efficiency import get_acceptance

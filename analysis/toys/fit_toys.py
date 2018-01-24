@@ -22,7 +22,7 @@ import ROOT
 from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.utils.random import get_urandom_int
+from analysis.utils.random_numbers import get_urandom_int
 from analysis.data import get_data
 from analysis.data.hdf import modify_hdf
 from analysis.data.converters import dataset_from_pandas

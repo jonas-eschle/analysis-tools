@@ -16,7 +16,7 @@ import ROOT
 
 from analysis.physics import configure_model
 from analysis.physics.factory import SumPhysicsFactory, SimultaneousPhysicsFactory
-from analysis.utils.random import get_urandom_int
+from analysis.utils.random_numbers import get_urandom_int
 from analysis.utils.root import destruct_object, list_to_rooargset
 from analysis.utils.config import load_config
 from analysis.utils.exceptions import ConfigError
