@@ -86,7 +86,7 @@ class SystematicsSubmitter(ToySubmitter):
                   'model': "No model was specified in the config file!",
                   'randomizer': "No randomizer was specified in the config file!"}
     # pylint: disable=E1101
-    TOY_PATH_GETTER = staticmethod(_paths.get_toy_path)
+    TOY_PATH_GETTER = staticmethod(_paths.get_toy_syst_path)
     TOY_CONFIG_PATH_GETTER = staticmethod(_paths.get_toy_syst_config_path)
     NTOYS_KEY = 'syst/ntoys'
     NTOYS_PER_JOB_KEY = 'syst/ntoys-per-job'
