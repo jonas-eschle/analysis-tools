@@ -19,9 +19,10 @@ import pandas as pd
 
 import ROOT
 
+from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.utils.random import get_urandom_int
+from analysis.utils.random_numbers import get_urandom_int
 from analysis.data import get_data
 from analysis.data.hdf import modify_hdf
 from analysis.data.converters import dataset_from_pandas
@@ -90,10 +91,15 @@ def get_datasets(data_frames, acceptance, fit_models):
         # Add category column
         if category:
             # By default the label is stored in the 'category' column
-            if 'category' in rows and not all(rows['category']==category):
-                logger.error("Data %s contains categories not matching the specified category: ",
-                             rows, set(rows['category']) - {category})
-                raise ValueError("Data {} has categories different to the specified one".format(data_name))  # TODO: replace with DataError
+            if 'category' in rows:
+                if len(set(rows['category'])) > 1:
+                    logger.error("Data %s contains more then one category: %s!",
+                                 rows, set(rows['category']))
+                    raise ValueError("Data {} contains more then one category: ".format(data_name))  # TODO: replace with DataError
+                elif not rows['category'].iloc[0] == category:
+                    logger.info("Data %s contains a category %s, dropping it and "
+                                "replacing it with the specified one %s", rows,
+                                rows['category'].iloc[0], category)
             rows['category'] = category
         elif 'category' in rows:
             logger.warning("Data %s contains a 'category' column but no category was specified"
@@ -151,7 +157,7 @@ def run(config_files, link_from, verbose):
                                                'data'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
-    except _config.ConfigError as error:
+    except ConfigError as error:
         if 'fit/nfits' in error.missing_keys:
             logger.error("Number of fits not specified")
         if 'name' in error.missing_keys:
@@ -265,7 +271,7 @@ def run(config_files, link_from, verbose):
         acceptance = get_acceptance(config['acceptance']) \
             if 'acceptance' in config \
             else None
-    except _config.ConfigError as error:
+    except ConfigError as error:
         raise KeyError("Error loading acceptance -> {}".format(error))
     # Prepare output
     gen_events = defaultdict(list)

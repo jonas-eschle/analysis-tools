@@ -13,8 +13,9 @@ These generate and fit in one go with some random variation of one or more param
 from __future__ import print_function, division, absolute_import
 
 import argparse
-from collections import defaultdict
+import os
 from timeit import default_timer
+import copy
 
 import pandas as pd
 import numpy as np
@@ -23,14 +24,14 @@ import ROOT
 
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
-from analysis.utils.random import get_urandom_int
+from analysis.utils.random_numbers import get_urandom_int
 from analysis.data.hdf import modify_hdf
 from analysis.physics import configure_model
 from analysis.efficiency import get_acceptance
 from analysis.fit import fit
 from analysis.fit.result import FitResult
 from analysis.batch import get_job_id
-from analysis.toys import get_systematic
+from analysis.toys import get_randomizer
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
@@ -58,22 +59,23 @@ def run(config_files, link_from, verbose):
     """
     try:
         config = _config.load_config(*config_files,
-                                     validate=['fit/nfits',
+                                     validate=['syst/ntoys',
                                                'name',
-                                               'syst'])
+                                               'randomizer'])
     except OSError:
         raise OSError("Cannot load configuration files: {}".format(config_files))
     except _config.ConfigError as error:
-        if 'fit/nfits' in error.missing_keys:
-            logger.error("Number of fits not specified")
+        if 'syst/ntoys' in error.missing_keys:
+            logger.error("Number of toys not specified")
         if 'name' in error.missing_keys:
             logger.error("No name was specified in the config file!")
-        if 'syst' in error.missing_keys:
-            logger.error("No systematics configuration specified in config file!")
+        if 'randomizer' in error.missing_keys:
+            logger.error("No randomizer configuration specified in config file!")
         raise KeyError("ConfigError raised -> {}".format(error.missing_keys))
     except KeyError as error:
         logger.error("YAML parsing error -> %s", error)
-    model_name = config['fit'].get('model', 'model')  # TODO: 'model' returns name?
+        raise
+    model_name = config['syst'].get('model', 'model')  # TODO: 'model' returns name?
     try:
         model_config = config[model_name]
     except KeyError as error:
@@ -81,14 +83,15 @@ def run(config_files, link_from, verbose):
         raise KeyError("Missing model configuration")
     # Load fit model
     try:
-        fit_model = configure_model(model_config)
+        fit_model = configure_model(copy.deepcopy(model_config))
+        randomizer_model = configure_model(copy.deepcopy(model_config))
     except KeyError:
         logger.exception('Error loading model')
         raise ValueError('Error loading model')
     # Some info
-    nfits = config['fit'].get('nfits-per-job', config['fit']['nfits'])
-    logger.info("Doing %s generate/fit sequences", nfits)
-    logger.info("Fit job name: %s", config['name'])
+    ntoys = config['syst'].get('ntoys-per-job', config['syst']['ntoys'])
+    logger.info("Doing %s generate/fit sequences", ntoys)
+    logger.info("Systematics job name: %s", config['name'])
     if link_from:
         config['link-from'] = link_from
     if 'link-from' in config:
@@ -103,53 +106,100 @@ def run(config_files, link_from, verbose):
     except _config.ConfigError as error:
         raise KeyError("Error loading acceptance -> {}".format(error))
     # Fit strategy
-    fit_strategy = config['fit'].get('strategy', 'simple')
-    # Load systematic configuration
-    systematic = get_systematic(config['syst'])(model=fit_model,
-                                                config=config['syst'],
-                                                acceptance=acceptance)
+    fit_strategy = config['syst'].get('strategy', 'simple')
+    # Load randomizer configuration
+    randomizer = get_randomizer(config['randomizer'])(model=randomizer_model,
+                                                      config=config['randomizer'],
+                                                      acceptance=acceptance)
     # Set seed
     job_id = get_job_id()
     # Start looping
-    fit_results = defaultdict(list)
+    fit_results = {}
     logger.info("Starting sampling-fit loop (print frequency is 20)")
     initial_mem = memory_usage()
     initial_time = default_timer()
-    for fit_num in range(nfits):
+    do_extended = config['syst'].get('extended', False)
+    do_minos = config['syst'].get('minos', False)
+    for fit_num in range(ntoys):
         # Logging
         if (fit_num+1) % 20 == 0:
-            logger.info("  Fitting event %s/%s", fit_num+1, nfits)
+            logger.info("  Fitting event %s/%s", fit_num+1, ntoys)
         # Generate a dataset
         seed = get_urandom_int(4)
         np.random.seed(seed=seed)
         ROOT.RooRandom.randomGenerator().SetSeed(seed)
         try:
-            dataset = systematic.get_dataset()
-            fit_result = fit(fit_model,
-                             model_name,
-                             fit_strategy,
-                             dataset,
-                             verbose,
-                             Extended=config['fit'].get('extended', False),
-                             Minos=config['fit'].get('minos', False))
+            # Get a randomized dataset and fit it with the nominal fit
+            dataset = randomizer.get_dataset(randomize=True)
+            gen_values = randomizer.get_current_values()
+            fit_result_nominal = fit(fit_model,
+                                     model_name,
+                                     fit_strategy,
+                                     dataset,
+                                     verbose,
+                                     Extended=do_extended,
+                                     Minos=do_minos)
+            # Fit the randomized dataset with the randomized values as nominal
+            fit_result_rand = fit(randomizer_model,
+                                  model_name,
+                                  fit_strategy,
+                                  dataset,
+                                  verbose,
+                                  Extended=do_extended,
+                                  Minos=do_minos)
+            randomizer.reset_values()  # Needed to avoid generating unphysical values
         except ValueError:
             raise RuntimeError()
         except Exception:
-            logger.exception()
+            # logger.exception()
             raise RuntimeError()  # TODO: provide more information?
-        # Now results are in fit_parameters
-        result = FitResult.from_roofit(fit_result).to_plain_dict()
+        result = {}
         result['fitnum'] = fit_num
         result['seed'] = seed
-        fit_results[fit_num].append(result)
-        _root.destruct_object(fit_result)
+        # Save the results of the randomized fit
+        result_roofit_rand = FitResult.from_roofit(fit_result_rand)
+        result['param_names'] = result_roofit_rand.get_fit_parameters().keys()
+        result['rand'] = result_roofit_rand.to_plain_dict()
+        result['rand_cov'] = result_roofit_rand.get_covariance_matrix()
+        _root.destruct_object(fit_result_rand)
+        # Save the results of the nominal fit
+        result_roofit_nominal = FitResult.from_roofit(fit_result_nominal)
+        result['nominal'] = result_roofit_nominal.to_plain_dict()
+        result['nominal_cov'] = result_roofit_nominal.get_covariance_matrix()
+        result['gen'] = gen_values
+        _root.destruct_object(result_roofit_nominal)
         _root.destruct_object(dataset)
+        fit_results[fit_num] = result
         logger.debug("Cleaning up")
     logger.info("Fitting loop over")
-    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/nfits)
-    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/nfits)
+    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/ntoys)
+    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/ntoys)
     logger.info("Saving to disk")
-    data_frame = pd.DataFrame(fit_results)
+    data_res = []
+    cov_matrices = {}
+    # Get covariance matrices
+    for fit_num, fit_res_i in fit_results.items():
+        fit_res = {'fitnum': fit_res_i['fitnum'],
+                   'seed': fit_res_i['seed'],
+                   'model_name': model_name,
+                   'fit_strategy': fit_strategy}
+        param_names = fit_res_i['param_names']
+        cov_folder_rand = os.path.join(str(job_id), str(fit_res['fitnum']), 'rand')
+        cov_matrices[cov_folder_rand] = pd.DataFrame(fit_res_i['rand_cov'],
+                                                     index=param_names,
+                                                     columns=param_names)
+        cov_folder_nominal = os.path.join(str(job_id), str(fit_res['fitnum']), 'nominal')
+        cov_matrices[cov_folder_nominal] = pd.DataFrame(fit_res_i['nominal_cov'],
+                                                        index=param_names,
+                                                        columns=param_names)
+        for res_name, res_value in fit_res_i['rand'].items():
+            fit_res['{}_rand'.format(res_name)] = res_value
+        for res_name, res_value in fit_res_i['nominal'].items():
+            fit_res['{}_nominal'.format(res_name)] = res_value
+        for res_name, res_value in fit_res_i['gen'].items():
+            fit_res['{}_gen'.format(res_name)] = res_value
+        data_res.append(fit_res)
+    data_frame = pd.DataFrame(data_res)
     fit_result_frame = pd.concat([data_frame,
                                   pd.concat([pd.DataFrame({'jobid': [job_id]})]
                                             * data_frame.shape[0]).reset_index(drop=True)],
@@ -162,8 +212,13 @@ def run(config_files, link_from, verbose):
             with modify_hdf(toy_fit_file) as hdf_file:
                 # First fit results
                 hdf_file.append('fit_results', fit_result_frame)
+                # Save covarinance matrix under 'covariance/jobid/fitnum
+                for cov_folder, cov_matrix in cov_matrices.items():
+                    cov_path = os.path.join('covariance', cov_folder)
+                    hdf_file.append(cov_path, cov_matrix)
                 # Generator info
-                hdf_file.append('input_values', pd.DataFrame([systematic.get_input_values()]))
+                hdf_file.append('input_values', pd.DataFrame.from_dict(randomizer.get_input_values(), orient='index'))
+
             logger.info("Written output to %s", toy_fit_file)
             if 'link-from' in config:
                 logger.info("Linked to %s", config['link-from'])

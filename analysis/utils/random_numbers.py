@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file   random.py
+# @file   random_numbers.py
 # @author Jonas Eschle "Mayou36" (jonas.eschle@cern.ch)
 # @date   07.11.2017
 # =============================================================================

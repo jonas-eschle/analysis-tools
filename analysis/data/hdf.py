@@ -22,7 +22,11 @@ logger = get_logger('analysis.data.hdf')
 
 @contextmanager
 def modify_hdf(file_name, compress=True):
-    """Context manager to exclusively open an HDF file and write it to disk on close.
+    """Context manager to process-exclusively open an HDF file and write it to disk on close.
+
+    Note:
+        This does **NOT** work for threads! The lock applied is an inter-process lock
+        and invokes the fcntl(2) system call.
 
     Note:
         File is compressed on closing. If compression fails, a warning is issued but
@@ -45,8 +49,10 @@ def modify_hdf(file_name, compress=True):
             else:
                 logger.info("File %s exists but seems empty -> not construct with pytables?"
                             "Overwriting existing file!", file_name)
+            test_len_file.flush(fsync=True)
     with pd.HDFStore(file_name, mode=mode, format='table') as data_file:
         yield data_file
+        data_file.flush(fsync=True)
     logger.debug('Compressing...')
     if compress:
         compressed_file = "{}.out".format(file_name)
@@ -60,9 +66,14 @@ def modify_hdf(file_name, compress=True):
             out = subprocess.check_output(cmd)
             if not os.path.exists(compressed_file):  # Something went wrong
                 raise subprocess.CalledProcessError(0, ' '.join(cmd), output=out)
-            shutil.move(compressed_file, file_name)
         except subprocess.CalledProcessError as error:
             logger.warning("Error compressing -> %s", error.output)
+        else:
+            try:
+                shutil.move(compressed_file, file_name)
+            except IOError as error:
+                logger.warning("Error moving (copying) compressed file -> %s", error)
+        finally:
             if os.path.exists(compressed_file):
                 os.remove(compressed_file)
 

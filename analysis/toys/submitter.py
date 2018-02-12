@@ -36,7 +36,8 @@ class ToySubmitter(object):
         VALIDATION (dict, optional): Pairs of key, message to validate the input
             configuration. If the key is not present, KeyError is raised and the
             message logged.
-        ALLOWED_CONFIG_DIFFS (list(str), optional):
+        ALLOWED_CONFIG_DIFFS (list(str), optional): Allowed differences between new and
+            stored configurations.
 
     """
 
@@ -47,7 +48,7 @@ class ToySubmitter(object):
     NTOYS_KEY = None
     NTOYS_PER_JOB_KEY = None
 
-    def __init__(self, config_files, link_from, extend, overwrite):
+    def __init__(self, config_files, link_from, extend, overwrite, verbose=False):
         """Configure the toy submitter.
 
         Arguments:
@@ -91,11 +92,14 @@ class ToySubmitter(object):
             raise ValueError()
         # Store infotmation
         self.config = config
+        self.allowed_config_diffs = set([self.NTOYS_KEY, self.NTOYS_PER_JOB_KEY, 'batch/runtime']
+                                        + self.ALLOWED_CONFIG_DIFFS)
         # Assign link-from giving priority to the argument
         self.config['link-from'] = link_from if link_from else config.get('link-from')
         self.link_from = link_from
         self.extend = extend
         self.overwrite = overwrite
+        self.verbose = verbose
         # Get the batch system
         self.batch_system = get_batch_system()
 
@@ -121,7 +125,7 @@ class ToySubmitter(object):
         # First check the config (we may have already checked)
         if os.path.exists(config_file_dest):  # It exists, check they match
             config_dest = _config.load_config(config_file_dest)
-            if _config.compare_configs(flat_config, config_dest).difference(set(self.ALLOWED_CONFIG_DIFFS)):
+            if _config.compare_configs(flat_config, config_dest).difference(self.allowed_config_diffs):
                 logger.error("Non-matching configuration already exists with that name!")
                 raise AttributeError()
         # Now check output
@@ -152,6 +156,8 @@ class ToySubmitter(object):
         script_args = []
         if self.config['link-from']:
             script_args.append('--link-from={}'.format(self.config['link-from']))
+        if self.verbose:
+            script_args.append('--verbose')
         script_args.append(config_file_dest)
         # Prepare paths
         # pylint: disable=E1101

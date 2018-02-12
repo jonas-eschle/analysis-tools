@@ -171,6 +171,28 @@ class ExponentialPdfMixin(object):
 
 
 # pylint: disable=R0903
+class LinearPdfMixin(object):
+    """Linear mass PDF.
+
+    Parameter names:
+        - 'a1'
+
+    """
+
+    MANDATORY_PARAMETERS = ('a1',)
+
+    def get_unbound_pdf(self, name, title):
+        """Get the physics PDF.
+
+        Return:
+            ROOT.RooPolynomial.
+
+        """
+        return ROOT.RooPolynomial(name, title,
+                                  *(self.get_observables()+(ROOT.RooArgList(*self.get_fit_parameters()),)))
+
+
+# pylint: disable=R0903
 class ArgusConvGaussPdfMixin(object):
     """Partially reconstructed background mass PDF.
 
@@ -355,6 +377,9 @@ class RooWorkspaceMixin(object):
             if not var:
                 raise KeyError("Observable {} not present in RooWorkspace".format(obs_name))
             if obs_id not in self or var != self[obs_id]:
+                var.setStringAttribute('originalName',
+                                       obs_id if obs_id not in self
+                                       else self[obs_id].getStringAttribute('originalName'))
                 self.set(obs_id, var)
                 self.set_observable(obs_id, title=obs_title, limits=(obs_min, obs_max), units=unit)
         return super(RooWorkspaceMixin, self).get_observables()

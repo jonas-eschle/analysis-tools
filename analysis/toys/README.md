@@ -190,15 +190,16 @@ This script needs a simple input config with a few keys:
 	- `fit` gives details on the fitting procedure, similarly to `fit_toys`.
 	In this case, only one fit model can be specified, `model` being the default.
 	- `acceptance` optionally specifies a generation/fit acceptance.
-	- `syst` configures the `SystematicToys` class to use.
-	The only mandatory entry is `type`, which specifies the type of systematic that is run.
-	Currently there are two registered systematic types (as done in `analysis.toys.systematics`): `fixed_params` and `acceptance`.
+	- `randomizer` configures the `RandomizerToys` class to use.
+	The only mandatory entry is `type`, which specifies the type of randomizer that is run.
+	Currently there are two registered randomizer types (as done in `analysis.toys.randomizers`): `fixed_params` and `acceptance`.
 
 Systematic toys are performed in the following way:
 
-	1. A suitable `Systematic` object is loaded according to the configuration in `syst`.
+	1. A suitable `Randomizer` object is loaded according to the configuration in `syst`.
 	2. A dataset is generated from the fit model applying a randomization step, which is different for each type of systematic study.
 	3. The generated dataset is fit with the nominal fit model.
+  4. The generated dataset is fit with the randomized model as if it was the nominal.
 	4. Steps 2 and 3 are repeated until a total of `fit/nfits-per-job` generate/fit loops have been performed.
 
 ### Fixed parameters systematics
@@ -211,12 +212,12 @@ For example,
 syst:
 	type: fixed_params
 	params:
-		- result: MCFit1
-			param_names:
-				mc_fit1_param1: mymodel_param1
+    - result: MCFit1
+      param_names:
+        mc_fit1_param1: mymodel_param1
 				mc_fit1_param2: mymodel_param2
 		- result: MCFit2
-			param_names:
+		  param_names:
 				mc_fit2_param1: mymodel_param3
 				mc_fit2_param2: mymodel_param4
 ```

@@ -11,56 +11,56 @@ from __future__ import print_function, division, absolute_import
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
 
-from .systematics import SYSTEMATIC_TOYS as _SYSTEMATIC_TOYS
+from .randomizers import TOY_RANDOMIZERS as _TOY_RANDOMIZERS
 
 logger = get_logger('analysis.toys')
 
 
-def register_systematic(name, syst_class):
-    """Register a systematic toy generator.
+def register_toy_randomizer(name, rand_class):
+    """Register a randomized toy generator.
 
-    Systematics are registered in the `TOY_SYSTEMATICS` global variable.
+    Randomizers are registered in the `TOY_RANDOMIZERS` global variable.
 
     Arguments:
-        name (str): Name of the systematic.
-        syst_class (SystematicToys): SystematicToys generator class to register.
+        name (str): Name of the randomizer.
+        rand_class (ToyRandomizer): Randomizer class to register.
 
     Return:
-        int: Number of registered systematics.
+        int: Number of registered randomizers.
 
     Raise:
-        ValueError: If `syst_class` is not of the correct type.
+        ValueError: If `rand_class` is not of the correct type.
 
     """
-    from analysis.toys.systematics import SystematicToys
-    logger.debug("Registering %s systematic generator", name)
-    if not issubclass(syst_class, SystematicToys):
-        raise ValueError("Wrong class type -> {}".format(type(syst_class)))
-    get_global_var('TOY_SYSTEMATICS').update({name: syst_class})
-    return len(get_global_var('TOY_SYSTEMATICS'))
+    from analysis.toys.randomizers import ToyRandomizer
+    logger.debug("Registering %s toy randomizer", name)
+    if not issubclass(rand_class, ToyRandomizer):
+        raise ValueError("Wrong class type -> {}".format(type(rand_class)))
+    get_global_var('TOY_RANDOMIZERS').update({name: rand_class})
+    return len(get_global_var('TOY_RANDOMIZERS'))
 
 
 # Register our models
-for syst_name, class_ in _SYSTEMATIC_TOYS.items():
-    register_systematic(syst_name, class_)
+for rand_name, class_ in _TOY_RANDOMIZERS.items():
+    register_toy_randomizer(rand_name, class_)
 
 
-def get_systematic(syst_config):
-    """Load systematic toy generator.
+def get_randomizer(rand_config):
+    """Load randomized toy generator.
 
-    The systematic type is specified through the `type` key.
+    The randomizer type is specified through the `type` key.
 
     Arguments:
-        syst_config (dict): Configuration of the systematic toy.
+        rand_config (dict): Configuration of toy randomizer.
 
     Return:
-        SystematicToys class
+        ToyRandomizer class
 
     Raise:
-        KeyError: If the systematic type is unknown.
+        KeyError: If the randomizer type is unknown.
 
     """
-    return get_global_var('TOY_SYSTEMATICS')[syst_config['type']]
+    return get_global_var('TOY_RANDOMIZERS')[rand_config['type']]
 
 
 # EOF

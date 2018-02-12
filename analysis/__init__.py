@@ -50,6 +50,8 @@ def set_global_var(name, value):
 
 
 # Initialize global variables
+set_global_var('ANALYSIS_PATH',
+               os.path.abspath(os.path.join(os.path.dirname(__file__))))
 set_global_var('BASE_PATH',
                os.path.abspath(os.path.join(os.path.dirname(__file__))))
 set_global_var('STYLE_PATH',
@@ -61,6 +63,6 @@ set_global_var('FILE_TYPES', {})
 set_global_var('FIT_STRATEGIES', {})
 set_global_var('PHYSICS_FACTORIES', defaultdict(dict))
 set_global_var('EFFICIENCY_MODELS', {})
-set_global_var('TOY_SYSTEMATICS', {})
+set_global_var('TOY_RANDOMIZERS', {})
 
 # EOF
