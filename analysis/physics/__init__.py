@@ -120,6 +120,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return param, constraint
 
     def configure_factory(observable, config, shared_vars):
+        config = config.copy()
         logger.debug("Configuring factory -> %s", config)
         if 'yield' in config:
             yield_ = config.pop('yield')
@@ -131,6 +132,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
 
     def configure_prod_factory(config, shared_vars):
         logger.debug("Configuring product -> %s", config['pdf'])
+        config = config.copy()
         # Parameter propagated disabled
         # params = config.get('parameters', {})
         # params.update(config['pdf'].pop('parameters', {}))
@@ -166,6 +168,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                  #             for param_name, param_val in params.items()})
 
     def configure_sum_factory(config, shared_vars):
+        config = config.copy()
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
@@ -177,6 +180,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
             # pdf_config['parameters'].update({param_name: (param_val, None)
             #                                  for param_name, param_val
             #                                  in config.get('parameters', {}).items()})
+            pdf_config = pdf_config.copy()
             if 'yield' in shared_vars[pdf_name]:
                 yields[pdf_name] = shared_vars[pdf_name].pop('yield')
             if 'yield' in pdf_config:
@@ -202,7 +206,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
             elif (len(factories) - len(yields)) == 1:
                 if list(yields.keys())[-1] == list(factories.keys())[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
-                if 'yield' in config:
+                if 'yield' in config:  # this is never reached?
                     yield_ = config.pop('yield')
                     if 'yield' not in shared_vars:
                         parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
