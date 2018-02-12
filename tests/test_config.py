@@ -14,7 +14,7 @@ import atexit
 import sys
 
 import yaml
-import yamlordereddictloader
+import yamlloader
 import pytest
 
 from analysis.utils.config import load_config, ConfigError
@@ -206,7 +206,7 @@ def config_simple_load_target():
                     parameters:
                         tau: CONST -0.003
         """,
-                              Loader=yamlordereddictloader.Loader)
+                              Loader=yamlloader.ordereddict.CLoader)
     return loaded_config
 
 
