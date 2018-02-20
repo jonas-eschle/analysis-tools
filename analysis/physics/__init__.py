@@ -15,7 +15,7 @@ import ROOT
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-from analysis.utils.config import get_shared_vars, configure_parameter
+from analysis.utils.config import get_shared_vars, configure_parameter, recursive_dict_copy
 from analysis.utils.exceptions import ConfigError
 
 
@@ -120,7 +120,6 @@ def configure_model(config, shared_vars=None, external_vars=None):
         return param, constraint
 
     def configure_factory(observable, config, shared_vars):
-        config = config.copy()
         logger.debug("Configuring factory -> %s", config)
         if 'yield' in config:
             yield_ = config.pop('yield')
@@ -132,7 +131,6 @@ def configure_model(config, shared_vars=None, external_vars=None):
 
     def configure_prod_factory(config, shared_vars):
         logger.debug("Configuring product -> %s", config['pdf'])
-        config = config.copy()
         # Parameter propagated disabled
         # params = config.get('parameters', {})
         # params.update(config['pdf'].pop('parameters', {}))
@@ -168,7 +166,6 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                  #             for param_name, param_val in params.items()})
 
     def configure_sum_factory(config, shared_vars):
-        config = config.copy()
         logger.debug("Configuring sum -> %s", dict(config))
         factories = OrderedDict()
         yields = OrderedDict()
@@ -180,7 +177,6 @@ def configure_model(config, shared_vars=None, external_vars=None):
             # pdf_config['parameters'].update({param_name: (param_val, None)
             #                                  for param_name, param_val
             #                                  in config.get('parameters', {}).items()})
-            pdf_config = pdf_config.copy()
             if 'yield' in shared_vars[pdf_name]:
                 yields[pdf_name] = shared_vars[pdf_name].pop('yield')
             if 'yield' in pdf_config:
@@ -259,7 +255,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
     import analysis.physics.factory as factory
 
     # copy: to not alter argument; shallow (not deep!): do not duplicate ROOT objects
-    config = config.copy()
+    config = recursive_dict_copy(config, to_copy=(list, tuple))
     # Prepare shared variables
     if shared_vars is None:
         try:
