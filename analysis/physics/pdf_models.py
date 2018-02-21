@@ -190,10 +190,10 @@ class PolynomialPdfMixin(object):
             parameters (unused)
 
         """
-        super(PolynomialPdfMixin, self).__init__(config, parameters)
         # pylint: disable=C0103
         self.MANDATORY_PARAMETERS = {'a{}'.format(param_num+1)
                                      for param_num in range(config.get('order', 1))}
+        super(PolynomialPdfMixin, self).__init__(config, parameters)
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
