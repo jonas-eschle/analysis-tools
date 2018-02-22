@@ -484,7 +484,7 @@ def recursive_dict_copy(x, to_copy=None):
         x (dict): The dictionary to be copied.
         to_copy (cls or list of cls): if any element is an instance of cls, it is copied (shallow).
     """
-    iterables = (list, tuple)
+    iterables = (list, tuple, set)
     dicts = (dict, OrderedDict)
     if not isinstance(x, dicts):
         raise TypeError("{} has to be of type {} but is {}".format(x, dicts, type(x)))
@@ -498,7 +498,7 @@ def recursive_dict_copy(x, to_copy=None):
     for key, val in x.items():
         if isinstance(val, dicts):
             new_dict[key] = recursive_dict_copy(x=val, to_copy=to_copy)
-        elif isinstance(val, to_copy):
+        elif not (len(to_copy) == 1 and None in to_copy) and isinstance(val, tuple(to_copy)):
             new_dict[key] = copy.copy(val)
 
     return new_dict
