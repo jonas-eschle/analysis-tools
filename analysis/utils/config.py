@@ -478,11 +478,18 @@ def get_shared_vars(config, external_vars=None):
 def recursive_dict_copy(x, to_copy=None):
     """*Deepcopy* all dicts and *to_copy* elements inside *x*.
 
+    A selective *deepcopy* of a dict where only the selected elements (*to_copy* and
+    dict/OrderedDict) are copied, the others remain as a reference. This prevents that
+    additional objects (like numpy arrays) are created while the dictionary and it's
+    sub-dictionaries are fully copied and newly created.
+
     If x is an *ordereddict* instead of a dict, the returned object will also be an OrderedDict.
 
     Args:
         x (dict): The dictionary to be copied.
-        to_copy (cls or list of cls): if any element is an instance of cls, it is copied (shallow).
+        to_copy (cls or list/tuple/set of cls): if any element is an instance of cls,
+            it is copied (shallow). Otherwise a reference will remain in the new dict pointing
+            to the old dicts object.
     """
     iterables = (list, tuple, set)
     dicts = (dict, OrderedDict)
