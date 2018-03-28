@@ -9,7 +9,7 @@
 from __future__ import print_function, division, absolute_import
 
 import yaml
-import yamlordereddictloader
+import yamlloader
 import pytest
 
 import ROOT
@@ -101,7 +101,7 @@ phys.register_physics_factories("q2", {'flat': FlatQ2})
 def load_model(config_str):
     """Load a model using `configure_model`."""
     factory_config = yaml.load(config_str,
-                               Loader=yamlordereddictloader.Loader)
+                               Loader=yamlloader.ordereddict.CLoader)
     return phys.configure_model(factory_config)
 
 

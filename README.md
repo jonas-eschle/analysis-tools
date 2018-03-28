@@ -1,3 +1,6 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1162200.svg)](https://doi.org/10.5281/zenodo.1162200)
+
+
 Analysis tools
 ==============
 

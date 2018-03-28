@@ -16,7 +16,7 @@ import string
 from collections import OrderedDict, defaultdict
 
 import yaml
-import yamlordereddictloader
+import yamlloader
 
 from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
@@ -68,7 +68,7 @@ def load_config(*file_names, **options):
         try:
             with open(file_name) as input_obj:
                 unfolded_data.extend(unfold_config(yaml.load(input_obj,
-                                                             Loader=yamlordereddictloader.Loader)))
+                                                             Loader=yamlloader.ordereddict.CLoader)))
         except yaml.parser.ParserError as error:
             raise KeyError(str(error))
     # Load required data

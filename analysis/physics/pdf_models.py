@@ -171,15 +171,29 @@ class ExponentialPdfMixin(object):
 
 
 # pylint: disable=R0903
-class LinearPdfMixin(object):
-    """Linear mass PDF.
+class PolynomialPdfMixin(object):
+    """Polynomial PDF.
 
     Parameter names:
-        - 'a1'
+        - 'a1' to 'aX', where X is given by the 'order' configuration.
+
+    If no 'order' is given, X is assumed to be 1.
 
     """
 
-    MANDATORY_PARAMETERS = ('a1',)
+    def __init__(self, config, parameters=None):
+        """Configure the order of the polynomial.
+
+        Arguments:
+            config (dict): PDF configuration. If it contains 'buffer_fraction', it is
+              used to set the RooFFTConvPdf buffer fraction.
+            parameters (unused)
+
+        """
+        # pylint: disable=C0103
+        self.MANDATORY_PARAMETERS = {'a{}'.format(param_num+1)
+                                     for param_num in range(config.get('order', 1))}
+        super(PolynomialPdfMixin, self).__init__(config, parameters)
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
