@@ -13,7 +13,6 @@ from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 import sys
 
 from analysis.utils.paths import get_efficiency_path, work_on_file
@@ -235,6 +234,8 @@ class Efficiency(object):
                     escape_chars.append(str(key))
             regex = re.compile('|'.join(escape_chars))
             return regex.sub(lambda match: conv[match.group()], text)
+
+        import seaborn as sns
 
         if weight_var and weight_var not in data.columns:
             raise ValueError("The weight variable is not find in the dataset -> {}".format(weight_var))
