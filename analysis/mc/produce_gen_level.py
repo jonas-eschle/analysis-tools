@@ -49,8 +49,8 @@ GaussGen = GenInit('GaussGen')
 GaussGen.FirstEventNumber = 1
 GaussGen.RunNumber = $seed
 LHCbApp().EvtMax = {n_events}
-LHCbApp().DDDBtag   = "{dddb_tag}"
-LHCbApp().CondDBtag = "{conddb_tag}"
+LHCbApp().DDDBtag   = '{dddb_tag}'
+LHCbApp().CondDBtag = '{conddb_tag}'
 Gauss().DatasetName = '$seed'" > $seedfile
 echo "Config file:"
 cat $seedfile
