@@ -13,8 +13,6 @@ from collections import OrderedDict, defaultdict
 import numpy as np
 from scipy.stats import poisson
 
-import ROOT
-
 from analysis.fit.result import FitResult
 from analysis.utils.root import list_to_rooargset, list_to_rooarglist, iterate_roocollection
 from analysis.data.mergers import merge_root
@@ -114,6 +112,8 @@ class ToyRandomizer(object):
             `ROOT.RooDataSet`.
 
         """
+        import ROOT
+
         # TODO: Add weights?
         if randomize:
             logger.debug("Applying randomization")

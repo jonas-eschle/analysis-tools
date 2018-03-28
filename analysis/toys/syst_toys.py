@@ -20,8 +20,6 @@ import copy
 import pandas as pd
 import numpy as np
 
-import ROOT
-
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
 from analysis.utils.random_numbers import get_urandom_int
@@ -35,6 +33,8 @@ from analysis.toys import get_randomizer
 import analysis.utils.paths as _paths
 import analysis.utils.config as _config
 import analysis.utils.root as _root
+
+import ROOT
 
 logger = get_logger('analysis.toys.syst')
 
