@@ -137,28 +137,28 @@ These are the more basic values.
 The variable used for everything that is floating. Parameters have the same order as the
 ROOT internally used Class (except that an initial value *has to be* provided).
 
-ROOT analogue: RooRealVar (with min, max specified)
-Types: string numerical numerical numerical
-Meaning: VAR initial_val minimum maximum
-Example: VAR 500 450 570
+ROOT analogue: RooRealVar (with min, max specified)  
+Types: string numerical numerical numerical  
+Meaning: VAR initial_val minimum maximum  
+Example: VAR 500 450 570  
 
 ##### Constant
 A numerical constant.
 
-ROOT analogue: RooRealVar (without min, max specified)
-Types: string numerical
-Meaning: CONST value
-Example: CONST 13.41
+ROOT analogue: RooRealVar (without min, max specified)  
+Types: string numerical  
+Meaning: CONST value  
+Example: CONST 13.41  
 
 
 ##### Constraint
 
 Currently implemented is the gaussian constraining of a parameter.
 
-ROOT analogue: ROOT.RooGaussian
-Types: string numerical numerical
-Meaning: GAUSS value("mean") value_error("sigma")
-Example: GAUSS 647 15
+ROOT analogue: ROOT.RooGaussian  
+Types: string numerical numerical  
+Meaning: GAUSS value("mean") value_error("sigma")  
+Example: GAUSS 647 15  
 
 #### Shift, scale and blind
 
@@ -168,26 +168,26 @@ for this referenced value.
 
 ##### Shifting
 
-ROOT analogue: RooAddition
-Types: string reference RooVarConfig
-Meaning: SHIFT shift_itself variable_to_shift_from
-Example: SHIFT @muShift 900
+ROOT analogue: RooAddition  
+Types: string reference RooVarConfig  
+Meaning: SHIFT shift_itself variable_to_shift_from  
+Example: SHIFT @muShift 900  
 
 ##### Scaling
 
-ROOT analogue: RooProduct
-Types: string reference RooVarConfig
-Meaning: SCALE scale_itself variable_to_be_scaled
-Example: SCALE @sigmaScale 5
+ROOT analogue: RooProduct  
+Types: string reference RooVarConfig  
+Meaning: SCALE scale_itself variable_to_be_scaled  
+Example: SCALE @sigmaScale 5  
 
 ##### Blinding
 For the blinding, a blind string is provided for the randomization, a central value
 as well as a sigma value. Those three parameters are used to "blind" the parameter.
 
-ROOT analogue: RooUnblindPrecision
-Types: string reference  string numerical numerical
-Meaning: BLIND blinding_reference blind_str central_val sigma_val
-Example: BLIND @sigma1 uzhirchel 15 36
+ROOT analogue: RooUnblindPrecision  
+Types: string reference  string numerical numerical  
+Meaning: BLIND blinding_reference blind_str central_val sigma_val  
+Example: BLIND @sigma1 uzhirchel 15 36  
 
 
 
@@ -197,11 +197,11 @@ Shared variables can be referenced by their *reference_name*. Every variable can
 be shared (so not strings, numerical etc. where sharing would not serve any purpose either).
 
 
-Types: @string/string/string/string *(followed by params as needed for Roo variable config)*
-Meaning: @reference_name/variable_name/variable_title/type (type is the exact config
-syntax for a variable)
-Example: @mu1_low/mu1/mu_the_lower/VAR 50 10 90 (shared variable of type VAR)
+Types: @string/string/string/string *(followed by params as needed for Roo variable config)*  
+Meaning: @reference_name/variable_name/variable_title/type (type is the exact config  
+syntax for a variable)  
+Example: @mu1_low/mu1/mu_the_lower/VAR 50 10 90 (shared variable of type VAR)  
 
-Usage examples:
-just the reference: @mu1_low
-within another variable: SHIFT @mu1_low 2701 (shift the value 2071 by @mu1_low)
+Usage examples:  
+just the reference: @mu1_low  
+within another variable: SHIFT @mu1_low 2701 (shift the value 2071 by @mu1_low)  
