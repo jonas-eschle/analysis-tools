@@ -15,7 +15,7 @@ import ROOT
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-from analysis.utils.config import get_shared_vars, configure_parameter
+from analysis.utils.config import get_shared_vars, configure_parameter, recursive_dict_copy
 from analysis.utils.exceptions import ConfigError
 
 
@@ -202,12 +202,6 @@ def configure_model(config, shared_vars=None, external_vars=None):
             elif (len(factories) - len(yields)) == 1:
                 if list(yields.keys())[-1] == list(factories.keys())[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
-                if 'yield' in config:
-                    yield_ = config.pop('yield')
-                    if 'yield' not in shared_vars:
-                        parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
-                # if 'yield' in parameters:
-                #     parameters['yield'][0].setStringAttribute('shared', 'true')
             output_factory = factory.SumPhysicsFactory(factories, yields, parameters)
         if global_yield:
             output_factory.set_yield_var(global_yield)
@@ -255,7 +249,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
     import analysis.physics.factory as factory
 
     # copy: to not alter argument; shallow (not deep!): do not duplicate ROOT objects
-    config = config.copy()
+    config = recursive_dict_copy(config, to_copy=(list, tuple))
     # Prepare shared variables
     if shared_vars is None:
         try:

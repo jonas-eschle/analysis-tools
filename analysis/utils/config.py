@@ -9,6 +9,7 @@
 
 from __future__ import print_function, division, absolute_import
 
+import copy
 import os
 import random
 import string
@@ -474,5 +475,44 @@ def get_shared_vars(config, external_vars=None):
     return fold_config(new_config, recurse_dict)
 
 
-# Exceptions
+def recursive_dict_copy(x, to_copy=None):
+    """*Deepcopy* all dicts and *to_copy* elements inside *x*.
+
+    A selective *deepcopy* of a dict where only the selected elements (*to_copy* and
+    dict/OrderedDict) are copied, the others remain as a reference. This prevents that
+    additional objects (like numpy arrays) are created while the dictionary and it's
+    sub-dictionaries are fully copied and newly created.
+
+    If x is an *ordereddict* instead of a dict, the returned object will also be an OrderedDict.
+
+    Args:
+        x (dict): The dictionary to be copied.
+        to_copy (cls or list/tuple/set of cls): if any element is an instance of cls,
+            it is copied (shallow). Otherwise a reference will remain in the new dict pointing
+            to the old dicts object.
+    """
+    iterables = (list, tuple, set)
+    dicts = (dict, OrderedDict)
+    if not isinstance(x, dicts):
+        raise TypeError("{} has to be of type {} but is {}".format(x, dicts, type(x)))
+    if not (isinstance(to_copy, iterables) and len(to_copy) > 0):
+        to_copy = (to_copy,)
+
+    to_copy = set(to_copy)
+    new_dict = copy.copy(x)
+
+    # iterate and call recursive
+    for key, val in x.items():
+        if isinstance(val, dicts):
+            new_dict[key] = recursive_dict_copy(x=val, to_copy=to_copy)
+        elif not (len(to_copy) == 1 and None in to_copy) and isinstance(val, tuple(to_copy)):
+            new_dict[key] = copy.copy(val)
+
+    return new_dict
+
+
+
+
+
+
 # EOF
