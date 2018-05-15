@@ -202,12 +202,6 @@ def configure_model(config, shared_vars=None, external_vars=None):
             elif (len(factories) - len(yields)) == 1:
                 if list(yields.keys())[-1] == list(factories.keys())[-1]:  # The last one should not have a yield!
                     raise ConfigError("Wrong order in yield/factory specification")
-                if 'yield' in config:  # this is never reached?
-                    yield_ = config.pop('yield')
-                    if 'yield' not in shared_vars:
-                        parameters['yield'] = sanitize_parameter(yield_, 'Yield', 'Yield')
-                # if 'yield' in parameters:
-                #     parameters['yield'][0].setStringAttribute('shared', 'true')
             output_factory = factory.SumPhysicsFactory(factories, yields, parameters)
         if global_yield:
             output_factory.set_yield_var(global_yield)
