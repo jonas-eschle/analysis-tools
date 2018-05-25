@@ -143,6 +143,33 @@ def load_config(*file_names, **options):
     return data
 
 
+def replace_globals(unfolded_data):
+
+    GLOBALS_KEYWORD = 'globals'
+
+    yaml_globals = {}
+
+    # capture globals
+    for key in list(unfolded_data.keys()):
+        if key.startswith(GLOBALS_KEYWORD):
+            yaml_globals[key] = unfolded_data.pop(key)
+
+    # replace globals
+    data_globals = {}
+    for key, val in unfolded_data.items():
+        if val.startswith(GLOBALS_KEYWORD + '.'):
+            val_slashed = val.replace('.', '/')
+        try:
+            data_globals[key] = yaml_globals[val_slashed]
+        except KeyError:
+            raise ConfigError("Invalid global reference '{}': value not found".format(val))
+
+    unfolded_data.update(data_globals)
+    return unfolded_data
+
+
+
+
 def write_config(config, file_name):
     """Write configuration to file.
 
