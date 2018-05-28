@@ -118,6 +118,10 @@ def load_config(*file_names, **options):
             unfolded_data_expanded.append((key, val))
     # Fold back
     data = fold_config(unfolded_data_expanded, OrderedDict)
+
+    # Replace globals
+    data = replace_globals(data)
+
     logger.debug('Loaded configuration -> %s', data)
     data_root = options.get('root', '')
     if data_root:
@@ -143,31 +147,39 @@ def load_config(*file_names, **options):
     return data
 
 
-def replace_globals(unfolded_data):
+def replace_globals(folded_data):
+    """Replace values referencing to global, remove global.
 
+    Args:
+        folded_data (dict): The folded config containing
+
+    Returns:
+        OrderedDict : *folded_data* with the global keyword removed and
+            every value containing the global keyword replaced by the value.
+
+    """
     GLOBALS_KEYWORD = 'globals'
+    SEP = '.'
+    folded_data = folded_data.copy()  # do not mutate arguments
+    yaml_globals = folded_data.pop(GLOBALS_KEYWORD, {})
 
-    yaml_globals = {}
-
-    # capture globals
-    for key in list(unfolded_data.keys()):
-        if key.startswith(GLOBALS_KEYWORD):
-            yaml_globals[key] = unfolded_data.pop(key)
+    unfolded_data = unfold_config(folded_data)
 
     # replace globals
-    data_globals = {}
-    for key, val in unfolded_data.items():
-        if val.startswith(GLOBALS_KEYWORD + '.'):
-            val_slashed = val.replace('.', '/')
-        try:
-            data_globals[key] = yaml_globals[val_slashed]
-        except KeyError:
-            raise ConfigError("Invalid global reference '{}': value not found".format(val))
+    data_replacements = {}
+    for key, val in unfolded_data:
+        if isinstance(val, str) and val.startswith(GLOBALS_KEYWORD + SEP):
+            glob_keys = val.split(SEP)[1:]  # remove identifier
+            yaml_global = yaml_globals
+            try:
+                for glob_key in glob_keys:
+                    yaml_global = yaml_global[glob_key]
+            except KeyError:
+                raise ConfigError(
+                    "Invalid global reference '{}': value {key} not found".format(val, key=key))
+                unfolded_data.append((key, yaml_global))
 
-    unfolded_data.update(data_globals)
-    return unfolded_data
-
-
+    return fold_config(unfolded_data, OrderedDict)
 
 
 def write_config(config, file_name):
