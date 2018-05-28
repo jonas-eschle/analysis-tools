@@ -432,7 +432,8 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         """
         object_list = tree.GetListOfLeaves()
         return [object_list[leave_number].GetName()
-                for leave_number in range(object_list.GetSize())]
+                for leave_number in range(object_list.GetSize())
+                if object_list[leave_number]]
 
     logger.debug("Loading ROOT file in RooDataSet format -> %s:%s",
                  file_name, tree_name)
