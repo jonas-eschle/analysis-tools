@@ -188,4 +188,82 @@ def rooarglist_to_list(rooarglist):
     """
     return [var for var in iterate_roocollection(rooarglist)]
 
+
+def copy_tree_with_cuts(old_file, tree_name, new_file_name, cuts, active_branches=["*"], disabled_branches=None):
+    """Copy a TTree for a file applying cuts.
+
+    The names of the branches to copy, ie, active, can be specified
+    to reduce file size.
+
+    Arguments:
+        old_file (str): File name to copy the structure from.
+        tree_name (str): Name of the tree to analyze.
+        new_file_name (str): Name of the file to create.
+        cuts (list): Cuts to apply. A string can be given too.
+        active_branches (list, optional): Branches to pass on to the new tree. Defaults to all.
+        disabled_branches (list, optional): Branches to disable after activating. Defaults to None.
+
+    Raise:
+        AttributeError: When the cuts variable cannot be used to apply cuts.
+        ValueError: When there are no events left after the cuts.
+        KeyError: When the input tree doesn't exist.
+
+    """
+    def copy_file_structure(old_file, tree_name, new_file):
+        """Copy the structure of a ROOT file.
+
+        Arguments:
+            old_file (str): File name to copy the structure from.
+            tree_name (str): Name of the tree to analyze.
+            new_file (str): Name of the file to create.
+
+        Return:
+            tuple: old TFile, old TTree, new TFile.
+
+        Raise:
+            KeyError: If the tree doesn't exist.
+
+        """
+        old_file = ROOT.TFile.Open(old_file)
+        old_tree = old_file.Get(tree_name)
+        if not old_tree:
+            raise KeyError("Cannot find tree -> %s" % tree_name)
+        new_file = ROOT.TFile.Open(new_file, 'RECREATE')
+        dirs = tree_name.split('/')
+        if len(dirs) > 1:
+            for dir_ in dirs[:-1]:
+                new_file.mkdir(dir_)
+                new_file.cd(dir_)
+        return old_file, old_tree, new_file
+
+    try:
+        old_file, old_tree, new_file = copy_file_structure(old_file, tree_name, new_file_name)
+    except KeyError:
+        raise
+    # Process cuts
+    if isinstance(cuts, (list, tuple)):
+        cut_string = ' && '.join(cuts)
+    elif isinstance(cuts, str):
+        cut_string = cuts
+    elif isinstance(cuts, ROOT.TCut):
+        cut_string = cuts.GetTitle()
+    else:
+        raise AttributeError
+    # Which branches to save?
+    old_tree.SetBranchStatus("*", 0)
+    for branch in active_branches:
+        old_tree.SetBranchStatus(branch, 1)
+    if disabled_branches:
+        for branch in disabled_branches:
+            old_tree.SetBranchStatus(branch, 0)
+    # Let's do it
+    new_tree = old_tree.CopyTree(cut_string)
+    if not new_tree:
+        raise ValueError("No events passed the selection")
+    new_tree.Write("", ROOT.TObject.kOverwrite)
+    new_file.Write("", ROOT.TObject.kOverwrite)
+    new_file.Close()
+    old_file.Close()
+
+
 # EOF

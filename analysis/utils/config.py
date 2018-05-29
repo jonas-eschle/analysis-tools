@@ -42,7 +42,8 @@ def load_config(*file_names, **options):
             config file. The value of this key can have two formats:
 
             + `file_name:key` inserts the contents of `key` in `file_name` at the same
-                level as the `load` entry.
+                level as the `load` entry. `file_name` is relative to the lowest common
+                denominator of `file_names`.
             + `path_func:name:key` inserts the contents `key` in the file obtained by the
                 `get_{path_func}_path(name)` call at the same level as the `load` entry.
         - The `modify` command can be used to modify a previously loaded key/value pair.
@@ -81,6 +82,11 @@ def load_config(*file_names, **options):
             split_val = val.split(":")
             if len(split_val) == 2:  # file_name:key format
                 file_name_result, required_key = split_val
+                if not os.path.isabs(file_name_result):
+                    if len(file_names) == 1:
+                        file_name_result = os.path.join(os.path.split(file_names[0])[0], file_name_result)
+                    else:
+                        file_name_result = os.path.join(os.path.commonprefix(*file_names), file_name_result)
             elif len(split_val) == 3:  # path_func:name:key format
                 path_name, name, required_key = split_val
                 import analysis.utils.paths as _paths
@@ -103,7 +109,7 @@ def load_config(*file_names, **options):
         elif root_prev_load and key.startswith(root_prev_load):  # we have to handle it *somehow*
             relative_key = key.split(root_prev_load + '/', 1)[1]  # remove root
             if not relative_key.startswith('modify/'):
-                logger.error("Key {} cannot be used without 'modify' if 'load' came before.".format(key))
+                logger.error("Key % cannot be used without 'modify' if 'load' came before.", key)
                 raise ConfigError("Loaded pdf with 'load' can *only* be modified by using 'modify'.")
 
             key_to_replace = '{}/{}'.format(root_prev_load, relative_key.split('modify/', 1)[1])
