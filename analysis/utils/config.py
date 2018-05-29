@@ -166,7 +166,6 @@ def replace_globals(folded_data):
     unfolded_data = unfold_config(folded_data)
 
     # replace globals
-    data_replacements = {}
     for key, val in unfolded_data:
         if isinstance(val, str) and val.startswith(GLOBALS_KEYWORD + SEP):
             glob_keys = val.split(SEP)[1:]  # remove identifier
@@ -177,7 +176,7 @@ def replace_globals(folded_data):
             except KeyError:
                 raise ConfigError(
                     "Invalid global reference '{}': value {key} not found".format(val, key=key))
-                unfolded_data.append((key, yaml_global))
+            unfolded_data.append((key, yaml_global))
 
     return fold_config(unfolded_data, OrderedDict)
 
