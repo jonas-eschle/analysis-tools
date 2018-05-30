@@ -117,6 +117,37 @@ Example (FAILS by design!):
         parameters:
             alpha: CONST 0.54`
 
+### Sharing globals
+
+When loading several files, it can be useful to share parameters accross the files (in the sense of
+"same value", not "shared parameter"). Similar to yaml anchors.
+
+All `globals` have to be registered under the key "globals". All globals from all files given to
+`load_config` will be merged.
+
+config1.yaml
+```
+globals:
+    key1: val1
+    key2:
+        key21: val21
+        key22: val22
+```
+
+and can be accessed (anywhere) with the value `globals.path.to.my.var`, which replaces this string
+by the value found under globals['path']['to']['my']['var'] (which can be a string, int, dict, list...)
+
+
+config2.yaml
+```
+model:
+    pdf:
+        one: globals.key1  # -> val1
+        two: globals.key2  # -> {key21: val21, key22: val22}
+        three: globals.key2.key21  # -> val21
+```
+
+This has to be loaded with `load_config('config1.yaml', 'config2.yaml')`.
 
 ### Variables Syntax
 

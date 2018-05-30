@@ -48,6 +48,9 @@ def load_config(*file_names, **options):
         - The `modify` command can be used to modify a previously loaded key/value pair.
             It has the format `key: value` and replaces `key` at its same level by the value
             given by `value`. For more complete examples and documentation, see the README.
+        - The `globals` key can be used to define global variables. Access is via a value
+          written as "globals.path_to.myvar" with a configuration like:
+          {globals: {path_to: {myvar: myval}},....}. This will replace it with `myval`.
 
     Arguments:
         *file_names (list[str]): Files to load.
@@ -161,8 +164,9 @@ def replace_globals(folded_data):
     GLOBALS_KEYWORD = 'globals'
     SEP = '.'
     folded_data = folded_data.copy()  # do not mutate arguments
-    yaml_globals = folded_data.pop(GLOBALS_KEYWORD, {})
 
+    # gather globals
+    yaml_globals = folded_data.pop(GLOBALS_KEYWORD, {})
     unfolded_data = unfold_config(folded_data)
 
     # replace globals
