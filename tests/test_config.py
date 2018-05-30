@@ -117,6 +117,11 @@ def result_simple_signal():
 @pytest.fixture
 def config_simple_load(result_simple):
     config_str = """
+        globals:
+            glob_var1: CONST 5
+            glob_dict2:
+                glob_var21: CONST 21
+                glob_var22: VAR 4.0 2.2 5.6
         signal:
             yield: 0.5
             pdf:
@@ -223,3 +228,97 @@ def test_simple_signal(config_simple_load_signal, config_simple_load_target):
 def test_fails_loudly(config_simple_fail_noload):
     with pytest.raises(ConfigError) as error_info:
         load_config(config_simple_fail_noload)
+
+
+# test globals replacement
+
+@pytest.fixture
+def config_simple_globals_1():
+    """Config with globals"""
+    config_str = """
+        globals:
+            glob_mass_exp: 
+                pdf: exp
+                parameters:
+                    tau: CONST -0.003
+        signal:
+            yield: 0.5
+            pdf:
+                mass:
+                    pdf: cb
+                    parameters:
+                        mu: 5246.7 5200 5300
+                        sigma1: globals.glob_sigma1
+                        sigma2: '@sigma'
+                        n1: globals.glob_n1
+                        n2: 1.6 0.2 2
+                        alpha1: globals.glob_alpha.alpha1
+                        alpha2: -1.9749 -3.5 -1.0
+                        frac: 0.84873 0.1 1.0
+        background1:
+            pdf:
+                mass: globals.glob_mass_exp
+        """
+    filename = dump_yaml_str(config_str)
+
+    return filename
+
+
+@pytest.fixture
+def config_simple_globals_2():
+    """Config with globals"""
+    config_str = """
+        globals:
+            glob_sigma1: '@sigma/sigma/sigma/41 35 45'
+            glob_alpha:
+                alpha1: 0.25923 0.1 0.5
+            glob_n1: 5.6689 2 9
+        background2:
+            pdf:
+                mass: globals.glob_mass_exp
+                    
+        """
+    filename = dump_yaml_str(config_str)
+
+    return filename
+
+
+@pytest.fixture
+def config_simple_globals_target():
+    """What we want config_simple_globals_{1, 2} to look like"""
+    loaded_config = yaml.load("""
+        signal:
+            yield: 0.5
+            pdf:
+                mass:
+                    pdf: cb
+                    parameters:
+                        mu: 5246.7 5200 5300
+                        sigma1: '@sigma/sigma/sigma/41 35 45'
+                        sigma2: '@sigma'
+                        n1: 5.6689 2 9
+                        n2: 1.6 0.2 2
+                        alpha1: 0.25923 0.1 0.5
+                        alpha2: -1.9749 -3.5 -1.0
+                        frac: 0.84873 0.1 1.0
+        background1:
+            pdf:
+                mass:
+                    pdf: exp
+                    parameters:
+                        tau: CONST -0.003
+        background2:
+            pdf:
+                mass:
+                    pdf: exp
+                    parameters:
+                        tau: CONST -0.003
+        """,
+                              Loader=yamlloader.ordereddict.CLoader)
+    return loaded_config
+
+
+def test_global_replace(config_simple_globals_1, config_simple_globals_2,
+                        config_simple_globals_target):
+    config = load_config(config_simple_globals_1, config_simple_globals_2)
+    assert config == config_simple_globals_target

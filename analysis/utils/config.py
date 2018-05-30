@@ -49,6 +49,9 @@ def load_config(*file_names, **options):
         - The `modify` command can be used to modify a previously loaded key/value pair.
             It has the format `key: value` and replaces `key` at its same level by the value
             given by `value`. For more complete examples and documentation, see the README.
+        - The `globals` key can be used to define global variables. Access is via a value
+          written as "globals.path_to.myvar" with a configuration like:
+          {globals: {path_to: {myvar: myval}},....}. This will replace it with `myval`.
 
     Arguments:
         *file_names (list[str]): Files to load.
@@ -124,6 +127,10 @@ def load_config(*file_names, **options):
             unfolded_data_expanded.append((key, val))
     # Fold back
     data = fold_config(unfolded_data_expanded, OrderedDict)
+
+    # Replace globals
+    data = replace_globals(data)
+
     logger.debug('Loaded configuration -> %s', data)
     data_root = options.get('root', '')
     if data_root:
@@ -147,6 +154,41 @@ def load_config(*file_names, **options):
             raise ConfigError("Failed validation: {} are missing".format(','.join(missing_keys)),
                               missing_keys)
     return data
+
+
+def replace_globals(folded_data):
+    """Replace values referencing to global, remove global.
+
+    Args:
+        folded_data (dict): The folded config containing
+
+    Returns:
+        OrderedDict : *folded_data* with the global keyword removed and
+            every value containing the global keyword replaced by the value.
+
+    """
+    GLOBALS_KEYWORD = 'globals'
+    SEP = '.'
+    folded_data = folded_data.copy()  # do not mutate arguments
+
+    # gather globals
+    yaml_globals = folded_data.pop(GLOBALS_KEYWORD, {})
+    unfolded_data = unfold_config(folded_data)
+
+    # replace globals
+    for key, val in unfolded_data:
+        if isinstance(val, str) and val.startswith(GLOBALS_KEYWORD + SEP):
+            glob_keys = val.split(SEP)[1:]  # remove identifier
+            yaml_global = yaml_globals
+            try:
+                for glob_key in glob_keys:
+                    yaml_global = yaml_global[glob_key]
+            except KeyError:
+                raise ConfigError(
+                    "Invalid global reference '{}': value {key} not found".format(val, key=key))
+            unfolded_data.append((key, yaml_global))
+
+    return fold_config(unfolded_data, OrderedDict)
 
 
 def write_config(config, file_name):

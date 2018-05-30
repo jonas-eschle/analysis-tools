@@ -1,9 +1,8 @@
-from unittest import TestCase
 from collections import OrderedDict
 import copy
 
-import numpy as np
 import ROOT
+import numpy as np
 
 from analysis.utils.config import recursive_dict_copy
 
