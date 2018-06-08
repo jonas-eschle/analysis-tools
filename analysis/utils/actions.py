@@ -205,7 +205,6 @@ def action_BLIND(name, title, action_params, external_vars):
     """
     try:
         ref_var, blind_str, blind_central, blind_sigma = action_params
-        second_var = ''
     except ValueError:
         raise ValueError("Wrong number of arguments for BLIND -> {}".format(action_params))
     try:
@@ -214,24 +213,6 @@ def action_BLIND(name, title, action_params, external_vars):
         else:
             raise ValueError("The first value for a BLIND must be a reference.")
         ref_var, constraint = external_vars[ref_var]
-        if second_var.startswith('@'):
-            second_var = second_var[1:]
-            second_var, const = external_vars[second_var]
-            if not constraint:
-                constraint = const
-            else:
-                raise NotImplementedError("Two constrained variables in BLIND are not allowed")
-        elif ':' in second_var:
-            from analysis.fit.result import FitResult
-            fit_name, var_name = second_var.split(':')
-            result = FitResult.from_yaml_file(fit_name)
-            try:
-                value = result.get_fit_parameter(var_name)[0]
-            except KeyError:
-                value = result.get_const_parameter(var_name)
-            second_var = ROOT.RooFit.RooConst(value)
-        else:
-            second_var = ROOT.RooFit.RooConst(float(second_var))
     except KeyError as error:
         raise ValueError("Missing parameter definition -> {}".format(error))
     parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
