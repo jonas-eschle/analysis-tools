@@ -12,7 +12,7 @@ import inspect
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-from analysis.utils.actions import ACTIONS
+from analysis.utils.actions import ACTION_KEYWORDS
 
 logger = get_logger('analysis.utils')
 
@@ -48,7 +48,7 @@ def register_config_action(name, action_function):
     return len(get_global_var('PARAMETER_KEYWORDS'))
 
 
-for keyword, action_func in ACTIONS.items():
+for keyword, action_func in ACTION_KEYWORDS.items():
     register_config_action(keyword, action_func)
 
 

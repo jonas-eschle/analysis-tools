@@ -365,9 +365,10 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
     action_params = str(parameter_config).split()
     action = 'VAR' if not action_params[0].isalpha() else action_params.pop(0).upper()
     try:
-        return get_config_action(name, title, action, action_params, external_vars)
+        action = get_config_action(action)
     except KeyError:
         raise KeyError('Unknown action -> {}'.format(action))
+    return action(name, title, action_params, external_vars)
 
 
 def get_shared_vars(config, external_vars=None):
