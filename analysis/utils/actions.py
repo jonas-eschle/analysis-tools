@@ -21,13 +21,12 @@ def action_VAR(name, title, action_params, _):
 
     """
     # Take numerical value or load from file
-    value_error = None
     if ':' in action_params[0]:  # We want to load a fit result
         from analysis.fit.result import FitResult
         fit_name, var_name = action_params[0].split(':')
         result = FitResult.from_yaml_file(fit_name)
         try:
-            value, value_error, _, _ = result.get_fit_parameter(var_name)
+            value, _, _, _ = result.get_fit_parameter(var_name)
         except KeyError:
             value = result.get_const_parameter(var_name)
     else:
@@ -56,13 +55,12 @@ def action_CONST(name, title, action_params, _):
 
     """
     # Take numerical value or load from file
-    value_error = None
     if ':' in action_params[0]:  # We want to load a fit result
         from analysis.fit.result import FitResult
         fit_name, var_name = action_params[0].split(':')
         result = FitResult.from_yaml_file(fit_name)
         try:
-            value, value_error, _, _ = result.get_fit_parameter(var_name)
+            value, _, _, _ = result.get_fit_parameter(var_name)[0]
         except KeyError:
             value = result.get_const_parameter(var_name)
     else:
