@@ -7,7 +7,7 @@ pip install diff_cover > tmp.txt && echo 'diff code checker installed'
 #    run tests
 echo "======================= Running tests with coverage FULL ======================="
 # excluding a test in test_data.py
-coverage run -m pytest -k "not test_load_with_weights" tests/ && \
+coverage run -m pytest -k "not (test_load_with_weights or test_sumfactory_ratio_load)" tests/ && \
 coverage report analysis/*/*.py && \
 coverage xml analysis/*/*.py && \
 echo "================================ Coverage DIFF =================================" && \

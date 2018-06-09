@@ -361,6 +361,34 @@ background:
 """)
 
 
+@pytest.fixture
+def sum_factory_ratio():
+    """Load a SumPhysicsFactory with a RATIO."""
+    return load_model("""
+signal:
+    yield: '@yield/yield/yield/GAUSS 999 100'
+    pdf:
+        mass:
+            pdf: cb
+            parameters:
+                mu: 5246.7 5200 5300
+                sigma1: '@sigma/sigma/sigma/41 35 45'
+                sigma2: '@sigma'
+                n1: 5.6689 2 9
+                n2: 1.6 0.2 2
+                alpha1: 0.25923 0.1 0.5
+                alpha2: -1.9749 -3.5 -1.0
+                frac: 0.84873 0.1 1.0
+background:
+    yield: 'RATIO @yield 2'
+    pdf:
+        mass:
+            pdf: exp
+            parameters:
+                tau: CONST -0.003
+""")
+
+
 # pylint: disable=W0621
 def test_sumfactory_load(sum_factory):
     """Test factory loading returns an object of the correct type."""
@@ -405,6 +433,12 @@ def test_sumfactory_fractions(sum_factory_frac):
     frac_signal.setVal(0.7)
     assert frac_signal.getVal() + frac_background.getVal() == 1.0
     assert sum_factory_frac.get_children()['signal'].get_yield_var().getVal() == 700.0
+
+
+def test_sumfactory_ratio_load(sum_factory_ratio):
+    """Test that ratios are working."""
+    assert sum_factory_ratio.get_children()['signal'].get_yield_var().getVal() == \
+        2.0 * sum_factory_ratio.get_children()['background'].get_yield_var().getVal()
 
 
 @pytest.fixture

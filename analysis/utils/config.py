@@ -357,107 +357,18 @@ def configure_parameter(name, title, parameter_config, external_vars=None):
         ValueError: If the action is badly configured.
 
     """
-    import ROOT
+    from analysis.utils import get_config_action
 
     if external_vars is None:
         external_vars = {}
-    constraint = None
     # Do something with it
     action_params = str(parameter_config).split()
     action = 'VAR' if not action_params[0].isalpha() else action_params.pop(0).upper()
-    if action in ('VAR', 'CONST', 'GAUSS'):
-        # Take numerical value or load from file
-        value_error = None
-        if ':' in action_params[0]:  # We want to load a fit result
-            from analysis.fit.result import FitResult
-            fit_name, var_name = action_params[0].split(':')
-            result = FitResult.from_yaml_file(fit_name)
-            try:
-                value, value_error, _, _ = result.get_fit_parameter(var_name)
-            except KeyError:
-                value = result.get_const_parameter(var_name)
-        else:
-            try:
-                value = float(action_params[0])
-            except ValueError:
-                print("error, action params[0]", action_params[0])
-        parameter = ROOT.RooRealVar(name, title, value)
-        if action == 'VAR':  # Free parameter, we specify its initial value
-            parameter.setConstant(False)
-            if len(action_params) > 1:
-                try:
-                    _, min_val, max_val = action_params
-                except ValueError:
-                    raise ValueError("Wrongly specified var (need to give 1 or 3 arguments) "
-                                     "-> {}".format(action_params))
-                parameter.setMin(float(min_val))
-                parameter.setMax(float(max_val))
-                parameter.setConstant(False)
-        elif action == 'CONST':  # Fixed parameter
-            parameter.setConstant(True)
-        elif action == 'GAUSS':  # Gaussian constraint
-            try:
-                if len(action_params) == 1 and value_error is None:
-                    raise ValueError
-                elif len(action_params) == 2:
-                    value_error = float(action_params[1])
-                else:
-                    raise ValueError
-            except ValueError:
-                raise ValueError("Wrongly specified Gaussian constraint -> {}".format(action_params))
-            constraint = ROOT.RooGaussian(name + 'Constraint',
-                                          name + 'Constraint',
-                                          parameter,
-                                          ROOT.RooFit.RooConst(value),
-                                          ROOT.RooFit.RooConst(value_error))
-            parameter.setConstant(False)
-    elif action in ('SHIFT', 'SCALE', 'BLIND'):
-        # SHIFT @var val
-        try:
-            if action == 'BLIND':
-                ref_var, blind_str, blind_central, blind_sigma = action_params
-                second_var = ''
-            else:
-                ref_var, second_var = action_params
-        except ValueError:
-            raise ValueError("Wrong number of arguments for {} -> {}".format(action, action_params))
-        try:
-            if ref_var.startswith('@'):
-                ref_var = ref_var[1:]
-            else:
-                raise ValueError("The first value for a {} must be a reference.".format(action))
-            ref_var, constraint = external_vars[ref_var]
-            if second_var.startswith('@'):
-                second_var = second_var[1:]
-                second_var, const = external_vars[second_var]
-                if not constraint:
-                    constraint = const
-                else:
-                    raise NotImplementedError("Two constrained variables in SHIFT or SCALE are not allowed")
-            elif ':' in second_var:
-                from analysis.fit.result import FitResult
-                fit_name, var_name = second_var.split(':')
-                result = FitResult.from_yaml_file(fit_name)
-                try:
-                    value = result.get_fit_parameter(var_name)[0]
-                except KeyError:
-                    value = result.get_const_parameter(var_name)
-                second_var = ROOT.RooFit.RooConst(value)
-            else:
-                if action in ('SHIFT', 'SCALE'):
-                    second_var = ROOT.RooFit.RooConst(float(second_var))
-        except KeyError as error:
-            raise ValueError("Missing parameter definition -> {}".format(error))
-        if action == 'SHIFT':
-            parameter = ROOT.RooAddition(name, title, ROOT.RooArgList(ref_var, second_var))
-        elif action == 'SCALE':
-            parameter = ROOT.RooProduct(name, title, ROOT.RooArgList(ref_var, second_var))
-        elif action == 'BLIND':
-            parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
-                                                 float(blind_central), float(blind_sigma), ref_var)
-    else:
+    try:
+        action = get_config_action(action)
+    except KeyError:
         raise KeyError('Unknown action -> {}'.format(action))
-    return parameter, constraint
+    return action(name, title, action_params, external_vars)
 
 
 def get_shared_vars(config, external_vars=None):

@@ -13,7 +13,9 @@ test27:
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+#    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+    - conda create -n test27 python=2.7 root=6 root-numpy  > tmp.txt && echo 'env created'
+    - conda update -f libstdcxx-ng -y
     - source activate test27 > tmp.txt && echo 'activated'
 
 #   HACK, psutil fails to build currently
@@ -45,6 +47,7 @@ test36:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
     - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+    - conda create -n test36 python=3.6 root=6 root-numpy > tmp.txt && echo 'env created'
     - source activate test36 > tmp.txt && echo 'activated'
 
 #   HACK, psutil fails to build currently
