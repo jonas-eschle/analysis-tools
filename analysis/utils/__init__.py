@@ -50,7 +50,7 @@ def register_config_action(name, action_function):
 
 for func_name, action_func in inspect.getmembers(_actions, inspect.isfunction):
     if func_name.startswith('action_'):
-        keyword = func_name.lstrip('action_')
+        keyword = func_name[len('action_'):]  # stripping of 'action_'
         register_config_action(keyword, action_func)
 
 
