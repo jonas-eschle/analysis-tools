@@ -257,4 +257,29 @@ def action_BLIND(name, title, action_params, external_vars):
     return parameter, constraint
 
 
+def action_BLINDOFFSET(name, title, action_params, external_vars):
+    """Configure the blinding of a parameter using RooUnblindOffset.
+
+    The first parameter must be a shared variable whereas the following are a string and one float.
+    They represent a randomization string, and the scale used for the randomization of the blind
+    value.
+
+    """
+    try:
+        ref_var, blind_str, blind_scale = action_params
+    except ValueError:
+        raise ValueError("Wrong number of arguments for BLINDOFFSET -> {}".format(action_params))
+    try:
+        if ref_var.startswith('@'):
+            ref_var = ref_var[1:]
+        else:
+            raise ValueError("The first value for a BLINDOFFSET must be a reference.")
+        ref_var, constraint = external_vars[ref_var]
+    except KeyError as error:
+        raise ValueError("Missing parameter definition -> {}".format(error))
+    parameter = ROOT.RooUnblindOffset(name + "_blindoffset", title + "_blindoffset",
+                                      blind_str, float(blind_scale), ref_var)
+    return parameter, constraint
+
+
 # EOF
