@@ -257,12 +257,4 @@ def action_BLIND(name, title, action_params, external_vars):
     return parameter, constraint
 
 
-ACTION_KEYWORDS = {'VAR': action_VAR,
-                   'CONST': action_CONST,
-                   'GAUSS': action_GAUSS,
-                   'SHIFT': action_SHIFT,
-                   'SCALE': action_SCALE,
-                   'RATIO': action_RATIO,
-                   'BLIND': action_BLIND}
-
 # EOF
