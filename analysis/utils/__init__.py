@@ -12,7 +12,7 @@ import inspect
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-import analysis.utils.actions as _actions
+from analysis.utils import actions as _actions
 
 logger = get_logger('analysis.utils')
 
