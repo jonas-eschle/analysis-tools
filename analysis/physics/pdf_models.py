@@ -74,19 +74,19 @@ class BifurcatedCBPdfMixin(object):
     Parameter names, and their defaults (when applicable):
         - 'mu'
         - 'sigma'
-        - 'alphaR'
-        - 'nR'
         - 'alphaL'
         - 'nL'
+        - 'alphaR'
+        - 'nR'
 
     """
 
     MANDATORY_PARAMETERS = ('mu',
                             'sigma',
-                            'alphaR',
-                            'nR',
                             'alphaL',
-                            'nL')
+                            'nL',
+                            'alphaR',
+                            'nR')
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
