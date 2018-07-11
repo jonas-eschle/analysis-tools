@@ -469,7 +469,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     leave_list = []
     if selection:
         selection_expr = formulate.from_root(selection)
-        for var in selection_expr.variables:
+        for var in selection_expr.variables.union(variables):
             leave_list.append(ROOT.RooRealVar(var, var, 0.0))
             leave_set.add(leave_list[-1])
         name = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits)
