@@ -17,6 +17,7 @@ import ROOT
 import numpy as np
 import pandas as pd
 from root_pandas import read_root
+import formulate
 
 from analysis.data.converters import dataset_from_pandas
 from analysis.utils.logging_color import get_logger
@@ -467,7 +468,8 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     leave_set = ROOT.RooArgSet()
     leave_list = []
     if selection:
-        for var in leaves:
+        selection_expr = formulate.from_root(selection)
+        for var in selection_expr.variables.union(variables):
             leave_list.append(ROOT.RooRealVar(var, var, 0.0))
             leave_set.add(leave_list[-1])
         name = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits)
@@ -562,9 +564,11 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
     if not os.path.exists(file_name):
         raise OSError("Cannot find input file -> {}".format(file_name))
     selection = kwargs.get('selection')
-    variables = kwargs.get('variables')
+    variables = kwargs.get('variables', [])
     if selection:
-        output_data = read_root(file_name, tree_name).query(selection)
+        selection_expr = formulate.from_numexpr(selection)
+        full_variables = variables + list(selection_expr.variables)
+        output_data = read_root(file_name, tree_name, columns=full_variables).query(selection)
         if variables:
             output_data = output_data[variables]
     else:
