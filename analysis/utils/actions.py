@@ -9,6 +9,9 @@
 
 from __future__ import print_function, division, absolute_import
 
+import ast
+import operator as op
+
 import ROOT
 
 
@@ -281,5 +284,30 @@ def action_BLINDOFFSET(name, title, action_params, external_vars):
                                       blind_str, float(blind_scale), ref_var)
     return parameter, constraint
 
+
+def action_ARITHMETICS(name, title, action_params, _):
+    """Perform number arithmetics and return a const."""
+    # supported operators
+    operators = {ast.Add: op.add,
+                 ast.Sub: op.sub,
+                 ast.Mult: op.mul,
+                 ast.Div: op.truediv,
+                 ast.Pow: op.pow,
+                 ast.BitXor: op.xor,
+                 ast.USub: op.neg}
+
+    def eval_(node):
+        if isinstance(node, ast.Num):  # <number>
+            return node.n
+        elif isinstance(node, ast.BinOp):  # <left> <operator> <right>
+            return operators[type(node.op)](eval_(node.left), eval_(node.right))
+        elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
+            return operators[type(node.op)](eval_(node.operand))
+        else:
+            raise TypeError(node)
+
+    expr = ' '.join(action_params)
+    value = eval_(ast.parse(expr, mode='eval').body)
+    return action_CONST(name, title, ['{}'.format(value)], _)
 
 # EOF
