@@ -12,7 +12,12 @@ from __future__ import print_function, division, absolute_import
 import ast
 import operator as op
 
+from analysis.utils.logging_color import get_logger
+
 import ROOT
+
+
+logger = get_logger('analysis.utils.actions')
 
 
 def action_VAR(name, title, action_params, _):
@@ -307,7 +312,11 @@ def action_ARITHMETICS(name, title, action_params, _):
             raise TypeError(node)
 
     expr = ' '.join(action_params)
-    value = eval_(ast.parse(expr, mode='eval').body)
+    try:
+        value = eval_(ast.parse(expr, mode='eval').body)
+    except Exception as exc:
+        logger.error('ARITHMETICS error -> {}'.format(exc))
+        value = 0.0
     return action_CONST(name, title, ['{}'.format(value)], _)
 
 # EOF
