@@ -140,7 +140,7 @@ def run(config_files, link_from):
     # Prepare job
     _, _, log_file = _paths.prepare_path(name='mc/{}'.format(evt_type),
                                          path_func=_paths.get_log_path,
-                                         link_from=None)  # No linking is done for logs
+                                         link_from=link_from)  # No linking is done for logs
     # MC config
     sim_version = config['simulation-version'].lower()
     year = int(config['year'])
