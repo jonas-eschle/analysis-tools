@@ -47,8 +47,38 @@ test36:
     - conda info -a
     - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
     - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
-    - conda create -n test36 python=3.6 root=6 root-numpy > tmp.txt && echo 'env created'
+#    - conda create -n test36 python=3.6 root=6 root-numpy > tmp.txt && echo 'env created'
     - source activate test36 > tmp.txt && echo 'activated'
+
+#   HACK, psutil fails to build currently
+    - echo "========== HACK install psutil (fails to build) =========="
+    - conda install psutil > tmp.txt && echo 'psutil installed'
+
+    - echo "========== Install analysis =========="
+    - pip install -e .
+
+    - bash ci/test_runner.sh
+
+    - bash ci/static_checker.sh
+
+    - bash ci/testbuild_docs.sh
+
+
+    - echo "========== All tests finished =========="
+
+
+test37:
+  image: continuumio/miniconda3:latest
+  stage: test
+  script:
+    - echo "========== Setting up environment =========="
+    - apt install -y python3-dev  > tmp.txt && echo 'apt deps installed'
+    - conda config --set always_yes yes --set changeps1 no
+    - conda info -a
+    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
+    - conda create -n test37 python=3.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+#    - conda create -n test37 python=3.7 root=6 root-numpy > tmp.txt && echo 'env created'
+    - source activate test37 > tmp.txt && echo 'activated'
 
 #   HACK, psutil fails to build currently
     - echo "========== HACK install psutil (fails to build) =========="
