@@ -140,10 +140,11 @@ def action_SHIFT(name, title, action_params, external_vars):
         if second_var.startswith('@'):
             second_var = second_var[1:]
             second_var, const = external_vars[second_var]
-            if not constraint:
-                constraint = const
-            else:
-                raise NotImplementedError("Two constrained variables in SHIFT are not allowed")
+            if const:
+                if not constraint:
+                    constraint = const
+                else:
+                    raise NotImplementedError("Two constrained variables in SHIFT are not allowed")
         elif ':' in second_var:
             from analysis.fit.result import FitResult
             fit_name, var_name = second_var.split(':')
@@ -180,10 +181,11 @@ def action_SCALE(name, title, action_params, external_vars):
         if second_var.startswith('@'):
             second_var = second_var[1:]
             second_var, const = external_vars[second_var]
-            if not constraint:
-                constraint = const
-            else:
-                raise NotImplementedError("Two constrained variables in SCALE are not allowed")
+            if const:
+                if not constraint:
+                    constraint = const
+                else:
+                    raise NotImplementedError("Two constrained variables in SCALE are not allowed")
         elif ':' in second_var:
             from analysis.fit.result import FitResult
             fit_name, var_name = second_var.split(':')
@@ -220,10 +222,11 @@ def action_RATIO(name, title, action_params, external_vars):
     for variable in action_params:
         if variable.startswith('@'):
             processed_variable, const = external_vars[variable[1:]]
-            if not constraint:
-                constraint = const
-            else:
-                raise NotImplementedError("Two constrained variables in SCALE are not allowed")
+            if const:
+                if not constraint:
+                    constraint = const
+                else:
+                    raise NotImplementedError("Two constrained variables in SCALE are not allowed")
         elif ':' in variable:
             from analysis.fit.result import FitResult
             fit_name, var_name = variable.split(':')
