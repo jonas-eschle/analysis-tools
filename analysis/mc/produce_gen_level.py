@@ -171,7 +171,7 @@ def run(config_files, link_from):
     options.append(decfile)
     # Prepare to submit
     nevents = min(config['prod']['nevents-per-job'], config['prod']['nevents'])
-    logger.info("Generatic %s events of decfile -> %s", nevents, decfile)
+    logger.info("Generating %s events of decfile -> %s", nevents, decfile)
     logger.info("Output path: %s", output_path)
     logger.info("Log file location: %s", os.path.dirname(log_file))
     if do_link:
