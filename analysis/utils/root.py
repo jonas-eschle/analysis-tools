@@ -39,6 +39,8 @@ def load_library(name, lib_dirs=None, debug=False, force=False, use_mathmore=Fal
     for extension in ('.cc', '.cxx'):
         if not os.path.splitext(name)[1]:
             file_name = name + extension
+        else:
+            file_name = name
         if not os.path.isabs(file_name):
             if os.path.exists(os.path.abspath(file_name)):
                 name = os.path.abspath(file_name)

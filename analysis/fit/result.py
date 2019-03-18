@@ -21,6 +21,30 @@ from analysis.utils.root import iterate_roocollection
 
 _SUFFIXES = ('', '_err_hesse', '_err_minus', '_err_plus')
 
+# Minuit covariance codes
+COV_CODES = {-1: "Not available (inversion failed or Hesse failed)",
+             0: "Not positive defined",
+             1: "Only approximate",
+             2: "Forced pos def",
+             3: "Full accurate matrix"}
+
+STATUS = {'MINIMIZE': {0: "Converged",
+                       1: "Covariance was made pos defined",
+                       2: "Hesse is invalid",
+                       3: "EDM is above max",
+                       4: "Reached call limit",
+                       5: "Other failure"},
+          'HESSE': {0: "Converged",
+                    1: "Hesse failed",
+                    2: "Matrix inversion failed",
+                    3: "Matrix is not pos defined"},
+          'MINOS': {0: "Converged",
+                    1: "Maximum number of function calls exceeded when running for lower error",
+                    2: "Maximum number of function calls exceeded when running for upper error",
+                    3: "New minimum found when running for lower error",
+                    4: "New minimum found when running for upper error",
+                    5: "Other failure"}}
+
 
 def ensure_initialized(method):
     """Make sure the fit result is initialized."""
@@ -329,6 +353,14 @@ class FitResult(object):
         """
         return not any(status for status in self._result['status'].values()) and \
             self._result['covariance-matrix']['quality'] == 3
+
+    @ensure_initialized
+    def get_status_string(self):
+        """Get a string summary of the fit status."""
+        output = ", ".join("{}: {}".format(step, STATUS[step].get(status, status))
+                           for step, status in self._result['status'].items())
+        output += ", COVMATRIX: {}".format(COV_CODES[self._result['covariance-matrix']['quality']])
+        return output
 
     @ensure_initialized
     def generate_random_pars(self, params=None, include_const=False):

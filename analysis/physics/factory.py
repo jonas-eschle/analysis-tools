@@ -118,8 +118,7 @@ class BaseFactory(object):
         if name in self._objects:
             return self._objects[name]
         for child in self._children.values():
-            if name in child:
-                return child[name]
+            return child._find_object(name)
         return None
 
     def get(self, key, default=None, recursive=False):
