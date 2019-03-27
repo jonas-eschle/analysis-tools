@@ -93,11 +93,17 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
                   ROOT.RooFit.PrintLevel(2 if verbose else -1)]
     kwargs.setdefault('Range', 'Full')
     for command, val in kwargs.items():
-        roo_cmd = getattr(ROOT.RooFit, command, None)
+        if command == 'Minos' and dataset.isWeighted():
+            # Explicitly disabled Minos
+            roo_cmd = ROOT.RooFit.Minos(False)
+        else:
+            roo_cmd = getattr(ROOT.RooFit, command, None)
         if not roo_cmd:
             logger.warning("Specified unknown RooArgCmd %s", command)
             continue
         fit_config.append(roo_cmd(val))
+    if dataset.isWeighted():
+        fit_config.append(ROOT.RooFit.SumW2Error(True))
     constraints = factory.get_constraints()
     if constraints.getSize():
         fit_config.append(ROOT.RooFit.ExternalConstraints(constraints))
@@ -105,8 +111,6 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
         fit_func = get_fit_strategy(strategy)
     except KeyError:
         raise KeyError("Unknown fit strategy -> {}".format(strategy))
-    if dataset.isWeighted():
-        fit_config.append(ROOT.RooFit.SumW2Error(True))
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
             if factory.is_extended() \
