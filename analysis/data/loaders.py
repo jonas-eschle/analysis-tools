@@ -432,9 +432,13 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
 
         """
         object_list = tree.GetListOfLeaves()
-        return [object_list[leave_number].GetName()
-                for leave_number in range(object_list.GetSize())
-                if object_list[leave_number]]
+        it = object_list.MakeIterator()
+        output = set()
+        for _ in range(object_list.GetSize()):
+            obj = it.Next()
+            if obj:
+                output.add(obj.GetName())
+        return output 
 
     logger.debug("Loading ROOT file in RooDataSet format -> %s:%s",
                  file_name, tree_name)
@@ -449,7 +453,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
     tree = tfile.Get(tree_name)
     if not tree:
         raise KeyError("Cannot find tree in input file -> {}".format(tree_name))
-    leaves = set(get_list_of_leaves(tree))
+    leaves = get_list_of_leaves(tree)
     variables = set(kwargs.get('variables', leaves))
     # Acceptance
     if 'acceptance' in kwargs:
