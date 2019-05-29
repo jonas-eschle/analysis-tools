@@ -11,6 +11,7 @@ from __future__ import print_function, division, absolute_import
 
 import ast
 import operator as op
+from copy import deepcopy
 
 from analysis.utils.logging_color import get_logger
 
@@ -240,6 +241,51 @@ def action_RATIO(name, title, action_params, external_vars):
             processed_variable = ROOT.RooFit.RooConst(float(variable))
         processed_vars.append(processed_variable)
     parameter = Ratio(name, title, *processed_vars)
+    return parameter, constraint
+
+
+def action_BLINDRATIO(name, title, action_params, external_vars):
+    """Configure a ratio between two variables.
+
+    The first is the numerator, the second the denominator. At least needs to be a shared variable,
+    and currently two constrained variables are not possible.
+    The third is a randomization string; the fourth a mean and the fifth a width.
+
+    """
+    from analysis.utils.pdf import load_pdf_by_name
+    Ratio = load_pdf_by_name('RooRatio')
+
+    if len(action_params) != 5:
+        raise ValueError("Wrong number of arguments for RATIO -> {}".format(action_params))
+    if not any(v.startswith('@') for v in action_params):
+        raise ValueError("At least one parameter of a RATIO must be a reference")
+    constraint = None
+    processed_vars = []
+    for variable in action_params[:2]:
+        if variable.startswith('@'):
+            processed_variable, const = external_vars[variable[1:]]
+            if const:
+                if not constraint:
+                    constraint = const
+                else:
+                    raise NotImplementedError("Two constrained variables in SCALE are not allowed")
+        elif ':' in variable:
+            from analysis.fit.result import FitResult
+            fit_name, var_name = variable.split(':')
+            result = FitResult.from_yaml_file(fit_name)
+            try:
+                value = result.get_fit_parameter(var_name)[0]
+            except KeyError:
+                value = result.get_const_parameter(var_name)
+            processed_variable = ROOT.RooFit.RooConst(value)
+        else:
+            processed_variable = ROOT.RooFit.RooConst(float(variable))
+        processed_vars.append(processed_variable)
+    parameter = Ratio(name, title, *processed_vars)
+    blind_str, blind_central, blind_sigma = action_params[3:]
+    ref_var = deepcopy(parameter)
+    parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
+                                         float(blind_central), float(blind_sigma), ref_var)
     return parameter, constraint
 
 
