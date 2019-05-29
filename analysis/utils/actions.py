@@ -256,9 +256,9 @@ def action_BLINDRATIO(name, title, action_params, external_vars):
     Ratio = load_pdf_by_name('RooRatio')
 
     if len(action_params) != 5:
-        raise ValueError("Wrong number of arguments for RATIO -> {}".format(action_params))
+        raise ValueError("Wrong number of arguments for BLINDRATIO -> {}".format(action_params))
     if not any(v.startswith('@') for v in action_params):
-        raise ValueError("At least one parameter of a RATIO must be a reference")
+        raise ValueError("At least one parameter of a BLINDRATIO must be a reference")
     constraint = None
     processed_vars = []
     for variable in action_params[:2]:
@@ -282,7 +282,7 @@ def action_BLINDRATIO(name, title, action_params, external_vars):
             processed_variable = ROOT.RooFit.RooConst(float(variable))
         processed_vars.append(processed_variable)
     parameter = Ratio(name, title, *processed_vars)
-    blind_str, blind_central, blind_sigma = action_params[3:]
+    blind_str, blind_central, blind_sigma = action_params[2:]
     ref_var = deepcopy(parameter)
     parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
                                          float(blind_central), float(blind_sigma), ref_var)
