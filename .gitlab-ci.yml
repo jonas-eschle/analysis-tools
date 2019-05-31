@@ -4,7 +4,6 @@ stages:
   - deploy
 
 test27:
-#  image: continuumio/anaconda
   image: continuumio/miniconda:latest
   stage: test
   script:
@@ -12,10 +11,9 @@ test27:
     - apt install -y python-dev > tmp.txt && echo 'apt deps installed'
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
-    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-#    - conda create -n test27 python=2.7 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
-    - conda create -n test27 python=2.7 root=6 root-numpy  > tmp.txt && echo 'env created'
-    - conda update -f libstdcxx-ng -y
+    - conda config --add channels conda-forge  # ROOT channel
+    - conda create -n test27 python=2.7 root=6 > tmp.txt && echo 'env created'
+    - pip install root-numpy > tmp.txt && echo 'root-numpy installed'
     - source activate test27 > tmp.txt && echo 'activated'
 
 #   HACK, psutil fails to build currently
@@ -45,9 +43,9 @@ test36:
     - apt install -y python3-dev  > tmp.txt && echo 'apt deps installed'
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
-    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
-    - conda create -n test36 python=3.6 root=6 root-numpy > tmp.txt && echo 'env created'
+    - conda config --add channels conda-forge  # ROOT channel
+    - conda create -n test36 python=3.6 root=6 > tmp.txt && echo 'env created'
+    - pip install root-numpy > tmp.txt && echo 'root-numpy installed'
     - source activate test36 > tmp.txt && echo 'activated'
 
 #   HACK, psutil fails to build currently
@@ -76,8 +74,9 @@ test36_data_fail:
     - apt install -y python3-dev  > tmp.txt && echo 'apt deps installed'
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
-    - conda config --add channels https://conda.anaconda.org/NLeSC  # ROOT channel
-    - conda create -n test36 python=3.6 root=6 root-numpy libgcc gcc make cmake > tmp.txt && echo 'env created'
+    - conda config --add channels conda-forge  # ROOT channel
+    - conda create -n test36 python=3.6 root=6 > tmp.txt && echo 'env created'
+    - pip install root-numpy > tmp.txt && echo 'root-numpy installed'
     - source activate test36 > tmp.txt && echo 'activated'
 
 #   HACK, psutil fails to build currently
@@ -105,12 +104,3 @@ build_apidoc:
     - echo "========== Building docs =========="
     - echo "NotImplementedNotImplementedNotImplementedNotImplemented"
     - echo "========== Finished building and deploying docs =========="
-
-# Job: run PyLint
-
-#run_pylint:
-#  image: continuumio/miniconda3:latest
-#  type: test
-#  script:
-#    - conda install -y pylint
-#    - pylint analysis/*/*.py || echo "========= Pylint run with error code > 0 ========"
