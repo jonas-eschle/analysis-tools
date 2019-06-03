@@ -41,7 +41,7 @@ def register_config_action(name, action_function):
         action_function_args = inspect.getfullargspec(action_function).args
     except AttributeError:  # PY2
         action_function_args = inspect.getargspec(action_function).args
-    if len(action_function_args) != 4:
+    if len(action_function_args) != 4 and not 'BLINDRATIO' in action_function:
         raise ValueError("The action configuration function needs to have 4 arguments")
     logger.debug("Registering %s parameter configuration keyword", name)
     get_global_var('PARAMETER_KEYWORDS').update({name: action_function})
