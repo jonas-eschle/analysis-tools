@@ -253,39 +253,55 @@ def action_BLINDRATIO(name, title, action_params, external_vars):
 
     """
     from analysis.utils.pdf import load_pdf_by_name
+    print('now I load RooRatio')
     Ratio = load_pdf_by_name('RooRatio')
-
+    print('I loaded it')
+    print('Now I check the action parameters, i.e. {}'.format(action_params))
     if len(action_params) != 5:
         raise ValueError("Wrong number of arguments for BLINDRATIO -> {}".format(action_params))
     if not any(v.startswith('@') for v in action_params):
         raise ValueError("At least one parameter of a BLINDRATIO must be a reference")
     constraint = None
     processed_vars = []
+    print('Now I go through the variables, i.e. {}'.format(action_params[:2]))
     for variable in action_params[:2]:
         if variable.startswith('@'):
             processed_variable, const = external_vars[variable[1:]]
+            print('processed_variable, const are: \t{}\t{}'.format(processed_variable, const))
             if const:
                 if not constraint:
                     constraint = const
+                    print('Now constraint is: {}'.format(constraint))
                 else:
                     raise NotImplementedError("Two constrained variables in SCALE are not allowed")
         elif ':' in variable:
+            print('Now I import the fit result because I found a colon')
             from analysis.fit.result import FitResult
             fit_name, var_name = variable.split(':')
+            print('fit_name, var_name are: \t{}\t{}'.format(fit_name, var_name))
             result = FitResult.from_yaml_file(fit_name)
             try:
                 value = result.get_fit_parameter(var_name)[0]
             except KeyError:
                 value = result.get_const_parameter(var_name)
+            print('I found the fit result, which is: {}'.format(value))
             processed_variable = ROOT.RooFit.RooConst(value)
         else:
             processed_variable = ROOT.RooFit.RooConst(float(variable))
+        print('I append the variable to the list of processed vars')
         processed_vars.append(processed_variable)
+    print('processed variables list: {}'.format(processed_vars))
+    print('Now I create a ratio parameter')
     parameter = Ratio(name, title, *processed_vars)
     blind_str, blind_central, blind_sigma = action_params[2:]
+    print('I found the blinding string, central val and sigma:\t{}\t{}\t{}'.format(blind_str, blind_central, blind_sigma))
     ref_var = deepcopy(parameter)
+    print('I deepcopied the parameter')
     parameter = ROOT.RooUnblindPrecision(name + "_blind", title + "_blind", blind_str,
                                          float(blind_central), float(blind_sigma), ref_var)
+    print('I blinded it')
+    print(parameter)
+    print(constraint)
     return parameter, constraint
 
 

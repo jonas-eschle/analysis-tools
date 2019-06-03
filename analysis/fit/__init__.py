@@ -39,6 +39,10 @@ def register_fit_strategy(name, fit_function):
         fit_function_args = inspect.getfullargspec(fit_function).args
     except AttributeError:  # PY2
         fit_function_args = inspect.getargspec(fit_function).args
+
+    print('I am registering the fit function')
+    print('arguments are: {}'.format(fit_function_args))
+
     if len(fit_function_args) != 3:
         raise ValueError("The strategy function needs to have 3 arguments")
     logger.debug("Registering %s fitting strategy", name)
@@ -79,10 +83,12 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
 
     """
     import ROOT
-
+    print('I am __init__.py from analysis.fit')
+    print('I am inside the fit function, FINALLY')
     # Check the match between dataset and factory
     dataset_event = dataset.get()
     for obs in factory.get_observables():
+        print('Doing observable {}'.format(obs))
         dataset_obs = dataset_event[obs.GetName()]
         if (obs.getMin(), obs.getMax()) != (dataset_obs.getMin(), dataset_obs.getMax()):
             logger.warning("Mismatching ranges between PDF and dataset for observable %s, correcting...",
@@ -104,14 +110,17 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
         fit_config.append(roo_cmd(val))
     if dataset.isWeighted():
         fit_config.append(ROOT.RooFit.SumW2Error(True))
+    print('I managed to process all my configuration')
+    print('Now I look at the constraints')
     constraints = factory.get_constraints()
     if constraints.getSize():
         fit_config.append(ROOT.RooFit.ExternalConstraints(constraints))
+    print('Now I try to get the fit strategy')
     try:
         fit_func = get_fit_strategy(strategy)
     except KeyError:
         raise KeyError("Unknown fit strategy -> {}".format(strategy))
-    print('\n\n\n\n\n{}\n\n\n\n\n'.format(fit_config))
+    print('\n\nFit config is as shown below:\n\n\n{}\n\n\n\n\n'.format(fit_config))
     try:
         model = factory.get_extended_pdf(pdf_name, pdf_name) \
             if factory.is_extended() \
@@ -123,6 +132,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
         logger.warning("Requested fit with Extended=%s fit on %s extended PDF. Check this is what you want.",
                        kwargs.get('Extended', False),
                        'an ' if factory.is_extended() else 'a non-')
+    print('Ok, all set. Watch me fitting!')
     return fit_func(model, dataset, fit_config)
 
 # EOF
