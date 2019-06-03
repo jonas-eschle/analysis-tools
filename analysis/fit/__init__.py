@@ -41,6 +41,7 @@ def register_fit_strategy(name, fit_function):
         fit_function_args = inspect.getargspec(fit_function).args
 
     print('I am registering the fit function')
+    print('name, fit_function are:\t{}\t{}'.format(name, fit_function))
     print('arguments are: {}'.format(fit_function_args))
 
     if len(fit_function_args) != 3:
@@ -133,6 +134,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
                        kwargs.get('Extended', False),
                        'an ' if factory.is_extended() else 'a non-')
     print('Ok, all set. Watch me fitting!')
+    print(fit_func)
     return fit_func(model, dataset, fit_config)
 
 # EOF
