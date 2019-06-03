@@ -134,6 +134,7 @@ def fit(factory, pdf_name, strategy, dataset, verbose=False, **kwargs):
                        kwargs.get('Extended', False),
                        'an ' if factory.is_extended() else 'a non-')
     print('Ok, all set. Watch me fitting!')
+    print('The type of the fit function is: {}'.format(type(fit_func)))
     print(fit_func)
     return fit_func(model, dataset, fit_config)
 
