@@ -405,10 +405,7 @@ def get_shared_vars(config, external_vars=None):
     # Build shared parameters
     pending_params = parameter_configs.copy()
     for _ in range(100):
-        if not pending_params:
-            # We're done
-            break
-        failed_items = {}
+        failed_items = OrderedDict()
         for config_element, config_value in pending_params.items():
             if not config_value.startswith('@'):
                 continue
@@ -430,6 +427,9 @@ def get_shared_vars(config, external_vars=None):
                 raise ValueError("Badly configured shared parameter -> {}: {}".format(config_element,
                                                                                       config_value))
         pending_params = failed_items
+        if not pending_params:
+            # We're done
+            break
     if pending_params:
         raise ValueError("Some shared parameters failed to be configured. Maximum recursion reached.")
     # Now replace the refs by the shared variables in a recursive defaultdict
