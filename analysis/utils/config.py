@@ -403,22 +403,33 @@ def get_shared_vars(config, external_vars=None):
     # First build the shared var
     refs = {} if not external_vars else external_vars
     # Build shared parameters
-    for config_element, config_value in parameter_configs.items():
-        if not config_value.startswith('@'):
-            continue
-        split_element = config_value[1:].split('/')
-        if len(split_element) == 4:
-            ref_name, var_name, var_title, var_config = split_element
-            if ref_name in refs:
-                raise ValueError("Shared parameter defined twice -> {}".format(ref_name))
-            var, constraint = configure_parameter(var_name, var_title, var_config, refs)
-            var.setStringAttribute('shared', 'true')
-            refs[ref_name] = (var, constraint)
-        elif len(split_element) == 1:
-            pass
-        else:
-            raise ValueError("Badly configured shared parameter -> {}: {}".format(config_element,
-                                                                                  config_value))
+    pending_params = parameter_configs.copy()
+    for _ in range(100):
+        if not pending_params:
+            # We're done
+            break
+        failed_items = {}
+        for config_element, config_value in pending_params.items():
+            if not config_value.startswith('@'):
+                continue
+            split_element = config_value[1:].split('/')
+            if len(split_element) == 4:
+                ref_name, var_name, var_title, var_config = split_element
+                if ref_name in refs:
+                    raise ValueError("Shared parameter defined twice -> {}".format(ref_name))
+                try:
+                    var, constraint = configure_parameter(var_name, var_title, var_config, refs)
+                    var.setStringAttribute('shared', 'true')
+                    refs[ref_name] = (var, constraint)
+                except KeyError:
+                    # Some parameter is not defined yet
+                    failed_items[config_element] = config_value
+            elif len(split_element) == 1:
+                pass
+            else:
+                raise ValueError("Badly configured shared parameter -> {}: {}".format(config_element,
+                                                                                      config_value))
+        pending_params = failed_items
     # Now replace the refs by the shared variables in a recursive defaultdict
     recurse_dict = lambda: defaultdict(recurse_dict)
     new_config = []
