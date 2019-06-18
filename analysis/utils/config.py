@@ -430,6 +430,8 @@ def get_shared_vars(config, external_vars=None):
                 raise ValueError("Badly configured shared parameter -> {}: {}".format(config_element,
                                                                                       config_value))
         pending_params = failed_items
+    if pending_params:
+        raise ValueError("Some shared parameters failed to be configured. Maximum recursion reached.")
     # Now replace the refs by the shared variables in a recursive defaultdict
     recurse_dict = lambda: defaultdict(recurse_dict)
     new_config = []
