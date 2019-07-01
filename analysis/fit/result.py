@@ -15,7 +15,7 @@ import numpy as np
 
 from analysis.utils.config import load_config, write_config
 from analysis.utils.exceptions import NotInitializedError, ConfigError
-from analysis.utils.decorators import memoize
+# from analysis.utils.decorators import memoize
 import analysis.utils.paths as _paths
 from analysis.utils.root import iterate_roocollection
 
@@ -91,7 +91,7 @@ class FitResult(object):
         return self._result
 
     @staticmethod
-    @memoize
+    # @memoize
     def from_roofit(roofit_result):
         """Load the `RooFitResult` into the internal format.
 
@@ -131,7 +131,7 @@ class FitResult(object):
         return FitResult(result)
 
     @staticmethod
-    @memoize
+    # @memoize
     def from_yaml(yaml_dict):
         """Initialize from a YAML dictionary.
 
@@ -159,7 +159,7 @@ class FitResult(object):
         return FitResult(yaml_dict)
 
     @staticmethod
-    @memoize
+    # @memoize
     def from_yaml_file(name):
         """Initialize from a YAML file.
 
