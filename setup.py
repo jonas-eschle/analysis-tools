@@ -9,7 +9,8 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -55,7 +56,10 @@ setup(name='analysis',
                         'matplotlib',
                         'seaborn',
                         'formulate'],
-      packages=['analysis'],
+      packages=find_packages(include=['analysis', 'analysis.batch',
+                                    'analysis.data', 'analysis.efficiency',
+                                      'analysis.fit', "analysis.mc", 'analysis.pdfs',
+                                     'analysis.physics', 'analysis.toys', 'analysis.utils']),
       data_files=['LICENSE', 'README.md'],
       zip_safe=False)
 
