@@ -265,6 +265,7 @@ class LegendreEfficiency(Efficiency):
                               op_flags=['readwrite'])
         weights = np.array(dataset[weight_var]) if weight_var else np.ones(dataset.shape[0])
         inv_sum_weights = 1.0/np.sum(weights)
+        inv_sum_weights_minus_one = 1.0 / (sum_weights - 1.)
         # Array to store the calculation of the legendres event by event
         events = np.zeros((dataset.shape[0],) + orders)
         while not it_coeffs.finished:
@@ -287,7 +288,7 @@ class LegendreEfficiency(Efficiency):
         if calculate_cov:
             sigma = np.sum(np.dot(err_diff[:, chunk:min(chunk + chunk_size, dataset.shape[0])],
                                   err_diff_t[chunk:min(chunk + chunk_size, dataset.shape[0]), :].conj())
-                           for chunk in range(0, dataset.shape[0], chunk_size)) * inv_sum_weights
+                           for chunk in range(0, dataset.shape[0], chunk_size)) * inv_sum_weights * inv_sum_weights_minus_one
         else:
             sigma = np.zeros((functools.reduce(operator.mul, orders),
                               functools.reduce(operator.mul, orders)))
