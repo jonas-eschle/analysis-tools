@@ -11,8 +11,8 @@ from __future__ import print_function, division, absolute_import
 import inspect
 
 from analysis import get_global_var
-from analysis.utils.logging_color import get_logger
 from analysis.utils import actions as _actions
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.utils')
 
@@ -69,6 +69,5 @@ def get_config_action(name):
 
     """
     return get_global_var('PARAMETER_KEYWORDS')[name]
-
 
 # EOF

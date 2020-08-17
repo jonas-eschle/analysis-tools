@@ -42,5 +42,4 @@ class memoize(object):
             self.cls.instances[key] = self.cls(*args, **kwargs)
         return self.cls.instances[key]
 
-
 # EOF

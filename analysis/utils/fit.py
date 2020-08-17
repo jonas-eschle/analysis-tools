@@ -74,10 +74,10 @@ def calculate_pulls(fit_results, gen_values):
         pulls[param_name + '_pull_diff'] = fit_results[param_name] - gen_values[gen_name]
         pulls[param_name + '_pull_hesse'] = pulls[param_name + '_pull_diff'] / fit_results[param_name + '_err_hesse']
         pulls[param_name + '_pull_minos'] = pulls[param_name + '_pull_diff'] / \
-            fit_results[param_name + '_err_plus']
+                                            fit_results[param_name + '_err_plus']
         pulls[param_name + '_pull_minos'][pulls[param_name + '_pull_diff'] > 0.0] = pulls[param_name + '_pull_diff'] / \
-            fit_results[param_name + '_err_minus'].abs()
+                                                                                    fit_results[
+                                                                                        param_name + '_err_minus'].abs()
     return pulls
-
 
 # EOF

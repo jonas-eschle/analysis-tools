@@ -13,16 +13,14 @@ import random
 import string
 
 import ROOT
-
+import formulate
 import numpy as np
 import pandas as pd
 from root_pandas import read_root
-import formulate
 
 from analysis.data.converters import dataset_from_pandas
 from analysis.utils.logging_color import get_logger
 from analysis.utils.root import destruct_object, list_to_rooarglist
-
 
 logger = get_logger('analysis.data.loaders')
 
@@ -121,7 +119,7 @@ def _get_root_from_dataframe(frame, kwargs):
     # Variables
     var_list = list(frame.columns)
     # Raise an error if some weights are not loaded.
-    if var_list and not set(weights_to_normalize+weights_not_to_normalize).issubset(set(var_list)):
+    if var_list and not set(weights_to_normalize + weights_not_to_normalize).issubset(set(var_list)):
         raise ValueError("Missing weights in the list of variables read from input file.")
     acc_var = ''
     # Acceptance specified
@@ -165,7 +163,7 @@ def _get_root_from_dataframe(frame, kwargs):
     if weight_var:
         frame[weight_var] = np.prod([frame[w_var] for w_var in weights_to_normalize],
                                     axis=0)
-        frame[weight_var] = frame[weight_var]/frame[weight_var].sum()*frame.shape[0]
+        frame[weight_var] = frame[weight_var] / frame[weight_var].sum() * frame.shape[0]
         frame[weight_var] = np.prod([frame[w_var] for w_var in weights_not_to_normalize + [weight_var]],
                                     axis=0)
     if var_list is not None and weight_var:
@@ -421,6 +419,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
         OSError: If the ROOT file cannot be found.
 
     """
+
     def get_list_of_leaves(tree):
         """Get list of leave names from a tree matching a certain regex.
 
@@ -438,7 +437,7 @@ def get_root_from_root_file(file_name, tree_name, kwargs):
             obj = it.Next()
             if obj:
                 output.add(obj.GetName())
-        return output 
+        return output
 
     logger.debug("Loading ROOT file in RooDataSet format -> %s:%s",
                  file_name, tree_name)
@@ -578,6 +577,5 @@ def get_pandas_from_root_file(file_name, tree_name, kwargs):
     else:
         output_data = read_root(file_name, tree_name, columns=variables)
     return output_data
-
 
 # EOF

@@ -52,5 +52,4 @@ def get_job_id():
             return job_id
     return ''
 
-
 # EOF

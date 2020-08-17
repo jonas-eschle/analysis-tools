@@ -8,15 +8,14 @@
 """Efficiency expansion with Legendre polynomials."""
 from __future__ import print_function, division, absolute_import
 
-import operator
 import functools
 import itertools
+import operator
 
 import numpy as np
 import pandas as pd
 
 from analysis.utils.logging_color import get_logger
-
 from .efficiency import Efficiency
 
 # Shortcuts
@@ -43,7 +42,6 @@ def process_range(range_lst):
 
     """
     # pylint: disable=W0612
-    from math import pi, cos, acos, sin, asin, sqrt  # For eval
     try:
         high, low = range_lst
     except ValueError:
@@ -93,7 +91,7 @@ def scale_dataset(data, input_min, input_max, output_min, output_max):
     """
     if any(data > input_max) or any(data < input_min):
         logger.warning("Scaling a dataset with values outside the range")
-    return (output_max-output_min)*(data-input_min)/(input_max-input_min) + output_min
+    return (output_max - output_min) * (data - input_min) / (input_max - input_min) + output_min
 
 
 ###############################################################################
@@ -217,7 +215,8 @@ class LegendreEfficiency(Efficiency):
 
     # pylint: disable=R0914,W0221
     @staticmethod
-    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None, calculate_cov=False, chunk_size=1000):
+    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None, calculate_cov=False,
+            chunk_size=1000):
         """Calculate Legendre coefficients using the method of moments.
 
         Arguments:
@@ -276,9 +275,9 @@ class LegendreEfficiency(Efficiency):
                                 np.array(np.append(np.zeros(current_orders[var_number]), [1])))
                          for var_number, var_name in enumerate(var_list)]
             event = functools.reduce(operator.mul,
-                                     ((2.*current_order+1.)/2.
+                                     ((2. * current_order + 1.) / 2.
                                       for current_order in current_orders)) * \
-                functools.reduce(np.multiply, [weights] + legendres)
+                    functools.reduce(np.multiply, [weights] + legendres)
             events[(Ellipsis,) + current_orders] = event
             it_coeffs[0] = inv_sum_weights * np.sum(event)
             it_coeffs.iternext()
@@ -289,7 +288,8 @@ class LegendreEfficiency(Efficiency):
         if calculate_cov:
             sigma = np.sum(np.dot(err_diff[:, chunk:min(chunk + chunk_size, dataset.shape[0])],
                                   err_diff_t[chunk:min(chunk + chunk_size, dataset.shape[0]), :].conj())
-                           for chunk in range(0, dataset.shape[0], chunk_size)) * inv_sum_weights * inv_sum_weights_minus_one
+                           for chunk in
+                           range(0, dataset.shape[0], chunk_size)) * inv_sum_weights * inv_sum_weights_minus_one
         else:
             sigma = np.zeros((functools.reduce(operator.mul, orders),
                               functools.reduce(operator.mul, orders)))
@@ -332,7 +332,7 @@ class LegendreEfficiency(Efficiency):
                     high, low = legval([1, -1],
                                        legint(np.array(np.append(np.zeros(order), [1])),
                                               lbnd=-1))
-                    term_val *= (high-low)
+                    term_val *= (high - low)
                 val += term_val
             y += val * legval(x, np.array(np.append(np.zeros(non_int_order), [1])))
         if var_name in self._ranges:
@@ -466,7 +466,8 @@ class LegendreEfficiency1D(Efficiency):
 
     # pylint: disable=R0914,W0221
     @staticmethod
-    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None, calculate_cov=False, chunk_size=1000):
+    def fit(dataset, var_list, weight_var=None, legendre_orders=None, ranges=None, calculate_cov=False,
+            chunk_size=1000):
         """Calculate Legendre coefficients using the method of moments.
 
         Arguments:
@@ -507,7 +508,7 @@ class LegendreEfficiency1D(Efficiency):
             data[range_var] = scale_dataset(data[range_var], min_, max_, -1, 1)
         # Loop
         weights = np.array(dataset[weight_var]) if weight_var else np.ones(dataset.shape[0])
-        inv_sum_weights = 1.0/np.sum(weights)
+        inv_sum_weights = 1.0 / np.sum(weights)
         coeff_list = []
         sigma = np.zeros((sum(legendre_orders.values()),
                           sum(legendre_orders.values())))
@@ -517,8 +518,8 @@ class LegendreEfficiency1D(Efficiency):
             coefficients = np.zeros(legendre_orders[var_name])
             events = np.zeros((dataset.shape[0], legendre_orders[var_name]))
             for current_order in range(legendre_orders[var_name]):
-                event = (2.*current_order+1.)/2 * weights * \
-                    legval(data[var_name].values, np.array(np.append(np.zeros(current_order), [1])))
+                event = (2. * current_order + 1.) / 2 * weights * \
+                        legval(data[var_name].values, np.array(np.append(np.zeros(current_order), [1])))
                 events[:, current_order] = event
                 coefficients[current_order] = inv_sum_weights * np.sum(event)
             coeff_list.append(coefficients.tolist())

@@ -9,8 +9,8 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-import subprocess
 import shutil
+import subprocess
 from contextlib import contextmanager
 
 import pandas as pd
@@ -76,6 +76,5 @@ def modify_hdf(file_name, compress=True):
         finally:
             if os.path.exists(compressed_file):
                 os.remove(compressed_file)
-
 
 # EOF

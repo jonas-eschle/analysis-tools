@@ -9,15 +9,15 @@
 from __future__ import print_function, division, absolute_import
 
 import re
+import sys
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import sys
 
-from analysis.utils.paths import get_efficiency_path, work_on_file
 from analysis.utils.config import write_config
 from analysis.utils.logging_color import get_logger
+from analysis.utils.paths import get_efficiency_path, work_on_file
 
 logger = get_logger('analysis.efficiency')
 
@@ -202,6 +202,7 @@ class Efficiency(object):
             ValueError: If the weight variable is not in `data`.
 
         """
+
         def tex_escape(text):
             """Escape LaTeX characters.
 

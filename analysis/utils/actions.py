@@ -13,10 +13,9 @@ import ast
 import operator as op
 from copy import deepcopy
 
-from analysis.utils.logging_color import get_logger
-
 import ROOT
 
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.utils.actions')
 

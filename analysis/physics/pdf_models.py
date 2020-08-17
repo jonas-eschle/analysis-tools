@@ -8,7 +8,6 @@
 """Basic PDFs to use for building complex factories."""
 from __future__ import print_function, division, absolute_import
 
-
 import ROOT
 
 from analysis.utils.pdf import load_pdf_by_name
@@ -36,7 +35,7 @@ class GaussianPdfMixin(object):
 
         """
         return ROOT.RooGaussian(name, title,
-                                *(self.get_observables()+self.get_fit_parameters()))
+                                *(self.get_observables() + self.get_fit_parameters()))
 
 
 # pylint: disable=R0903
@@ -64,7 +63,7 @@ class CBPdfMixin(object):
 
         """
         return ROOT.RooCBShape(name, title,
-                               *(self.get_observables()+self.get_fit_parameters()))
+                               *(self.get_observables() + self.get_fit_parameters()))
 
 
 # pylint: disable=R0903
@@ -97,7 +96,7 @@ class BifurcatedCBPdfMixin(object):
         """
         return load_pdf_by_name('BifurcatedCB')(name,
                                                 title,
-                                                *(self.get_observables()+self.get_fit_parameters()))
+                                                *(self.get_observables() + self.get_fit_parameters()))
 
 
 # pylint: disable=R0903
@@ -135,16 +134,16 @@ class DoubleCBPdfMixin(object):
         obs = self.get_observables()[0]
         params = self.get_fit_parameters()
         return ROOT.RooAddPdf(name, title,
-                              self.set(name+'CB1',
-                                       ROOT.RooCBShape(name+'CB1',
-                                                       title+'CB1',
+                              self.set(name + 'CB1',
+                                       ROOT.RooCBShape(name + 'CB1',
+                                                       title + 'CB1',
                                                        obs,
                                                        *params[0:4])),
-                              self.set(name+'CB2',
-                                       ROOT.RooCBShape(name+'CB2',
-                                                       title+'CB2',
+                              self.set(name + 'CB2',
+                                       ROOT.RooCBShape(name + 'CB2',
+                                                       title + 'CB2',
                                                        obs,
-                                                       *((params[0],)+params[4:7]))),
+                                                       *((params[0],) + params[4:7]))),
                               params[7])
 
 
@@ -157,7 +156,7 @@ class ExponentialPdfMixin(object):
 
     """
 
-    MANDATORY_PARAMETERS = ('tau', )
+    MANDATORY_PARAMETERS = ('tau',)
 
     def get_unbound_pdf(self, name, title):
         """Get the physics PDF.
@@ -167,7 +166,7 @@ class ExponentialPdfMixin(object):
 
         """
         return ROOT.RooExponential(name, title,
-                                   *(self.get_observables()+self.get_fit_parameters()))
+                                   *(self.get_observables() + self.get_fit_parameters()))
 
 
 # pylint: disable=R0903
@@ -191,7 +190,7 @@ class PolynomialPdfMixin(object):
 
         """
         # pylint: disable=C0103
-        self.MANDATORY_PARAMETERS = {'a{}'.format(param_num+1)
+        self.MANDATORY_PARAMETERS = {'a{}'.format(param_num + 1)
                                      for param_num in range(config.get('order', 1))}
         super(PolynomialPdfMixin, self).__init__(config, parameters)
 
@@ -203,7 +202,7 @@ class PolynomialPdfMixin(object):
 
         """
         return ROOT.RooPolynomial(name, title,
-                                  *(self.get_observables()+(ROOT.RooArgList(*self.get_fit_parameters()),)))
+                                  *(self.get_observables() + (ROOT.RooArgList(*self.get_fit_parameters()),)))
 
 
 # pylint: disable=R0903
@@ -256,14 +255,14 @@ class ArgusConvGaussPdfMixin(object):
         params = self.get_fit_parameters()
         return execute_and_return_self(ROOT.RooFFTConvPdf(name, title,
                                                           obs,
-                                                          self.set(name+'Argus',
-                                                                   ROOT.RooArgusBG(name+'Argus',
-                                                                                   title+'Argus',
+                                                          self.set(name + 'Argus',
+                                                                   ROOT.RooArgusBG(name + 'Argus',
+                                                                                   title + 'Argus',
                                                                                    obs,
                                                                                    *params[:3])),
-                                                          self.set(name+'Resol',
-                                                                   ROOT.RooGaussian(name+'Resol',
-                                                                                    title+'Resol',
+                                                          self.set(name + 'Resol',
+                                                                   ROOT.RooGaussian(name + 'Resol',
+                                                                                    title + 'Resol',
                                                                                     obs,
                                                                                     *params[3:]))),
                                        'setBufferFraction',
@@ -302,7 +301,7 @@ class IpatiaPdfMixin(object):
         """
         return load_pdf_by_name('RooIpatia', True)(name,
                                                    title,
-                                                   *(self.get_observables()+self.get_fit_parameters()))
+                                                   *(self.get_observables() + self.get_fit_parameters()))
 
 
 # pylint: disable=R0903
@@ -341,7 +340,7 @@ class Ipatia2PdfMixin(object):
         """
         return load_pdf_by_name('RooIpatia2', True)(name,
                                                     title,
-                                                    *(self.get_observables()+self.get_fit_parameters()))
+                                                    *(self.get_observables() + self.get_fit_parameters()))
 
 
 class RooWorkspaceMixin(object):

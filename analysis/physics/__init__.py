@@ -8,18 +8,19 @@
 """Physics utilities."""
 from __future__ import print_function, division, absolute_import
 
-from collections import OrderedDict
 import traceback
+from collections import OrderedDict
 
 import ROOT
 
 from analysis import get_global_var
-from analysis.utils.logging_color import get_logger
 from analysis.utils.config import get_shared_vars, configure_parameter, recursive_dict_copy
 from analysis.utils.exceptions import ConfigError
-
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.physics')
+
+
 # logger.setLevel(10)
 
 
@@ -80,6 +81,7 @@ def rename_on_recursion_end(func):
             factory.
 
     """
+
     def wrapped(*args, **kwargs):
         """Check the parent caller to determine when to rename.
 
@@ -100,6 +102,7 @@ def rename_on_recursion_end(func):
                 if frame[2] == func.__name__]) == 0:
             res_factory.rename_children_parameters()
         return res_factory
+
     return wrapped
 
 
@@ -111,6 +114,7 @@ def configure_model(config, shared_vars=None, external_vars=None):
         ConfigError: If the shared parameters are badly configured.
 
     """
+
     def sanitize_parameter(param, name, title):
         constraint = None
         if isinstance(param, (list, tuple)):
@@ -162,8 +166,8 @@ def configure_model(config, shared_vars=None, external_vars=None):
                                                              for observable, factory_config
                                                              in config.pop('pdf').items()),
                                                  parameters=config)
-                                                 # parameters={param_name: (param_val, None)
-                                                 #             for param_name, param_val in params.items()})
+            # parameters={param_name: (param_val, None)
+            #             for param_name, param_val in params.items()})
 
     def configure_sum_factory(config, shared_vars):
         logger.debug("Configuring sum -> %s", dict(config))
@@ -289,6 +293,5 @@ def configure_model(config, shared_vars=None, external_vars=None):
                     sh_vars['parameters'] = shared_vars['parameters']
                 return configure_factory(observable=pdf_obs, config=pdf_config, shared_vars=sh_vars)
     raise RuntimeError()
-
 
 # EOF

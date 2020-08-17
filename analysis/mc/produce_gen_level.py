@@ -12,12 +12,11 @@ import argparse
 import os
 from math import ceil
 
-import analysis.utils.paths as _paths
 import analysis.utils.config as _config
+import analysis.utils.paths as _paths
 from analysis.batch import get_batch_system
-from analysis.utils.logging_color import get_logger
 from analysis.mc.gauss import get_gauss_version, get_gaudirun_options, get_db_tags
-
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.efficiency.gen_level')
 
@@ -193,7 +192,7 @@ def run(config_files, link_from):
     except ValueError:
         raise
     # Submit
-    njobs = int(ceil(1.0*config['prod']['nevents']/config['prod']['nevents-per-job']))
+    njobs = int(ceil(1.0 * config['prod']['nevents'] / config['prod']['nevents-per-job']))
     logger.info("About to send %s jobs with %s events each.", njobs, nevents)
     for _ in range(njobs):
         # Submit

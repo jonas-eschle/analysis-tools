@@ -10,22 +10,21 @@ from __future__ import print_function, division, absolute_import
 
 import argparse
 
+import ROOT
 import numpy as np
 import pandas as pd
-import ROOT
 
+from analysis.batch import get_job_id
+from analysis.data.converters import pandas_from_dataset
+from analysis.data.hdf import modify_hdf
 from analysis.physics import configure_model
 from analysis.physics.factory import SumPhysicsFactory, SimultaneousPhysicsFactory
-from analysis.utils.random_numbers import get_urandom_int
-from analysis.utils.root import destruct_object, list_to_rooargset
 from analysis.utils.config import load_config
 from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
 from analysis.utils.paths import get_toy_path, work_on_file
-from analysis.data.converters import pandas_from_dataset
-from analysis.data.hdf import modify_hdf
-from analysis.batch import get_job_id
-
+from analysis.utils.random_numbers import get_urandom_int
+from analysis.utils.root import destruct_object, list_to_rooargset
 
 logger = get_logger('analysis.toys.generate')
 
@@ -51,6 +50,7 @@ def generate(physics_factory, n_events):
         KeyError: If an unknown simultaneous category label is requested.
 
     """
+
     def generate_events(gen_pdf, obs_set, n_events):
         """Generate events according to the given PDF.
 

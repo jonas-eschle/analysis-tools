@@ -17,13 +17,10 @@ import os
 
 from analysis import get_global_var
 from analysis.utils.config import load_config, ConfigError, unfold_config
-from analysis.utils.paths import get_efficiency_path, get_acceptance_path
 from analysis.utils.logging_color import get_logger
-
-from .legendre import _EFFICIENCY_MODELS as _LEG_EFFICIENCY_MODELS
-
+from analysis.utils.paths import get_efficiency_path, get_acceptance_path
 from .acceptance import Acceptance
-
+from .legendre import _EFFICIENCY_MODELS as _LEG_EFFICIENCY_MODELS
 
 logger = get_logger('analysis.efficiency')
 

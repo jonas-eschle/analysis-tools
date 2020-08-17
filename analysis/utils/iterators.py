@@ -48,6 +48,6 @@ def chunks(iterable, chunk_size):
     else:
         iter_range = range
     for index in iter_range(0, len(iterable), int(chunk_size)):
-        yield iterable[index:index+int(chunk_size)]
+        yield iterable[index:index + int(chunk_size)]
 
 # EOF

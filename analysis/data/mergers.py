@@ -8,8 +8,8 @@
 """Merge datasets."""
 from __future__ import print_function, division, absolute_import
 
-import pandas as pd
 import ROOT
+import pandas as pd
 
 from analysis.utils.root import rooargset_to_set, destruct_object
 

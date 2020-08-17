@@ -8,19 +8,17 @@
 """Script to model the efficiency from an input dataset."""
 from __future__ import print_function, division, absolute_import
 
-import os
 import argparse
+import os
 
 import matplotlib.pyplot as plt
 
-from analysis import get_global_var
-from analysis.data import get_data
-from analysis.utils.logging_color import get_logger
 import analysis.utils.config as _config
 import analysis.utils.paths as _paths
-
+from analysis import get_global_var
+from analysis.data import get_data
 from analysis.efficiency import get_efficiency_model_class, load_efficiency_model
-
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.efficiency.calculate_efficiency')
 # Register plot path

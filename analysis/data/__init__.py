@@ -10,12 +10,12 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from analysis.utils.backports import FileNotFoundError
+import analysis.utils.paths as paths
 from analysis import get_global_var
+from analysis.utils.backports import FileNotFoundError
 from analysis.utils.config import load_config
 from analysis.utils.exceptions import DataError
 from analysis.utils.logging_color import get_logger
-import analysis.utils.paths as paths
 
 logger = get_logger('analysis.data')
 
@@ -111,8 +111,8 @@ def get_data(data_config, **kwargs):
         if not os.path.exists(file_name):
             raise FileNotFoundError("Cannot find input file -> {}".format(file_name))
     except AttributeError as error:
-            logger.error("Unknows source type -> %s, original error %s", source_type, error)
-            raise DataError("Unknown source type -> {}".format(source_type))
+        logger.error("Unknows source type -> %s, original error %s", source_type, error)
+        raise DataError("Unknown source type -> {}".format(source_type))
     tree_name = data_config.pop('tree', '')
     output_format = data_config.pop('output-format').lower()
     # Optional: output-type, cuts, branches

@@ -14,7 +14,6 @@ from collections import OrderedDict
 
 from analysis.utils.logging_color import get_logger
 
-
 logger = get_logger('analysis.batch.batch_system')
 
 
@@ -28,6 +27,7 @@ def which(program):
         str: Path of the program. Returns None if it cannot be found.
 
     """
+
     def is_exe(fpath):
         """Check if path is executable."""
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)

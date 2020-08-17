@@ -10,11 +10,11 @@ from __future__ import print_function, division, absolute_import
 
 from collections import defaultdict
 
-import pandas as pd
 import ROOT
+import pandas as pd
 
-from analysis.utils.root import list_to_rooargset
 from analysis.utils.logging_color import get_logger
+from analysis.utils.root import list_to_rooargset
 
 logger = get_logger('analysis.data.converters')
 
@@ -66,6 +66,7 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
         KeyError: If the weight_var or the category is not present in `frame`.
 
     """
+
     def fill_dataset(name, title, var_set, input_data):
         """Fill a dataset from a pandas DataFrame.
 
@@ -120,6 +121,5 @@ def dataset_from_pandas(frame, name, title, var_list=None, weight_var=None, cate
                                   ROOT.RooFit.Import(dataset),
                                   ROOT.RooFit.WeightVar(weight_var))
     return dataset
-
 
 # EOF

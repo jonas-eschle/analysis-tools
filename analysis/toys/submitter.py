@@ -10,11 +10,10 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from analysis.batch import get_batch_system
 import analysis.utils.config as _config
 import analysis.utils.paths as _paths
+from analysis.batch import get_batch_system
 from analysis.utils.logging_color import get_logger
-
 
 logger = get_logger('analysis.toys.submitter')
 
@@ -167,7 +166,7 @@ class ToySubmitter(object):
         # Calculate number of jobs and submit
         ntoys = flat_config[self.NTOYS_KEY]
         ntoys_per_job = flat_config.get(self.NTOYS_PER_JOB_KEY, ntoys)
-        n_jobs = int(1.0*ntoys/ntoys_per_job)
+        n_jobs = int(1.0 * ntoys / ntoys_per_job)
         if ntoys % ntoys_per_job:
             n_jobs += 1
         # Submit!
@@ -180,6 +179,5 @@ class ToySubmitter(object):
                                                      log_file=log_file_fmt,
                                                      **self.config.get('batch', {}))
             logger.info('Submitted JobID: %s', job_id)
-
 
 # EOF

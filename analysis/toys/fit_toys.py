@@ -13,28 +13,26 @@ import os
 from collections import defaultdict
 from timeit import default_timer
 
-from scipy.stats import poisson
+import ROOT
 import numpy as np
 import pandas as pd
+from scipy.stats import poisson
 
-import ROOT
-
+import analysis.utils.config as _config
+import analysis.utils.paths as _paths
+import analysis.utils.root as _root
+from analysis.batch import get_job_id
+from analysis.data import get_data
+from analysis.data.converters import dataset_from_pandas
+from analysis.data.hdf import modify_hdf
+from analysis.efficiency import get_acceptance
+from analysis.fit import fit
+from analysis.fit.result import FitResult
+from analysis.physics import configure_model
 from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
 from analysis.utils.monitoring import memory_usage
 from analysis.utils.random_numbers import get_urandom_int
-from analysis.data import get_data
-from analysis.data.hdf import modify_hdf
-from analysis.data.converters import dataset_from_pandas
-from analysis.physics import configure_model
-from analysis.efficiency import get_acceptance
-from analysis.fit import fit
-from analysis.fit.result import FitResult
-from analysis.batch import get_job_id
-import analysis.utils.paths as _paths
-import analysis.utils.config as _config
-import analysis.utils.root as _root
-
 
 logger = get_logger('analysis.toys.fit')
 
@@ -95,7 +93,8 @@ def get_datasets(data_frames, acceptance, fit_models):
                 if len(set(rows['category'])) > 1:
                     logger.error("Data %s contains more then one category: %s!",
                                  rows, set(rows['category']))
-                    raise ValueError("Data {} contains more then one category: ".format(data_name))  # TODO: replace with DataError
+                    raise ValueError(
+                        "Data {} contains more then one category: ".format(data_name))  # TODO: replace with DataError
                 elif not rows['category'].iloc[0] == category:
                     logger.info("Data %s contains a category %s, dropping it and "
                                 "replacing it with the specified one %s", rows,
@@ -103,7 +102,7 @@ def get_datasets(data_frames, acceptance, fit_models):
             rows['category'] = category
         elif 'category' in rows:
             logger.warning("Data %s contains a 'category' column but no category was specified"
-                        "in the config file -> ignoring 'category column for the fit", rows)
+                           "in the config file -> ignoring 'category column for the fit", rows)
             del rows['category']
         # Append to merged dataset
         if dataset is None:
@@ -292,8 +291,8 @@ def run(config_files, link_from, verbose):
     initial_time = default_timer()
     for fit_num in range(nfits):
         # Logging
-        if (fit_num+1) % 20 == 0:
-            logger.info("  Fitting event %s/%s", fit_num+1, nfits)
+        if (fit_num + 1) % 20 == 0:
+            logger.info("  Fitting event %s/%s", fit_num + 1, nfits)
         # Get a compound dataset
         seed = get_urandom_int(4)
         np.random.seed(seed=seed)
@@ -338,8 +337,8 @@ def run(config_files, link_from, verbose):
             _root.destruct_object(dataset)
         logger.debug("Cleaning up")
     logger.info("Fitting loop over")
-    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/nfits)
-    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/nfits)
+    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem) / nfits)
+    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time) * 1000.0 / nfits)
     logger.info("Saving to disk")
     data_res = []
     cov_matrices = {}

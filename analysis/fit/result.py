@@ -8,15 +8,15 @@
 """Analyze and store fit results."""
 from __future__ import print_function, division, absolute_import
 
-from collections import OrderedDict
 import copy
+from collections import OrderedDict
 
 import numpy as np
 
-from analysis.utils.config import load_config, write_config
-from analysis.utils.exceptions import NotInitializedError, ConfigError
 # from analysis.utils.decorators import memoize
 import analysis.utils.paths as _paths
+from analysis.utils.config import load_config, write_config
+from analysis.utils.exceptions import NotInitializedError, ConfigError
 from analysis.utils.root import iterate_roocollection
 
 _SUFFIXES = ('', '_err_hesse', '_err_minus', '_err_plus')
@@ -48,6 +48,7 @@ STATUS = {'MINIMIZE': {0: "Converged",
 
 def ensure_initialized(method):
     """Make sure the fit result is initialized."""
+
     def wrapper(self, *args, **kwargs):
         """Check result is empty. Raise otherwise."""
         if not self.get_result():
@@ -352,7 +353,7 @@ class FitResult(object):
 
         """
         return not any(status for status in self._result['status'].values()) and \
-            self._result['covariance-matrix']['quality'] == 3
+               self._result['covariance-matrix']['quality'] == 3
 
     @ensure_initialized
     def get_status_string(self):

@@ -211,6 +211,7 @@ def copy_tree_with_cuts(old_file, tree_name, new_file_name, cuts, active_branche
         KeyError: When the input tree doesn't exist.
 
     """
+
     def copy_file_structure(old_file, tree_name, new_file):
         """Copy the structure of a ROOT file.
 
@@ -266,6 +267,5 @@ def copy_tree_with_cuts(old_file, tree_name, new_file_name, cuts, active_branche
     new_file.Write("", ROOT.TObject.kOverwrite)
     new_file.Close()
     old_file.Close()
-
 
 # EOF

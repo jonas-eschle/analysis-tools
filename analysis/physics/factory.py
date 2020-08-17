@@ -16,9 +16,8 @@ import ROOT
 
 from analysis.utils.config import configure_parameter
 from analysis.utils.exceptions import InvalidRequestError
-from analysis.utils.root import execute_and_return_self, list_to_rooargset, list_to_rooarglist
 from analysis.utils.logging_color import get_logger
-
+from analysis.utils.root import execute_and_return_self, list_to_rooargset, list_to_rooarglist
 
 logger = get_logger('analysis.physics.factory')
 
@@ -559,7 +558,7 @@ class PhysicsFactory(BaseFactory):
         """
         return ROOT.RooExtendPdf(name,
                                  title,
-                                 self.get_pdf(name+'_{noext}', title+'_{noext}'),
+                                 self.get_pdf(name + '_{noext}', title + '_{noext}'),
                                  self['Yield'])
 
     def has_to_be_extended(self):
@@ -645,7 +644,7 @@ class ProductPhysicsFactory(BaseFactory):
         # Return the extended PDF
         return ROOT.RooExtendPdf(name,
                                  title,
-                                 self.get_pdf(name+'_{noext}', title+'_{noext}'),
+                                 self.get_pdf(name + '_{noext}', title + '_{noext}'),
                                  self['Yield'])
 
     def has_to_be_extended(self):
@@ -836,7 +835,7 @@ class SumPhysicsFactory(BaseFactory):
             # Create non-extended PDF and extend
             return ROOT.RooExtendPdf(name,
                                      title,
-                                     self.get_pdf(name+'_{noext}', title+'_{noext}'),
+                                     self.get_pdf(name + '_{noext}', title + '_{noext}'),
                                      self['Yield'])
         else:
             pdfs = ROOT.RooArgList()
@@ -899,7 +898,8 @@ class SumPhysicsFactory(BaseFactory):
             yield_ = self._create_parameter('Yield', yield_)
             for child in self._children.values():
                 if 'Yield' in child:
-                    raise InvalidRequestError("Inconsistent state: trying to set the yield of an already configured Factory.")
+                    raise InvalidRequestError(
+                        "Inconsistent state: trying to set the yield of an already configured Factory.")
                 # Again, not very good heuristics
                 child.set_yield_var(ROOT.RooProduct(child['Fraction'].GetName().replace('Fraction', 'Yield'),
                                                     child['Fraction'].GetTitle().replace('Fraction', 'Yield'),
@@ -1093,6 +1093,5 @@ class SimultaneousPhysicsFactory(BaseFactory):
             dataset.loc[dataset[cat_var] == category] = self._children[category] \
                 .transform_dataset(dataset[dataset[cat_var] == category].copy())
         return dataset
-
 
 # EOF

@@ -18,11 +18,10 @@ These may just be soft links, depending on how they have been run.
 """
 from __future__ import print_function, division, absolute_import
 
-import os
 import inspect
-from functools import partial
-
+import os
 from contextlib import contextmanager
+from functools import partial
 
 import fasteners
 
@@ -208,6 +207,7 @@ def work_on_file(name, path_func, link_from=None):
         OSError: If there is a problem preparing the path.
 
     """
+
     def link_files(*files):
         """Perform simlinking of files.
 

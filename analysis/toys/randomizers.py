@@ -13,11 +13,11 @@ from collections import OrderedDict, defaultdict
 import numpy as np
 from scipy.stats import poisson
 
-from analysis.fit.result import FitResult
-from analysis.utils.root import list_to_rooargset, list_to_rooarglist, iterate_roocollection
-from analysis.data.mergers import merge_root
 from analysis.data.converters import pandas_from_dataset, dataset_from_pandas
+from analysis.data.mergers import merge_root
+from analysis.fit.result import FitResult
 from analysis.utils.logging_color import get_logger
+from analysis.utils.root import list_to_rooargset, list_to_rooarglist, iterate_roocollection
 
 logger = get_logger('analysis.toys.randomizers')
 
@@ -46,6 +46,7 @@ class ToyRandomizer(object):
                 configuration.
 
         """
+
         def get_pdfs_to_generate(pdf_model, pdf_config):
             """Split the PDF model into PDFs that need to be generated independently.
 
@@ -134,7 +135,7 @@ class ToyRandomizer(object):
                     while yield_to_generate:
                         events = self._gen_acceptance.apply_accept_reject(
                             pandas_from_dataset(
-                                pdf.generate(obs, yield_to_generate*2)))
+                                pdf.generate(obs, yield_to_generate * 2)))
                         # Sample if the dataset is too large
                         if events.shape[0] > yield_to_generate:
                             events = events.sample(yield_to_generate)
@@ -224,6 +225,7 @@ class FixedParamsRandomizer(ToyRandomizer):
                 configuration.
 
         """
+
         def make_block(*matrices):
             """Make bloc-diagonal matrix.
 
@@ -239,9 +241,9 @@ class FixedParamsRandomizer(ToyRandomizer):
             row = 0
             column = 0
             for mat in matrices:
-                output_mat[row:row+mat.shape[0], column:column+mat.shape[1]] = mat
-                row = row+mat.shape[0]
-                column = column+mat.shape[1]
+                output_mat[row:row + mat.shape[0], column:column + mat.shape[1]] = mat
+                row = row + mat.shape[0]
+                column = column + mat.shape[1]
             return output_mat
 
         super(FixedParamsRandomizer, self).__init__(model, config=config, acceptance=acceptance)

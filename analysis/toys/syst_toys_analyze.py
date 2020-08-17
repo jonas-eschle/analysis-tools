@@ -18,15 +18,14 @@ To configure, there are two mandatory configuration keys:
 
 from __future__ import print_function
 
-import os
 import argparse
+import os
 
 import pandas as pd
 
-from analysis.utils.logging_color import get_logger
-import analysis.utils.paths as _paths
 import analysis.utils.config as _config
-
+import analysis.utils.paths as _paths
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.toys.syst_analyze')
 
@@ -61,6 +60,7 @@ def count_toys(toy_data, _):
     n_toys = toy_data['fit_results'].shape[0]
     print('Found {} toys'.format(n_toys))
     return {'ntoys': n_toys}
+
 
 # Syst values
 def get_central_intervals(toy_data, config):

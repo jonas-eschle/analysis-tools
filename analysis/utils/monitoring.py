@@ -9,7 +9,6 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-
 from timeit import default_timer
 
 from .logging_color import get_logger
@@ -73,6 +72,6 @@ class Timer(object):
         self.elapsed = self._timer() - self.start
         if self.verbose:
             get_logger('analysis.utils.monitoring').info('Elapsed time: %f ms',
-                                                         self.elapsed*1000.0)
+                                                         self.elapsed * 1000.0)
 
 # EOF

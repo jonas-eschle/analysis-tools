@@ -13,28 +13,27 @@ These generate and fit in one go with some random variation of one or more param
 from __future__ import print_function, division, absolute_import
 
 import argparse
+import copy
 import os
 from timeit import default_timer
-import copy
 
-import pandas as pd
+import ROOT
 import numpy as np
+import pandas as pd
 
-from analysis.utils.logging_color import get_logger
-from analysis.utils.monitoring import memory_usage
-from analysis.utils.random_numbers import get_urandom_int
+import analysis.utils.config as _config
+import analysis.utils.paths as _paths
+import analysis.utils.root as _root
+from analysis.batch import get_job_id
 from analysis.data.hdf import modify_hdf
-from analysis.physics import configure_model
 from analysis.efficiency import get_acceptance
 from analysis.fit import fit
 from analysis.fit.result import FitResult
-from analysis.batch import get_job_id
+from analysis.physics import configure_model
 from analysis.toys import get_randomizer
-import analysis.utils.paths as _paths
-import analysis.utils.config as _config
-import analysis.utils.root as _root
-
-import ROOT
+from analysis.utils.logging_color import get_logger
+from analysis.utils.monitoring import memory_usage
+from analysis.utils.random_numbers import get_urandom_int
 
 logger = get_logger('analysis.toys.syst')
 
@@ -122,8 +121,8 @@ def run(config_files, link_from, verbose):
     do_minos = config['syst'].get('minos', False)
     for fit_num in range(ntoys):
         # Logging
-        if (fit_num+1) % 20 == 0:
-            logger.info("  Fitting event %s/%s", fit_num+1, ntoys)
+        if (fit_num + 1) % 20 == 0:
+            logger.info("  Fitting event %s/%s", fit_num + 1, ntoys)
         # Generate a dataset
         seed = get_urandom_int(4)
         np.random.seed(seed=seed)
@@ -172,8 +171,8 @@ def run(config_files, link_from, verbose):
         fit_results[fit_num] = result
         logger.debug("Cleaning up")
     logger.info("Fitting loop over")
-    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem)/ntoys)
-    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time)*1000.0/ntoys)
+    logger.info("--> Memory leakage: %.2f MB/sample-fit", (memory_usage() - initial_mem) / ntoys)
+    logger.info("--> Spent %.0f ms/sample-fit", (default_timer() - initial_time) * 1000.0 / ntoys)
     logger.info("Saving to disk")
     data_res = []
     cov_matrices = {}

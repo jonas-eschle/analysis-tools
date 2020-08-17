@@ -8,8 +8,8 @@
 """Random generation tools."""
 from __future__ import print_function, division, absolute_import
 
-import sys
 import os
+import sys
 
 
 def get_urandom_int(length):

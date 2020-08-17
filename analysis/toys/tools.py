@@ -9,12 +9,12 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-import contextlib2
 
+import contextlib2
 import pandas as pd
 
-from analysis.utils.paths import get_toy_fit_path
 from analysis.utils.logging_color import get_logger
+from analysis.utils.paths import get_toy_fit_path
 
 _logger = get_logger('analysis.toys.tools')
 

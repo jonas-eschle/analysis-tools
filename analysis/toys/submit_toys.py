@@ -31,15 +31,15 @@ Optional configuration keys:
 from __future__ import print_function, division, absolute_import
 
 import argparse
-import os
 import itertools
+import os
 import tempfile
 
-from analysis import get_global_var
-import analysis.utils.paths as _paths
 import analysis.utils.config as _config
-from analysis.utils.logging_color import get_logger
+import analysis.utils.paths as _paths
+from analysis import get_global_var
 from analysis.toys.submitter import ToySubmitter
+from analysis.utils.logging_color import get_logger
 
 logger = get_logger('analysis.toys.submit')
 
@@ -289,7 +289,7 @@ def main():
                       link_from=args.link_from,
                       extend=args.extend,
                       overwrite=args.overwrite,
-                      verbose=args.verbose).run(script_to_run,)
+                      verbose=args.verbose).run(script_to_run, )
             if scan_config:
                 os.remove(config_file)
         exit_status = 0

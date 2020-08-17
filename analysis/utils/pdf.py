@@ -13,9 +13,8 @@ import os
 import ROOT
 
 from analysis import get_global_var
-from .root import load_library as _load_library
 from .logging_color import get_logger
-
+from .root import load_library as _load_library
 
 _logger = get_logger('analysis.utils.pdf')
 
@@ -75,6 +74,5 @@ def load_pdf_by_name(name, use_mathmore=False):
     except OSError:
         raise OSError("Don't know this PDF! -> {}".format(name))
     return getattr(ROOT, os.path.splitext(os.path.split(name)[1])[0])
-
 
 # EOF

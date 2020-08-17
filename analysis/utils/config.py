@@ -13,7 +13,6 @@ import copy
 import os
 import random
 import string
-
 from collections import OrderedDict, defaultdict
 
 import yaml
@@ -21,7 +20,6 @@ import yamlloader
 
 from analysis.utils.exceptions import ConfigError
 from analysis.utils.logging_color import get_logger
-
 
 logger = get_logger('analysis.utils.config')
 
@@ -141,7 +139,7 @@ def load_config(*file_names, **options):
                 raise ConfigError("Root node {} of {} not found in dataset".format(root_node, data_root))
     if 'validate' in options:
         missing_keys = []
-        data_keys = ['/'.join(key.split('/')[:entry_num+1])
+        data_keys = ['/'.join(key.split('/')[:entry_num + 1])
                      for key, _ in unfolded_data
                      for entry_num in range(len(key.split('/')))]
         logger.debug("Validating against the following keys -> %s",
@@ -199,6 +197,7 @@ def write_config(config, file_name):
         file_name (str): Output file.
 
     """
+
     def represent_ordereddict(self, mapping, flow_style=None):
         """Dump an OrderedDict in YAML in the proper order.
 
@@ -481,10 +480,5 @@ def recursive_dict_copy(x, to_copy=None):
             new_dict[key] = copy.copy(val)
 
     return new_dict
-
-
-
-
-
 
 # EOF

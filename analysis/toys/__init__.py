@@ -10,7 +10,6 @@ from __future__ import print_function, division, absolute_import
 
 from analysis import get_global_var
 from analysis.utils.logging_color import get_logger
-
 from .randomizers import TOY_RANDOMIZERS as _TOY_RANDOMIZERS
 
 logger = get_logger('analysis.toys')
@@ -61,6 +60,5 @@ def get_randomizer(rand_config):
 
     """
     return get_global_var('TOY_RANDOMIZERS')[rand_config['type']]
-
 
 # EOF
