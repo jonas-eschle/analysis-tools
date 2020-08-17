@@ -264,7 +264,8 @@ class LegendreEfficiency(Efficiency):
                               flags=['multi_index'],
                               op_flags=['readwrite'])
         weights = np.array(dataset[weight_var]) if weight_var else np.ones(dataset.shape[0])
-        inv_sum_weights = 1.0/np.sum(weights)
+        sum_weights = np.sum(weights)
+        inv_sum_weights = 1.0 / sum_weights
         inv_sum_weights_minus_one = 1.0 / (sum_weights - 1.)
         # Array to store the calculation of the legendres event by event
         events = np.zeros((dataset.shape[0],) + orders)
