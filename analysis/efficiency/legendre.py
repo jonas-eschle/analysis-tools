@@ -42,6 +42,9 @@ def process_range(range_lst):
 
     """
     # pylint: disable=W0612
+    # noinspection PyUnresolvedReferences
+    from math import pi, cos, acos, sin, asin, sqrt  # For eval
+
     try:
         high, low = range_lst
     except ValueError:
