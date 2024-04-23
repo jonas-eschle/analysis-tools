@@ -320,7 +320,7 @@ class LegendreEfficiency(Efficiency):
         """
         var_pos = self.get_variables().index(var_name)
         x = np.linspace(-1, 1, n_points)
-        y = np.zeros(1000)
+        y = np.zeros(n_points)
         coeff_iter = [list(range(order)) for order in self._coefficients.shape]
         for non_int_order in range(self._coefficients.shape[var_pos]):
             coeff_iter[var_pos] = [non_int_order]
